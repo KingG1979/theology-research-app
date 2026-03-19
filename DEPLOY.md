@@ -1,92 +1,88 @@
-# Deployment Guide
+# Confession and Catechism Research — Deployment Guide
 
-Follow these steps to get your app live on the internet.
-The whole process takes about 30-45 minutes the first time.
+## Quick Deploy (Existing Features)
 
----
+1. Push to GitHub
+2. Connect to Vercel
+3. Set environment variables:
+   - `APP_PASSWORD` — Password for accessing the app
+   - `OPENAI_API_KEY` — OpenAI API key (for GPT-4o)
 
-## What you need before starting
+## Church Fathers RAG Setup
 
-- A free GitHub account (github.com)
-- A free Vercel account (vercel.com) - sign up with your GitHub account
-- Your Anthropic API key (console.anthropic.com)
-- A password you want to use for Beta access
+The Church Fathers feature requires a Supabase database with vector embeddings.
+Without it, the existing confessions features work normally — the Fathers tab
+will show a "Database not configured" message.
 
----
+### Step 1: Create Supabase Project
 
-## Step 1 - Upload your code to GitHub
+1. Go to [supabase.com](https://supabase.com) and create a free account
+2. Create a new project (free tier is sufficient)
+3. Note your **Project URL** and **API keys** (Settings > API)
 
-1. Go to github.com and sign in
-2. Click the "+" button (top right) and choose "New repository"
-3. Name it: theology-research-app
-4. Keep it Private
-5. Click "Create repository"
-6. On the next screen, click "uploading an existing file"
-7. Upload ALL the files from this folder, keeping the folder structure:
-   - index.html
-   - package.json
-   - vite.config.js
-   - src/main.jsx
-   - src/App.jsx
-   - api/chat.js
-8. Click "Commit changes"
+### Step 2: Run the Database Migration
 
----
+1. In Supabase, go to SQL Editor
+2. Copy and paste the contents of `supabase/migration.sql`
+3. Run the SQL — this creates the table, indexes, and search function
 
-## Step 2 - Deploy to Vercel
+### Step 3: Collect the Church Fathers Texts
 
-1. Go to vercel.com and sign in with GitHub
-2. Click "Add New Project"
-3. Find your theology-research-app repository and click "Import"
-4. Vercel will detect it is a Vite project automatically
-5. Before clicking Deploy, click "Environment Variables"
-6. Add these two variables:
+```bash
+# From the project root:
+python3 scripts/collect-texts.py
+python3 scripts/cleanup-chunks.py
+```
 
-   Name: ANTHROPIC_API_KEY
-   Value: (paste your Anthropic API key here)
+This downloads and processes texts from newadvent.org (public domain).
+Output goes to `church-fathers-data/all_chunks.json`.
 
-   Name: APP_PASSWORD
-   Value: (choose a password for your Beta testers)
+Current pilot: St. Augustine (48 works) and St. Athanasius (20 works).
 
-7. Click "Deploy"
-8. Wait about 60 seconds
-9. Vercel gives you a URL like: theology-research-app.vercel.app
+### Step 4: Generate Embeddings and Upload
 
----
+```bash
+OPENAI_API_KEY=sk-... \
+SUPABASE_URL=https://xxx.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=eyJ... \
+node scripts/generate-embeddings.js church-fathers-data/all_chunks.json
+```
 
-## Step 3 - Share with Beta testers
+This generates vector embeddings and uploads everything to Supabase.
+Cost: approximately $2-5 for the full pilot corpus (~14,000 chunks).
 
-Send your testers:
-- The URL (e.g. theology-research-app.vercel.app)
-- The password you set in Step 2
+### Step 5: Add Vercel Environment Variables
 
-That is it. They open the URL, enter the password, and they are in.
+Add these to your Vercel project settings:
+- `SUPABASE_URL` — Your Supabase project URL (e.g., https://xxx.supabase.co)
+- `SUPABASE_ANON_KEY` — Your Supabase anonymous/public key
 
----
+### Estimated Costs
 
-## Updating the app in future
+| Service | Cost |
+|---------|------|
+| Supabase (free tier) | $0 |
+| OpenAI embeddings (one-time) | ~$2-5 |
+| OpenAI GPT-4o queries | Per-use |
 
-When you want to make changes:
-1. Edit the files on your computer
-2. Go to your GitHub repository
-3. Upload the changed files (it will ask you to confirm overwriting)
-4. Vercel automatically detects the change and re-deploys within 60 seconds
+## Architecture
 
-No extra steps needed - GitHub and Vercel stay in sync automatically.
+```
+┌─────────────┐     ┌──────────┐     ┌───────────┐
+│  React SPA  │────▶│  Vercel  │────▶│  OpenAI   │
+│  (Vite)     │     │  API     │     │  GPT-4o   │
+└─────────────┘     └──────────┘     └───────────┘
+                         │
+                         ▼
+                    ┌───────────┐
+                    │ Supabase  │
+                    │ pgvector  │
+                    └───────────┘
+```
 
----
-
-## Costs
-
-- GitHub: Free
-- Vercel: Free for personal projects
-- Anthropic API: Pay per use. For a small Beta group doing research,
-  expect less than $5/month. You can set spending limits at console.anthropic.com
-
----
-
-## If something goes wrong
-
-- Vercel shows you build logs - errors appear there in plain English
-- The most common issue is an environment variable name typo
-- Double-check ANTHROPIC_API_KEY and APP_PASSWORD are spelled exactly right
+### RAG Flow
+1. User asks a question in Fathers mode
+2. Backend generates an embedding for the query (OpenAI)
+3. Searches Supabase for semantically similar passages
+4. Injects top passages into GPT-4o prompt as context
+5. Returns AI response grounded in actual patristic texts
