@@ -4,6 +4,57 @@ import { SYSTEM_PROMPT, CITATION_PROMPT, COMPARISON_PROMPT } from "./prompts";
 import { callAPI, extractText } from "./api";
 import { parseCitations, parseComparison } from "./utils/parsers";
 
+const pulseKeyframes = `
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+@keyframes fadeDot {
+  0%, 20% { opacity: 0; }
+  40%, 100% { opacity: 1; }
+}
+@media (max-width: 768px) {
+  .browse-layout { flex-direction: column !important; }
+  .browse-sidebar { width: 100% !important; max-height: 160px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; }
+  .browse-chapters { width: 100% !important; max-height: 140px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; }
+  .research-layout { flex-direction: column !important; }
+  .research-chat { border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; flex: 1 1 auto !important; min-height: 50vh !important; }
+  .research-sources { flex: 1 1 auto !important; min-height: 30vh !important; }
+  .header-wrap { flex-direction: column !important; gap: 8px !important; }
+  .header-title { text-align: center !important; }
+  .header-tabs { justify-content: center !important; }
+}
+`;
+
+function LoadingDots({ text, color }) {
+  return (
+    <span style={{ color: color || "#8a7a5a", fontStyle: "italic", fontSize: 13 }}>
+      {text}
+      <span style={{ display: "inline-block" }}>
+        <span style={{ animation: "fadeDot 1.2s infinite", animationDelay: "0s" }}>.</span>
+        <span style={{ animation: "fadeDot 1.2s infinite", animationDelay: "0.2s" }}>.</span>
+        <span style={{ animation: "fadeDot 1.2s infinite", animationDelay: "0.4s" }}>.</span>
+      </span>
+    </span>
+  );
+}
+
+function ErrorBox({ message, onRetry }) {
+  return (
+    <div style={{ margin: "16px 24px", padding: "14px 18px", background: "#fef2f2", border: "1px solid #e8b4b4", borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 12 }}>
+      <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>!</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 13, color: "#7a2a2a", lineHeight: 1.6 }}>{message}</div>
+        {onRetry && (
+          <button onClick={onRetry} style={{ marginTop: 8, padding: "4px 14px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 12, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+            Try Again
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function TheologyAssistant() {
   // Password gate - user must enter the app password before accessing
   const [appPassword, setAppPassword] = useState("");
@@ -37,6 +88,16 @@ export default function TheologyAssistant() {
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [commentary, setCommentary] = useState({});
   const [commentaryLoading, setCommentaryLoading] = useState(false);
+
+  // Inject CSS keyframes once
+  useEffect(() => {
+    if (!document.getElementById("theology-animations")) {
+      const style = document.createElement("style");
+      style.id = "theology-animations";
+      style.textContent = pulseKeyframes;
+      document.head.appendChild(style);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -105,7 +166,7 @@ export default function TheologyAssistant() {
       setCommentary(prev => ({ ...prev, [key]: extractText(data) }));
     } catch (e) {
       console.error(e);
-      setCommentary(prev => ({ ...prev, [key]: "Commentary unavailable. " + (e.message || "Please try again.") }));
+      setCommentary(prev => ({ ...prev, [key]: { error: true, message: "Unable to load commentary. Please try again." } }));
     }
     finally { setCommentaryLoading(false); }
   }
@@ -128,7 +189,7 @@ export default function TheologyAssistant() {
       try { setCitations(parseCitations(extractText(cd))); } catch { setCitations([]); }
     } catch (e) {
       console.error(e);
-      setMessages([...updated, { role: "assistant", content: "Sorry, I couldn't get a response. " + (e.message || "Please try again.") }]);
+      setMessages([...updated, { role: "assistant", content: "Unable to reach the AI service. Please try again.", isError: true }]);
     }
     finally { setLoading(false); setCitationsLoading(false); }
   }
@@ -193,19 +254,19 @@ export default function TheologyAssistant() {
     <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", flexDirection: "column", background: cream, color: dark, overflow: "hidden" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 24px", background: dark, flexShrink: 0 }}>
-        <div style={{ flex: 1 }}>
+      <div className="header-wrap" style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 24px", background: dark, flexShrink: 0 }}>
+        <div className="header-title" style={{ flex: 1 }}>
           <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>Confession and Catechism Research</div>
           <div style={{ fontSize: 10, color: gold, letterSpacing: 2, textTransform: "uppercase" }}>Westminster · Heidelberg · Augsburg · 1689 Baptist · Nicene · Orthodox · 39 Articles</div>
         </div>
-        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
           {[
             { key: "research", label: "Research" },
             { key: "compare", label: "Compare" },
             { key: "browse", label: "Browse" },
             { key: "notebook", label: "Notebook" + (entries.length > 0 ? " (" + entries.length + ")" : "") },
           ].map(({ key, label }) => (
-            <button key={key} onClick={() => setMode(key)} style={{ padding: "5px 12px", background: mode === key ? gold : "transparent", color: mode === key ? dark : gold, border: "1px solid " + gold, borderRadius: 20, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: mode === key ? "bold" : "normal" }}>
+            <button key={key} onClick={() => setMode(key)} style={{ padding: "5px 12px", background: mode === key ? gold : "transparent", color: mode === key ? dark : gold, border: "1px solid " + gold, borderRadius: 20, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: mode === key ? "bold" : "normal", transition: "all 0.15s ease", borderBottom: mode === key ? "2px solid " + dark : "1px solid " + gold }}>
               {label}
             </button>
           ))}
@@ -225,28 +286,46 @@ export default function TheologyAssistant() {
 
       {/* RESEARCH MODE */}
       {mode === "research" && (
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-          <div style={{ flex: 3, display: "flex", flexDirection: "column", borderRight: "2px solid " + border, overflow: "hidden" }}>
+        <div className="research-layout" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+          <div className="research-chat" style={{ flex: 3, display: "flex", flexDirection: "column", borderRight: "2px solid " + border, overflow: "hidden" }}>
             <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
               {messages.length === 0 && (
                 <div style={{ textAlign: "center", padding: "40px 20px", color: mid }}>
-                  <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 12 }}>Ask a theological question</p>
-                  <p style={{ fontSize: 13, marginBottom: 6, fontStyle: "italic" }}>What do the confessions say about justification by faith?</p>
-                  <p style={{ fontSize: 13, marginBottom: 6, fontStyle: "italic" }}>How does Westminster describe Scripture?</p>
-                  <p style={{ fontSize: 13, fontStyle: "italic" }}>What does Orthodoxy teach about theosis?</p>
+                  <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 16 }}>Ask a theological question</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
+                    {[
+                      "What does the Westminster Confession teach about justification?",
+                      "Compare baptism across Reformed and Lutheran traditions",
+                      "Explain the Heidelberg Catechism's view of the Lord's Supper",
+                    ].map((q) => (
+                      <button key={q} onClick={() => setInput(q)} style={{ padding: "8px 16px", background: "#fff", border: "1px solid " + border, borderRadius: 8, fontSize: 13, color: "#5a4a2a", cursor: "pointer", fontFamily: "Georgia, serif", fontStyle: "italic", lineHeight: 1.5, maxWidth: 440, transition: "all 0.15s ease" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.background = light; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = border; e.currentTarget.style.background = "#fff"; }}>
+                        {q}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
               {messages.map((msg, i) => (
                 <div key={i}>
+                  {msg.isError ? (
+                    <div style={{ background: "#fef2f2", border: "1px solid #e8b4b4", borderRadius: "2px 12px 12px 12px", padding: "14px 18px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      <span style={{ fontSize: 16, color: "#aa5a5a", lineHeight: 1, flexShrink: 0, marginTop: 1 }}>!</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: "#7a2a2a", lineHeight: 1.6 }}>{msg.content}</div>
+                        <button onClick={askQuestion} style={{ marginTop: 8, padding: "4px 14px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 12, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>Try Again</button>
+                      </div>
+                    </div>
+                  ) : (
                   <div style={{ background: msg.role === "user" ? dark : "#fff", color: msg.role === "user" ? cream : dark, borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px", padding: "12px 16px", border: msg.role === "user" ? "none" : "1px solid " + border, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", display: "inline-block", maxWidth: msg.role === "user" ? "75%" : "100%", float: msg.role === "user" ? "right" : "none", clear: "both" }}>
                     <div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5, color: msg.role === "user" ? gold : mid }}>{msg.role === "user" ? "You" : "Research Assistant"}</div>
                     <div style={{ fontSize: 14, lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{msg.content}</div>
                     {msg.role === "assistant" && <button onClick={() => saveEntry(msg.question || "", msg.content)} style={{ marginTop: 10, padding: "4px 12px", background: light, border: "1px solid " + border, borderRadius: 8, fontSize: 12, color: mid, cursor: "pointer", fontFamily: "Georgia, serif" }}>Save to Notebook</button>}
                   </div>
+                  )}
                   <div style={{ clear: "both" }} />
                 </div>
               ))}
-              {loading && <div style={{ background: "#fff", border: "1px solid " + border, borderRadius: "2px 12px 12px 12px", padding: "12px 16px" }}><div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", color: mid, marginBottom: 5 }}>Research Assistant</div><div style={{ fontSize: 13, color: mid, fontStyle: "italic" }}>Searching confessions...</div></div>}
+              {loading && <div style={{ background: "#fff", border: "1px solid " + border, borderRadius: "2px 12px 12px 12px", padding: "12px 16px", animation: "pulse 2s ease-in-out infinite" }}><div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", color: mid, marginBottom: 5 }}>Research Assistant</div><LoadingDots text="Researching" color={mid} /></div>}
             </div>
             <div style={{ padding: "12px 20px 16px", borderTop: "1px solid " + border, display: "flex", gap: 10, background: cream }}>
               <textarea style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, resize: "none", outline: "none" }} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askQuestion(); } }} placeholder="Ask about any doctrine, confession, or catechism..." rows={3} />
@@ -256,12 +335,12 @@ export default function TheologyAssistant() {
               </div>
             </div>
           </div>
-          <div style={{ flex: 2, overflowY: "auto", background: light, display: "flex", flexDirection: "column" }}>
+          <div className="research-sources" style={{ flex: 2, overflowY: "auto", background: light, display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid " + border, background: "#ede8dc" }}>
               <span style={{ fontSize: 13, fontWeight: "bold", color: "#5a4a2a" }}>Sources</span>
               {citations.length > 0 && <span style={{ fontSize: 11, color: mid, background: border, padding: "2px 8px", borderRadius: 10 }}>{citations.length} references</span>}
             </div>
-            {citationsLoading && <div style={{ padding: "24px", textAlign: "center", color: mid, fontSize: 13, fontStyle: "italic" }}>Identifying sources...</div>}
+            {citationsLoading && <div style={{ padding: "24px", textAlign: "center" }}><LoadingDots text="Identifying sources" color={mid} /></div>}
             {!citationsLoading && citations.length === 0 && <div style={{ padding: "32px 20px", textAlign: "center", color: mid, fontSize: 13 }}>Sources will appear here after your first question.</div>}
             {!citationsLoading && citations.filter(c => activeTraditions.has(c.tradition)).map((cite, i) => {
               const c = COLORS[cite.tradition] || COLORS.Ecumenical;
@@ -290,14 +369,14 @@ export default function TheologyAssistant() {
               {comparisonData && <button onClick={resetCompare} style={{ padding: "0 14px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: "Georgia, serif" }}>↺ New</button>}
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-              {["Baptism", "Justification", "Lords Supper", "Scripture", "Predestination", "Theosis"].map((t) => (
-                <button key={t} onClick={() => setCompareInput(t)} style={{ padding: "3px 12px", background: "#fff", border: "1px solid " + border, borderRadius: 14, fontSize: 12, color: "#5a4a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>{t}</button>
+              {["Baptism", "Justification", "The Lord's Supper", "Original Sin", "Scripture", "Predestination", "The Church"].map((t) => (
+                <button key={t} onClick={() => setCompareInput(t)} style={{ padding: "3px 12px", background: "#fff", border: "1px solid " + border, borderRadius: 14, fontSize: 12, color: "#5a4a2a", cursor: "pointer", fontFamily: "Georgia, serif", transition: "all 0.15s ease" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.background = light; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = border; e.currentTarget.style.background = "#fff"; }}>{t}</button>
               ))}
             </div>
           </div>
-          {compareError && <div style={{ margin: "16px 24px", padding: "12px 16px", background: "#fff0f0", border: "1px solid #ffaaaa", borderRadius: 8, color: "#aa2222", fontSize: 13 }}>{compareError}</div>}
-          {compareLoading && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}><div style={{ fontSize: 18, color: "#5a4a2a" }}>Comparing traditions...</div><div style={{ fontSize: 13, color: mid, fontStyle: "italic" }}>Consulting all six traditions...</div></div>}
-          {!comparisonData && !compareLoading && !compareError && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", padding: 40, textAlign: "center" }}><p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Compare any doctrine across traditions</p><p style={{ fontSize: 13, color: mid, maxWidth: 440, lineHeight: 1.7 }}>Use the filter bar above to choose traditions, then enter a topic.</p></div>}
+          {compareError && <ErrorBox message="Unable to complete the comparison. Please try again." onRetry={runComparison} />}
+          {compareLoading && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}><div style={{ fontSize: 18, color: "#5a4a2a" }}><LoadingDots text="Comparing traditions" color="#5a4a2a" /></div><div style={{ fontSize: 13, color: mid, fontStyle: "italic", animation: "pulse 2s ease-in-out infinite" }}>Consulting confessions and catechisms</div></div>}
+          {!comparisonData && !compareLoading && !compareError && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", padding: 40, textAlign: "center" }}><p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Compare any doctrine across traditions</p><p style={{ fontSize: 13, color: mid, maxWidth: 440, lineHeight: 1.7, marginBottom: 16 }}>Select a suggested topic above or type your own. Use the filter bar to choose which traditions to include.</p></div>}
           {comparisonData && !compareLoading && (
             <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
               <h2 style={{ margin: "0 0 6px", fontSize: 20, color: dark }}>{comparisonData.topic}</h2>
@@ -330,10 +409,10 @@ export default function TheologyAssistant() {
 
       {/* BROWSE MODE */}
       {mode === "browse" && (
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <div className="browse-layout" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
           {/* Confession list */}
-          <div style={{ width: 200, borderRight: "2px solid " + border, overflowY: "auto", background: light, flexShrink: 0 }}>
+          <div className="browse-sidebar" style={{ width: 200, borderRight: "2px solid " + border, overflowY: "auto", background: light, flexShrink: 0 }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid " + border, background: "#ede8dc", fontSize: 11, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase" }}>Confessions</div>
             {confessionNames.map(name => {
               const conf = CONFESSIONS[name];
@@ -350,7 +429,7 @@ export default function TheologyAssistant() {
 
           {/* Chapter list */}
           {currentConfession && (
-            <div style={{ width: 200, borderRight: "2px solid " + border, overflowY: "auto", background: "#fff", flexShrink: 0 }}>
+            <div className="browse-chapters" style={{ width: 200, borderRight: "2px solid " + border, overflowY: "auto", background: "#fff", flexShrink: 0 }}>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid " + border, background: "#ede8dc", fontSize: 11, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase" }}>Chapters</div>
               {currentConfession.chapters.map((ch, idx) => {
                 const active = selectedChapter === idx;
@@ -398,8 +477,17 @@ export default function TheologyAssistant() {
                           Get Commentary
                         </button>
                       )}
-                      {isLoading && <div style={{ fontSize: 12, color: mid, fontStyle: "italic" }}>Loading commentary...</div>}
-                      {hasCommentary && (
+                      {isLoading && <div style={{ fontSize: 12, color: mid }}><LoadingDots text="Loading commentary" color={mid} /></div>}
+                      {hasCommentary && hasCommentary.error && (
+                        <div style={{ marginTop: 10, padding: "12px 14px", background: "#fef2f2", border: "1px solid #e8b4b4", borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 10 }}>
+                          <span style={{ fontSize: 14, color: "#aa5a5a", lineHeight: 1, flexShrink: 0, marginTop: 1 }}>!</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 12, color: "#7a2a2a", lineHeight: 1.5 }}>{hasCommentary.message}</div>
+                            <button onClick={() => { setCommentary(prev => { const next = { ...prev }; delete next[key]; return next; }); getCommentary(selectedConfession, currentChapter.title, section.number, section.text); }} style={{ marginTop: 6, padding: "3px 12px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 11, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>Try Again</button>
+                          </div>
+                        </div>
+                      )}
+                      {hasCommentary && !hasCommentary.error && (
                         <div style={{ marginTop: 10, padding: "12px 14px", background: light, borderRadius: 8, borderLeft: "3px solid " + COLORS[currentConfession.tradition].border }}>
                           <div style={{ fontSize: 10, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Commentary</div>
                           <div style={{ fontSize: 13, color: dark, lineHeight: 1.7 }}>{hasCommentary}</div>
