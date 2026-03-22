@@ -333,23 +333,13 @@ const CONFESSIONS = {
   },
 };
 
-// For local development, calls Anthropic directly. On Vercel, uses the secure /api/chat backend.
-async function callAPI(body, password, localApiKey) {
-  if (localApiKey) {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": localApiKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify(body),
-    });
-    return res.json();
-  } else {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, password }),
-    });
-    return res.json();
-  }
+async function callAPI(body, password) {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, password }),
+  });
+  return res.json();
 }
 
 const SYSTEM_PROMPT = `You are a Christian theology research assistant specializing in historic confessions and catechisms. You have deep knowledge of the Westminster Confession of Faith, Heidelberg Catechism, Augsburg Confession, Catechism of the Catholic Church, Nicene Creed, the 1689 London Baptist Confession, the Eastern Orthodox Longer Catechism, and the Thirty-Nine Articles of the Church of England. Always cite specific article numbers. Note where traditions agree and differ. Be scholarly but accessible.`;
@@ -429,12 +419,22 @@ function parseComparison(text) {
   return result;
 }
 
+// Safely extract text from API response, throwing on errors
+function extractText(data) {
+  if (data && data.content && data.content[0] && data.content[0].text) {
+    return data.content[0].text;
+  }
+  if (data && data.error) {
+    throw new Error(data.error.message || data.error);
+  }
+  throw new Error("No response from the AI service. Please try again.");
+}
+
 export default function TheologyAssistant() {
   // Password gate - user must enter the app password before accessing
   const [appPassword, setAppPassword] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState(false);
-  const [localApiKey, setLocalApiKey] = useState("");
 
   function submitPassword() {
     if (passwordInput.trim()) {
@@ -527,9 +527,12 @@ export default function TheologyAssistant() {
     setCommentaryLoading(key);
     try {
       const prompt = "Provide a brief scholarly commentary (3-4 sentences) on this section from " + confessionName + ", " + chapterTitle + ": " + sectionText + " Note its historical context, theological significance, and how it relates to other traditions.";
-      const data = await callAPI({ model: "claude-sonnet-4-20250514", max_tokens: 300, system: SYSTEM_PROMPT, messages: [{ role: "user", content: prompt }] }, appPassword, localApiKey);
-      setCommentary(prev => ({ ...prev, [key]: data.content[0].text }));
-    } catch (e) { console.error(e); }
+      const data = await callAPI({ max_tokens: 300, system: SYSTEM_PROMPT, messages: [{ role: "user", content: prompt }] }, appPassword);
+      setCommentary(prev => ({ ...prev, [key]: extractText(data) }));
+    } catch (e) {
+      console.error(e);
+      setCommentary(prev => ({ ...prev, [key]: "Commentary unavailable. " + (e.message || "Please try again.") }));
+    }
     finally { setCommentaryLoading(false); }
   }
 
@@ -543,13 +546,16 @@ export default function TheologyAssistant() {
     setMessages(updated); setInput(""); setLoading(true); setCitationsLoading(true); setCitations([]);
     try {
       const [ad, cd] = await Promise.all([
-        callAPI({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: SYSTEM_PROMPT, messages: updated }, appPassword, localApiKey),
-        callAPI({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: CITATION_PROMPT, messages: [{ role: "user", content: question }] }, appPassword, localApiKey),
+        callAPI({ max_tokens: 1000, system: SYSTEM_PROMPT, messages: updated }, appPassword),
+        callAPI({ max_tokens: 1000, system: CITATION_PROMPT, messages: [{ role: "user", content: question }] }, appPassword),
       ]);
-      const answer = ad.content[0].text;
+      const answer = extractText(ad);
       setMessages([...updated, { role: "assistant", content: answer, question }]);
-      try { setCitations(parseCitations(cd.content[0].text)); } catch { setCitations([]); }
-    } catch (e) { console.error(e); }
+      try { setCitations(parseCitations(extractText(cd))); } catch { setCitations([]); }
+    } catch (e) {
+      console.error(e);
+      setMessages([...updated, { role: "assistant", content: "Sorry, I couldn't get a response. " + (e.message || "Please try again.") }]);
+    }
     finally { setLoading(false); setCitationsLoading(false); }
   }
 
@@ -557,9 +563,9 @@ export default function TheologyAssistant() {
     if (!compareInput.trim()) return;
     setCompareLoading(true); setComparisonData(null); setCompareError(null);
     try {
-      const data = await callAPI({ model: "claude-sonnet-4-20250514", max_tokens: 1500, system: COMPARISON_PROMPT, messages: [{ role: "user", content: compareInput }] }, appPassword, localApiKey);
-      if (data.error) throw new Error("API error: " + data.error.message);
-      const parsed = parseComparison(data.content[0].text);
+      const data = await callAPI({ max_tokens: 1500, system: COMPARISON_PROMPT, messages: [{ role: "user", content: compareInput }] }, appPassword);
+      const text = extractText(data);
+      const parsed = parseComparison(text);
       if (!parsed.topic || parsed.rows.length === 0) throw new Error("Could not parse response. Please try again.");
       setComparisonData(parsed);
     } catch (e) { console.error(e); setCompareError(e.message || "Unknown error."); }
@@ -595,14 +601,6 @@ export default function TheologyAssistant() {
             onKeyDown={(e) => { if (e.key === "Enter") submitPassword(); }}
             placeholder="Password"
             autoFocus
-          />
-          <div style={{ fontSize: 12, color: "#8a7a5a", margin: "14px 0 6px", textAlign: "left" }}>Running locally? Paste your Anthropic API key:</div>
-          <input
-            type="password"
-            style={{ width: "100%", padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, outline: "none", color: dark, boxSizing: "border-box", marginBottom: 10 }}
-            value={localApiKey}
-            onChange={(e) => setLocalApiKey(e.target.value)}
-            placeholder="sk-ant-... (optional, local use only)"
           />
           {passwordError && <div style={{ fontSize: 12, color: "#cc4444", marginBottom: 10 }}>Incorrect password. Please try again.</div>}
           <button
@@ -646,7 +644,7 @@ export default function TheologyAssistant() {
         {ALL_TRADITIONS.map(t => {
           const active = activeTraditions.has(t);
           const c = COLORS[t];
-          return <button key={t} onClick={() => toggleTradition(t)} style={{ padding: "2px 10px", background: active ? c.bg : "#fff", color: active ? c.text : "#aaa", border: "1px solid " + (active ? c.border : "#ccc"), borderRadius: 12, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: active ? "bold" : "normal" }}>{t}</button>;
+          return <button key={t} onClick={() => toggleTradition(t)} style={{ padding: "4px 12px", background: active ? c.border : "#fff", color: active ? "#fff" : "#aaa", border: "2px solid " + (active ? c.border : "#ccc"), borderRadius: 12, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: active ? "bold" : "normal", opacity: active ? 1 : 0.6, transition: "all 0.15s ease" }}>{t}</button>;
         })}
         <button onClick={() => setActiveTraditions(new Set(ALL_TRADITIONS))} style={{ padding: "2px 8px", background: "transparent", color: mid, border: "none", fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", textDecoration: "underline" }}>All</button>
       </div>
