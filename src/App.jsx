@@ -56,17 +56,40 @@ function ErrorBox({ message, onRetry }) {
 }
 
 export default function TheologyAssistant() {
-  // Password gate - user must enter the app password before accessing
-  const [appPassword, setAppPassword] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
-  const [passwordError, setPasswordError] = useState(false);
+  // Welcome screen - show on first visit
+  const [showWelcome, setShowWelcome] = useState(() => {
+    return !localStorage.getItem("cacr-welcomed");
+  });
 
-  function submitPassword() {
-    if (passwordInput.trim()) {
-      setAppPassword(passwordInput.trim());
-      setPasswordError(false);
-    }
+  function enterApp() {
+    localStorage.setItem("cacr-welcomed", "true");
+    setShowWelcome(false);
   }
+
+  // AI query rate limiting (5 per day, client-side)
+  function getAIUsage() {
+    const stored = localStorage.getItem("cacr-ai-usage");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      const today = new Date().toDateString();
+      if (parsed.date === today) return parsed.count;
+    }
+    return 0;
+  }
+
+  function incrementAIUsage() {
+    const today = new Date().toDateString();
+    const current = getAIUsage();
+    localStorage.setItem("cacr-ai-usage", JSON.stringify({ date: today, count: current + 1 }));
+    setAiUsageCount(current + 1);
+  }
+
+  function canUseAI() {
+    return getAIUsage() < 5;
+  }
+
+  const [aiUsageCount, setAiUsageCount] = useState(() => getAIUsage());
+  const [aiLimitMessage, setAiLimitMessage] = useState("");
 
   const [mode, setMode] = useState("research");
   const [input, setInput] = useState("");
@@ -159,11 +182,16 @@ export default function TheologyAssistant() {
   async function getCommentary(confessionName, chapterTitle, sectionNumber, sectionText) {
     const key = confessionName + "-" + chapterTitle + "-" + sectionNumber;
     if (commentary[key]) return;
+    if (!canUseAI()) {
+      setAiLimitMessage("You've reached your daily limit of 5 AI queries. Your limit resets tomorrow.");
+      return;
+    }
     setCommentaryLoading(key);
     try {
       const prompt = "Provide a brief scholarly commentary (3-4 sentences) on this section from " + confessionName + ", " + chapterTitle + ": " + sectionText + " Note its historical context, theological significance, and how it relates to other traditions.";
-      const data = await callAPI({ max_tokens: 300, system: SYSTEM_PROMPT, messages: [{ role: "user", content: prompt }] }, appPassword);
+      const data = await callAPI({ max_tokens: 300, system: SYSTEM_PROMPT, messages: [{ role: "user", content: prompt }] });
       setCommentary(prev => ({ ...prev, [key]: extractText(data) }));
+      incrementAIUsage();
     } catch (e) {
       console.error(e);
       setCommentary(prev => ({ ...prev, [key]: { error: true, message: "Unable to load commentary. Please try again." } }));
@@ -175,18 +203,23 @@ export default function TheologyAssistant() {
 
   async function askQuestion() {
     if (!input.trim()) return;
+    if (!canUseAI()) {
+      setAiLimitMessage("You've reached your daily limit of 5 AI queries. Your limit resets tomorrow.");
+      return;
+    }
     const userMessage = { role: "user", content: input };
     const updated = [...messages, userMessage];
     const question = input;
     setMessages(updated); setInput(""); setLoading(true); setCitationsLoading(true); setCitations([]);
     try {
       const [ad, cd] = await Promise.all([
-        callAPI({ max_tokens: 1000, system: SYSTEM_PROMPT, messages: updated }, appPassword),
-        callAPI({ max_tokens: 1000, system: CITATION_PROMPT, messages: [{ role: "user", content: question }] }, appPassword),
+        callAPI({ max_tokens: 1000, system: SYSTEM_PROMPT, messages: updated }),
+        callAPI({ max_tokens: 1000, system: CITATION_PROMPT, messages: [{ role: "user", content: question }] }),
       ]);
       const answer = extractText(ad);
       setMessages([...updated, { role: "assistant", content: answer, question }]);
       try { setCitations(parseCitations(extractText(cd))); } catch { setCitations([]); }
+      incrementAIUsage();
     } catch (e) {
       console.error(e);
       setMessages([...updated, { role: "assistant", content: "Unable to reach the AI service. Please try again.", isError: true }]);
@@ -196,13 +229,18 @@ export default function TheologyAssistant() {
 
   async function runComparison() {
     if (!compareInput.trim()) return;
+    if (!canUseAI()) {
+      setAiLimitMessage("You've reached your daily limit of 5 AI queries. Your limit resets tomorrow.");
+      return;
+    }
     setCompareLoading(true); setComparisonData(null); setCompareError(null);
     try {
-      const data = await callAPI({ max_tokens: 1500, system: COMPARISON_PROMPT, messages: [{ role: "user", content: compareInput }] }, appPassword);
+      const data = await callAPI({ max_tokens: 1500, system: COMPARISON_PROMPT, messages: [{ role: "user", content: compareInput }] });
       const text = extractText(data);
       const parsed = parseComparison(text);
       if (!parsed.topic || parsed.rows.length === 0) throw new Error("Could not parse response. Please try again.");
       setComparisonData(parsed);
+      incrementAIUsage();
     } catch (e) { console.error(e); setCompareError(e.message || "Unknown error."); }
     finally { setCompareLoading(false); }
   }
@@ -216,32 +254,31 @@ export default function TheologyAssistant() {
 
   const confessionNames = Object.keys(CONFESSIONS);
 
-  // Show password screen if not yet authenticated
-  if (!appPassword) {
-    const gold = "#c9a84c";
-    const dark = "#2c2416";
-    const cream = "#faf8f4";
-    const border = "#d4c4a0";
+  // Show welcome screen on first visit
+  if (showWelcome) {
     return (
       <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: cream }}>
-        <div style={{ width: 360, padding: "40px 36px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: "bold", color: dark, marginBottom: 6 }}>Confession and Catechism Research</div>
-          <div style={{ fontSize: 11, color: gold, letterSpacing: 2, textTransform: "uppercase", marginBottom: 28 }}>Beta Access</div>
-          <div style={{ fontSize: 14, color: "#5a4a2a", marginBottom: 20 }}>Enter your access password to continue</div>
-          <input
-            type="password"
-            style={{ width: "100%", padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + (passwordError ? "#cc4444" : border), borderRadius: 8, outline: "none", color: dark, boxSizing: "border-box", marginBottom: 10 }}
-            value={passwordInput}
-            onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false); }}
-            onKeyDown={(e) => { if (e.key === "Enter") submitPassword(); }}
-            placeholder="Password"
-            autoFocus
-          />
-          {passwordError && <div style={{ fontSize: 12, color: "#cc4444", marginBottom: 10 }}>Incorrect password. Please try again.</div>}
+        <div style={{ maxWidth: 520, padding: "48px 44px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
+          <div style={{ fontSize: 24, fontWeight: "bold", color: dark, marginBottom: 16 }}>Confession and Catechism Research</div>
+          <p style={{ fontSize: 14, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 28 }}>
+            Explore the historic confessions and catechisms of the Christian church. Compare what Reformed, Lutheran, Baptist, Anglican, Orthodox, and Catholic traditions teach on key doctrines — with AI-powered research and commentary.
+          </p>
+          <div style={{ textAlign: "left", marginBottom: 32 }}>
+            {[
+              { label: "Browse", desc: "Read the full texts of the Westminster Confession, Heidelberg Catechism, Augsburg Confession, 1689 Baptist Confession, 39 Articles, and more." },
+              { label: "Compare", desc: "See how different traditions approach baptism, justification, the Lord\u2019s Supper, and other doctrines side by side." },
+              { label: "Research", desc: "Ask any theological question and receive AI-powered answers grounded in confessional texts." },
+            ].map(({ label, desc }) => (
+              <div key={label} style={{ marginBottom: 16, paddingLeft: 20, borderLeft: "3px solid " + gold }}>
+                <div style={{ fontSize: 14, fontWeight: "bold", color: dark, marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.7 }}>{desc}</div>
+              </div>
+            ))}
+          </div>
           <button
-            onClick={submitPassword}
-            style={{ width: "100%", padding: "10px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>
-            Enter
+            onClick={enterApp}
+            style={{ width: "100%", padding: "12px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 16, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+            Start Exploring
           </button>
         </div>
       </div>
@@ -259,7 +296,7 @@ export default function TheologyAssistant() {
           <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>Confession and Catechism Research</div>
           <div style={{ fontSize: 10, color: gold, letterSpacing: 2, textTransform: "uppercase" }}>Westminster · Heidelberg · Augsburg · 1689 Baptist · Nicene · Orthodox · 39 Articles</div>
         </div>
-        <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
           {[
             { key: "research", label: "Research" },
             { key: "compare", label: "Compare" },
@@ -270,6 +307,7 @@ export default function TheologyAssistant() {
               {label}
             </button>
           ))}
+          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{Math.max(0, 5 - aiUsageCount)} of 5 AI queries remaining today</span>
         </div>
       </div>
 
@@ -283,6 +321,14 @@ export default function TheologyAssistant() {
         })}
         <button onClick={() => setActiveTraditions(new Set(ALL_TRADITIONS))} style={{ padding: "2px 8px", background: "transparent", color: mid, border: "none", fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", textDecoration: "underline" }}>All</button>
       </div>
+
+      {/* AI limit notification */}
+      {aiLimitMessage && (
+        <div style={{ padding: "10px 24px", background: "#fdf6e3", borderBottom: "1px solid #e8d9a0", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <span style={{ fontSize: 13, color: "#7a6a3a", lineHeight: 1.5 }}>{aiLimitMessage}</span>
+          <button onClick={() => setAiLimitMessage("")} style={{ background: "transparent", border: "none", color: "#a09070", fontSize: 16, cursor: "pointer", padding: "0 4px", fontFamily: "Georgia, serif" }}>×</button>
+        </div>
+      )}
 
       {/* RESEARCH MODE */}
       {mode === "research" && (
