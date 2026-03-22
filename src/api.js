@@ -1,8 +1,8 @@
-export async function callAPI(body, password) {
+export async function callAPI(body) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, password }),
+    body: JSON.stringify(body),
   });
   return res.json();
 }

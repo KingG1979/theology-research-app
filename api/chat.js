@@ -10,11 +10,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Check the app password
-  const { password, system, messages, max_tokens } = req.body;
-  if (password !== process.env.APP_PASSWORD) {
-    return res.status(401).json({ error: "Incorrect password" });
-  }
+  const { system, messages, max_tokens } = req.body;
 
   // Forward the request to OpenAI using your secret API key
   try {
