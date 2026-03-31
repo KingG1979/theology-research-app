@@ -66,7 +66,17 @@ export default function TheologyAssistant() {
     setShowWelcome(false);
   }
 
-  // AI query rate limiting (5 per day, client-side)
+  // VIP access via ?vip=blessed URL parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("vip") === "blessed") {
+      sessionStorage.setItem("cacr-vip", "true");
+    }
+  }, []);
+
+  const isVip = sessionStorage.getItem("cacr-vip") === "true";
+
+  // AI query rate limiting (7 per day, client-side)
   function getAIUsage() {
     const stored = localStorage.getItem("cacr-ai-usage");
     if (stored) {
@@ -85,7 +95,8 @@ export default function TheologyAssistant() {
   }
 
   function canUseAI() {
-    return getAIUsage() < 5;
+    if (isVip) return true;
+    return getAIUsage() < 7;
   }
 
   const [aiUsageCount, setAiUsageCount] = useState(() => getAIUsage());
@@ -183,7 +194,7 @@ export default function TheologyAssistant() {
     const key = confessionName + "-" + chapterTitle + "-" + sectionNumber;
     if (commentary[key]) return;
     if (!canUseAI()) {
-      setAiLimitMessage("You've reached your daily limit of 5 AI queries. Your limit resets tomorrow.");
+      setAiLimitMessage("You've reached your daily limit of 7 AI queries. Your limit resets tomorrow.");
       return;
     }
     setCommentaryLoading(key);
@@ -204,7 +215,7 @@ export default function TheologyAssistant() {
   async function askQuestion() {
     if (!input.trim()) return;
     if (!canUseAI()) {
-      setAiLimitMessage("You've reached your daily limit of 5 AI queries. Your limit resets tomorrow.");
+      setAiLimitMessage("You've reached your daily limit of 7 AI queries. Your limit resets tomorrow.");
       return;
     }
     const userMessage = { role: "user", content: input };
@@ -230,7 +241,7 @@ export default function TheologyAssistant() {
   async function runComparison() {
     if (!compareInput.trim()) return;
     if (!canUseAI()) {
-      setAiLimitMessage("You've reached your daily limit of 5 AI queries. Your limit resets tomorrow.");
+      setAiLimitMessage("You've reached your daily limit of 7 AI queries. Your limit resets tomorrow.");
       return;
     }
     setCompareLoading(true); setComparisonData(null); setCompareError(null);
@@ -307,7 +318,7 @@ export default function TheologyAssistant() {
               {label}
             </button>
           ))}
-          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{Math.max(0, 5 - aiUsageCount)} of 5 AI queries remaining today</span>
+          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{isVip ? "Unlimited" : Math.max(0, 7 - aiUsageCount) + " of 7 AI queries remaining today"}</span>
         </div>
       </div>
 
