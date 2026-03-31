@@ -495,7 +495,7 @@ export default function TheologyAssistant() {
             {!selectedConfession && (
               <div style={{ textAlign: "center", padding: "60px 20px", color: mid }}>
                 <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Browse the Source Texts</p>
-                <p style={{ fontSize: 13, lineHeight: 1.7 }}>Select a confession from the left to read the original text. Click any section to get AI commentary on its historical context and theological significance.</p>
+                <p style={{ fontSize: 13, lineHeight: 1.7 }}>Select a document from the left to read the original text. Click any section to get AI commentary on its historical context and theological significance.</p>
               </div>
             )}
             {selectedConfession && !selectedChapter === true && selectedChapter !== 0 && (
