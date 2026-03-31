@@ -1418,6 +1418,188 @@ export const CONFESSIONS = {
       },
     ]
   },
+  "Apostles' Creed": {
+    tradition: "Ecumenical",
+    year: "c. 4th century",
+    chapters: [
+      {
+        number: 1,
+        title: "The Creed",
+        sections: [
+          { number: 1, text: "I believe in God, the Father almighty, creator of heaven and earth." },
+          { number: 2, text: "I believe in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died, and was buried; he descended to hell." },
+          { number: 3, text: "The third day he rose again from the dead. He ascended to heaven and is seated at the right hand of God the Father almighty. From there he will come to judge the living and the dead." },
+          { number: 4, text: "I believe in the Holy Spirit, the holy catholic church, the communion of saints, the forgiveness of sins, the resurrection of the body, and the life everlasting. Amen." },
+        ]
+      },
+    ]
+  },
+  "Athanasian Creed": {
+    tradition: "Ecumenical",
+    year: "c. 5th century",
+    chapters: [
+      {
+        number: 1,
+        title: "On the Trinity",
+        sections: [
+          { number: 1, text: "Whosoever will be saved, before all things it is necessary that he hold the catholic faith; which faith except every one do keep whole and undefiled, without doubt he shall perish everlastingly." },
+          { number: 2, text: "And the catholic faith is this: That we worship one God in Trinity, and Trinity in Unity; neither confounding the persons nor dividing the substance." },
+          { number: 3, text: "For there is one person of the Father, another of the Son, and another of the Holy Spirit." },
+          { number: 4, text: "But the Godhead of the Father, of the Son, and of the Holy Spirit is all one, the glory equal, the majesty coeternal." },
+          { number: 5, text: "Such as the Father is, such is the Son, and such is the Holy Spirit." },
+          { number: 6, text: "The Father uncreated, the Son uncreated, and the Holy Spirit uncreated." },
+          { number: 7, text: "The Father incomprehensible, the Son incomprehensible, and the Holy Spirit incomprehensible." },
+          { number: 8, text: "The Father eternal, the Son eternal, and the Holy Spirit eternal." },
+          { number: 9, text: "And yet they are not three eternals but one eternal." },
+          { number: 10, text: "As also there are not three uncreated nor three incomprehensible, but one uncreated and one incomprehensible." },
+          { number: 11, text: "So likewise the Father is almighty, the Son almighty, and the Holy Spirit almighty." },
+          { number: 12, text: "And yet they are not three almighties, but one almighty." },
+          { number: 13, text: "So the Father is God, the Son is God, and the Holy Spirit is God;" },
+          { number: 14, text: "And yet they are not three Gods, but one God." },
+          { number: 15, text: "So likewise the Father is Lord, the Son Lord, and the Holy Spirit Lord;" },
+          { number: 16, text: "And yet they are not three Lords but one Lord." },
+          { number: 17, text: "For like as we are compelled by the Christian verity to acknowledge every Person by himself to be God and Lord; so are we forbidden by the catholic religion to say there are three Gods or three Lords." },
+          { number: 18, text: "The Father is made of none, neither created nor begotten." },
+          { number: 19, text: "The Son is of the Father alone; not made nor created, but begotten." },
+          { number: 20, text: "The Holy Spirit is of the Father and of the Son; neither made, nor created, nor begotten, but proceeding." },
+          { number: 21, text: "So there is one Father, not three Fathers; one Son, not three Sons; one Holy Spirit, not three Holy Spirits." },
+          { number: 22, text: "And in this Trinity none is afore or after another; none is greater or less than another." },
+          { number: 23, text: "But the whole three persons are coeternal, and coequal." },
+          { number: 24, text: "So that in all things, as aforesaid, the Unity in Trinity and the Trinity in Unity is to be worshipped." },
+          { number: 25, text: "He therefore that will be saved must thus think of the Trinity." },
+        ]
+      },
+      {
+        number: 2,
+        title: "On the Incarnation",
+        sections: [
+          { number: 26, text: "Furthermore it is necessary to everlasting salvation that he also believe rightly the incarnation of our Lord Jesus Christ." },
+          { number: 27, text: "For the right faith is that we believe and confess that our Lord Jesus Christ, the Son of God, is God and man." },
+          { number: 28, text: "God of the substance of the Father, begotten before the worlds; and man of substance of his mother, born in the world." },
+          { number: 29, text: "Perfect God and perfect man, of a reasonable soul and human flesh subsisting." },
+          { number: 30, text: "Equal to the Father as touching his Godhead, and inferior to the Father as touching his manhood." },
+          { number: 31, text: "Who, although he is God and man, yet he is not two, but one Christ." },
+          { number: 32, text: "One, not by conversion of the Godhead into flesh, but by taking of that manhood into God." },
+          { number: 33, text: "One altogether, not by confusion of substance, but by unity of person." },
+          { number: 34, text: "For as the reasonable soul and flesh is one man, so God and man is one Christ;" },
+          { number: 35, text: "Who suffered for our salvation, descended into hell, rose again the third day from the dead;" },
+          { number: 36, text: "He ascended into heaven, he sitteth on the right hand of the Father, God, Almighty;" },
+          { number: 37, text: "From thence he shall come to judge the quick and the dead." },
+          { number: 38, text: "At whose coming all men shall rise again with their bodies;" },
+          { number: 39, text: "And shall give account of their own works." },
+          { number: 40, text: "And they that have done good shall go into life everlasting and they that have done evil into everlasting fire." },
+          { number: 41, text: "This is the catholic faith, which except a man believe faithfully he cannot be saved." },
+        ]
+      },
+    ]
+  },
+  "Definition of Chalcedon": {
+    tradition: "Ecumenical",
+    year: "451",
+    chapters: [
+      {
+        number: 1,
+        title: "The Definition of Faith",
+        sections: [
+          { number: 1, text: "Following, then, the holy Fathers, we all unanimously teach that our Lord Jesus Christ is to us one and the same Son, the self-same perfect in Godhead, the self-same perfect in manhood; truly God and truly man; the self-same of a rational soul and body; consubstantial with the Father according to the Godhead, the self-same consubstantial with us according to the manhood; like us in all things, sin apart;" },
+          { number: 2, text: "before the ages begotten of the Father as to the Godhead, but in the last days, the self-same, for us and for our salvation born of Mary the Virgin Theotokos as to the manhood;" },
+          { number: 3, text: "one and the same Christ, Son, Lord, Only-begotten, made known in two natures without confusion, without change, without division, without separation; the difference of the natures being in no way removed because of the union, but rather the properties of each nature being preserved, and both concurring into one person and one subsistence — not parted or divided into two persons, but one and the same Son and Only-begotten God, Word, Lord, Jesus Christ;" },
+          { number: 4, text: "even as the Prophets from the beginning spoke concerning him, and our Lord Jesus Christ himself taught us, and the Symbol of the Fathers has handed down to us." },
+        ]
+      },
+    ]
+  },
+  "First Council of Constantinople — Canons": {
+    tradition: "Ecumenical",
+    year: "381",
+    chapters: [
+      {
+        number: 1,
+        title: "The Four Canons",
+        sections: [
+          { number: 1, text: "Canon I. The Faith of the Three Hundred and Eighteen Fathers assembled at Nicaea in Bithynia shall not be set aside, but shall remain firm. And every heresy shall be anathematized, particularly that of the Eunomians or Anomoeans, the Arians or Eudoxians, the Semi-Arians or Pneumatomachi, the Sabellians, the Marcellians, the Photinians, and the Apollinarians." },
+          { number: 2, text: "Canon II. The bishops are not to go beyond their dioceses to churches lying outside of their bounds, nor bring confusion on the churches; but let the Bishop of Alexandria, according to the canons, alone administer the affairs of Egypt; and let the bishops of the East manage the East alone, the privileges of the Church in Antioch, which are mentioned in the canons of Nicaea, being preserved; and let the bishops of the Asian Diocese administer the Asian affairs only; and the Pontic bishops only Pontic matters; and the Thracian bishops only Thracian affairs. And let not bishops go beyond their dioceses for ordination or any other ecclesiastical ministrations, unless they be invited. And the aforesaid canon concerning dioceses being observed, it is evident that the synod of every province will administer the affairs of that particular province as was decreed at Nicaea. But the Churches of God in heathen nations must be governed according to the custom which has prevailed from the times of the Fathers." },
+          { number: 3, text: "Canon III. The Bishop of Constantinople, however, shall have the prerogative of honour after the Bishop of Rome; because Constantinople is New Rome." },
+          { number: 4, text: "Canon IV. Concerning Maximus the Cynic and the disorder which has happened in Constantinople on his account: Maximus neither was nor is a bishop; neither are any of those ordained by him in any rank of the clergy. All that has been done concerning him, or by him, is declared void." },
+        ]
+      },
+    ]
+  },
+  "Second Council of Constantinople — Anathemas": {
+    tradition: "Ecumenical",
+    year: "553",
+    chapters: [
+      {
+        number: 1,
+        title: "Anathemas I–VII",
+        sections: [
+          { number: 1, text: "I. If anyone will not confess that the Father, Son, and Holy Spirit have one nature or substance, that they have one power and authority, that there is a consubstantial Trinity, one Deity to be adored in three subsistences or persons: let him be anathema. For there is one God and Father, from whom are all things, and one Lord Jesus Christ, through whom are all things, and one Holy Spirit, in whom are all things." },
+          { number: 2, text: "II. If anyone will not confess that the Word of God has two nativities, that which is before all ages from the Father, outside time and without a body, and secondly that nativity of these latter days when the Word of God came down from the heavens and was made flesh of holy and glorious Mary, Mother of God and ever-virgin, and was born from her: let him be anathema." },
+          { number: 3, text: "III. If anyone says that the wonder-working Word of God is one person and the Christ that suffered another, or says that God the Word was with the woman-born Christ, or was in him as one person in another, but that he was not one and the same our Lord Jesus Christ, the Word of God, incarnate and made man, and that his miracles and the sufferings which of his own will he underwent in the flesh were not of the same person: let him be anathema." },
+          { number: 4, text: "IV. If anyone says that the union of the Word of God to man was only according to grace or energy, or dignity, or equality of honour, or authority, or relation, or effect, or power, or according to good pleasure, as if God the Word was pleased with man, or approved of him, as the madman Theodore says; or that the union exists according to likeness of name, by which the Nestorians call the Word of God Jesus and Christ, designating the man separately as Christ and as Son, speaking thus clearly of two persons, and only by reason of honour, dignity, and adoration using the pretence of one person and one Christ: let him be anathema." },
+          { number: 5, text: "V. If anyone says that the holy, glorious, and ever-virgin Mary is called God-bearer by misuse of language and not truly, or by analogy, as though a mere man was born and not the Word of God made flesh, the birth of a man being referred, as they say, to God the Word as he was with the man who was being born; and if anyone shall slander the Holy Synod of Chalcedon, as though it called the Virgin the God-bearer according to the impious sense of Theodore; or if anyone shall call her man-bearer or Christ-bearer, as if Christ were not God: let him be anathema." },
+          { number: 6, text: "VI. If anyone says that the holy, glorious, and ever-virgin Mary is the mother of God in name only and not in truth, or by analogy only, meaning that merely a man was born and not God the Word incarnate, and asserting that the man was referred to the Word because the Word was with him when born — and if anyone slanders the holy Council of Chalcedon as calling the Virgin Mother of God in the impious sense of Theodore — or if anyone calls her mother of a man or mother of Christ, meaning that Christ is not God: let him be anathema." },
+          { number: 7, text: "VII. If anyone using the expression 'in two natures' does not confess that our one Lord Jesus Christ is made known in the divinity and in the humanity, so as to indicate by that expression a difference of the natures of which the ineffable union is unconfusedly made, a union in which neither the nature of the Word was changed into the nature of the flesh, nor that of the flesh into that of the Word, for each remained that it was by nature, the union being hypostatic; but shall take the expression with regard to the mystery of Christ in a sense so as to divide the parties: let him be anathema." },
+        ]
+      },
+      {
+        number: 2,
+        title: "Anathemas VIII–XIV",
+        sections: [
+          { number: 8, text: "VIII. If anyone uses the expression 'of two natures' confessing that a union was made of the Godhead and of the humanity, or the expression 'the one nature made flesh of God the Word,' and shall not so understand those expressions as the holy Fathers have taught, to wit: that from the divine and human natures a union was made according to subsistence, and that one Christ was formed; but from these expressions shall try to introduce one nature or substance of the Godhead and manhood of Christ: let him be anathema. For in teaching that the only-begotten Word was united according to subsistence we do not mean to say that there was made a mutual confusion of natures, but rather each of the two remained what it was, and we understand that the Word was united to the flesh." },
+          { number: 9, text: "IX. If anyone shall take the expression 'Christ ought to be worshipped in his two natures' in the sense that he wishes to introduce thus two adorations, the one in special relation to God the Word and the other as pertaining to man; or if anyone shall try to get rid of the flesh, or shall confuse the divine and human natures, asserting that there is but one nature or essence of them that are united, and so shall worship Christ, and shall not venerate, by one adoration, God the Word made man together with his flesh, as the Holy Church has from the beginning taught: let him be anathema." },
+          { number: 10, text: "X. If anyone does not confess that our Lord Jesus Christ who was crucified in the flesh is true God and the Lord of Glory and one of the Holy Trinity: let him be anathema." },
+          { number: 11, text: "XI. If anyone does not anathematize Arius, Eunomius, Macedonius, Apollinaris, Nestorius, Eutyches, and Origen, as well as their impious writings, as also all other heretics already condemned and anathematized by the Holy Catholic and Apostolic Church, and by the aforesaid four Holy Synods, and also all those who have held and hold or who in their impiety persist in holding to the end the same opinion as those heretics just mentioned: let him be anathema." },
+          { number: 12, text: "XII. If anyone defends the impious Theodore of Mopsuestia, who has said that the Word of God is one person, but that another person is Christ who was troubled by the passions of the soul and the desires of human flesh, was gradually set free from inferior things, and became better by his progress in good works, and could not be faulted in his way of life, and as a mere man was baptized in the name of the Father, Son, and Holy Spirit, and through his baptism received the grace of the Holy Spirit, and came to be deemed worthy of divine sonship; and that he is venerated, after the manner of an image of the emperor, as one person of God the Word, and that the said Theodore said that the union of God the Word with Christ is like to that which, according to the Apostle, is between a man and his wife, 'the two shall be in one flesh'; and if anyone defends his most impious writings, and does not anathematize him and these writings as well as all who accept or vindicate him, or who say that he expounded the faith correctly, and those who write or have written in favour of him and his impious works: let him be anathema." },
+          { number: 13, text: "XIII. If anyone shall defend the impious writings of Theodoret, directed against the true faith and against the first holy Synod of Ephesus and against Saint Cyril and his Twelve Chapters, and all that he wrote in defence of the impious Theodore and Nestorius, and others of the same mind as the aforesaid Theodore and Nestorius, accepting them and their impiety, and on their account calls impious the doctors of the Church who confess the union of God the Word according to subsistence; and if anyone does not anathematize these impious writings and those who have held or do hold sentiments like those contained therein, and all who have written or write against the true faith, or against Saint Cyril and his twelve Chapters, and who die in their impiety: let him be anathema." },
+          { number: 14, text: "XIV. If anyone shall defend the letter which Ibas is said to have written to Maris the Persian, which denies that the Word of God incarnate of the Holy God-bearer and ever-virgin Mary became man, but says that a mere man was born of her whom it calls a Temple, as if the Word of God were one person and the man another; which condemns Saint Cyril as a heretic, when he gives the true doctrine of Christians; and accuses Saint Cyril of holding the opinions of the impious Apollinaris; which rebukes the first Synod of Ephesus as having deposed Nestorius without examination; and calls the twelve Chapters of Saint Cyril impious and contrary to the right faith; and defends Theodore and Nestorius and their impious teachings and writings: if anyone, I say, shall defend the said letter and shall not anathematize it and all who defend and justify it, or who say that it or any part of it is correct, and those who write and have written in favour of it or of the impieties contained in it, and who dare to justify it or the impieties contained in it in the name of the Holy Fathers or of the Holy Synod of Chalcedon, and shall persist therein until the end: let him be anathema." },
+        ]
+      },
+    ]
+  },
+  "Third Council of Constantinople — Definition of Faith": {
+    tradition: "Ecumenical",
+    year: "681",
+    chapters: [
+      {
+        number: 1,
+        title: "Preamble",
+        sections: [
+          { number: 1, text: "The holy, great, and ecumenical synod, which has been assembled by the grace of God and the command of our most pious and faithful great emperor Constantine, in this God-protected and royal city of Constantinople, New Rome, in the hall of the imperial palace called Trullus, has decreed as follows:" },
+          { number: 2, text: "The only-begotten Son and Word of God the Father, who became man in all things like us without sin, Christ our true God, having declared expressly in the words of the Gospel, 'I am the light of the world; he that followeth me shall not walk in darkness, but shall have the light of life;' and again, 'My peace I leave with you, my peace I give unto you:' Our most gentle lord, guided by this teaching of peace, and having assembled this our holy and ecumenical assembly, has united the whole judgment of the Church." },
+        ]
+      },
+      {
+        number: 2,
+        title: "Affirmation of Previous Councils",
+        sections: [
+          { number: 3, text: "Wherefore this present holy and ecumenical synod, faithfully receiving and welcoming with open hands the report of Agatho, most holy and most blessed pope of ancient Rome, which came to our most serene and most faithful lord, the great emperor Constantine, which cast out by name those who taught or preached one will and one operation in the dispensation of the incarnation of our Lord Jesus Christ our true God; and in like manner having received the other synodal letter of the holy synod of one hundred and twenty-five bishops assembled under the same most holy pope, reached the same conclusions as Pope Agatho." },
+          { number: 4, text: "Therefore, following the five holy ecumenical councils and the holy and accepted Fathers, with one voice defining, we confess our Lord Jesus Christ our true God, one of the Holy Trinity, even after the incarnation, and declare that his two natures shone forth in his one subsistence." },
+        ]
+      },
+      {
+        number: 3,
+        title: "The Definition Concerning the Two Wills and Two Energies",
+        sections: [
+          { number: 5, text: "And we proclaim equally two natural volitions or wills in him and two natural principles of action which undergo no division, no change, no partition, no confusion, in accordance with the teaching of the holy Fathers. And the two natural wills are not contrary the one to the other — God forbid — as the impious heretics assert, but his human will follows and that not as resisting and reluctant, but rather as subject to his divine and omnipotent will." },
+          { number: 6, text: "For it was right that the flesh should be moved but subject to the divine will, according to the most wise Athanasius. For as his flesh is called and is the flesh of God the Word, so also the natural will of his flesh is called and is the proper will of God the Word, as he himself says: 'I came down from heaven, not that I might do mine own will but the will of the Father which sent me;' where he calls his own will the will of his flesh, inasmuch as his flesh also became his own." },
+          { number: 7, text: "For as his most holy and immaculate animated flesh was not destroyed because it was deified but continued in its own state and nature, so also his human will, although deified, was not suppressed, but was rather preserved according to the saying of Gregory the Theologian: 'His will, the will of the one who is conceived as Saviour, is not contrary to God but altogether deified.'" },
+          { number: 8, text: "We glorify two natural operations indivisibly, immutably, inconfusedly, inseparably in the same our Lord Jesus Christ our true God, that is to say a divine operation and a human operation, according to the divine preacher Leo, who most distinctly asserts: 'For each form does in communion with the other what pertains properly to it; the Word, namely, performing what pertains to the Word, and the flesh carrying out what pertains to the flesh.'" },
+          { number: 9, text: "For we will not admit one natural operation in God and in the creature, as we will not exalt into the divine essence what is created, nor will we bring down the glory of the divine nature to the place suited to the creature." },
+          { number: 10, text: "We recognize the miracles and the sufferings as of one and the same person, but of one or of the other nature of which he is and in which he has his being, as Cyril admirably says." },
+        ]
+      },
+      {
+        number: 4,
+        title: "Condemnation and Conclusion",
+        sections: [
+          { number: 11, text: "Preserving therefore in every way the unconfused and undivided, we set forth the whole confession in brief: We believe our Lord Jesus Christ, even after the incarnation, to be one of the Holy Trinity; declaring that each of his natures has its own natural property, and that these come together and are united in one person and one subsistence, not divided or separated into two persons, but one and the same only-begotten Son, the divine Word, the Lord Jesus Christ; as the prophets of old and Jesus Christ himself have taught us, and as the creed of the holy Fathers has delivered to us." },
+          { number: 12, text: "And we define that there are in him two natural wills and two natural operations, indivisibly, inconvertibly, inseparably, inconfusedly, according to the teaching of the holy Fathers; and that his two natural wills are not contrary the one to the other, as the impious heretics say, but his human will is compliant and not resistant or reluctant, but rather submissive to his divine and omnipotent will." },
+          { number: 13, text: "These things having been defined with all precision by us and with all care, we declare that it is not permitted to anyone to bring forward, or to write, or to compose, or to think, or to teach a different faith. Whosoever shall presume to compose a different faith, or to introduce or offer or teach or deliver a different creed to those who wish to turn to the knowledge of the truth, whether from Hellenism or Judaism, or from any heresy whatever: if they be bishops or clerics, the bishops shall be deposed, the clerics degraded; if they be monks or laity they shall be anathematized." },
+        ]
+      },
+    ]
+  },
   "Longer Catechism (Orthodox)": {
     tradition: "Orthodox",
     year: "1839",

@@ -259,7 +259,7 @@ export default function TheologyAssistant() {
     return (
       <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: cream }}>
         <div style={{ maxWidth: 520, padding: "48px 44px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
-          <div style={{ fontSize: 24, fontWeight: "bold", color: dark, marginBottom: 16 }}>Confession and Catechism Research</div>
+          <div style={{ fontSize: 24, fontWeight: "bold", color: dark, marginBottom: 16 }}>Creeds, Confessions and Catechism Research</div>
           <p style={{ fontSize: 14, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 28 }}>
             Explore the historic confessions and catechisms of the Christian church. Compare what Reformed, Lutheran, Baptist, Anglican, Orthodox, and Catholic traditions teach on key doctrines — with AI-powered research and commentary.
           </p>
@@ -293,7 +293,7 @@ export default function TheologyAssistant() {
       {/* Header */}
       <div className="header-wrap" style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 24px", background: dark, flexShrink: 0 }}>
         <div className="header-title" style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>Confession and Catechism Research</div>
+          <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>Creeds, Confessions and Catechism Research</div>
           <div style={{ fontSize: 10, color: gold, letterSpacing: 2, textTransform: "uppercase" }}>Westminster · Heidelberg · Augsburg · 1689 Baptist · Nicene · Orthodox · 39 Articles</div>
         </div>
         <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
