@@ -468,6 +468,7 @@ export default function TheologyAssistant() {
                 <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); }} style={{ padding: "10px 14px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "3px solid " + c.border : "3px solid transparent" }}>
                   <div style={{ fontSize: 12, fontWeight: "bold", color: active ? c.text : dark, lineHeight: 1.4 }}>{name}</div>
                   <div style={{ fontSize: 10, color: mid, marginTop: 2 }}>{conf.tradition} - {conf.year}</div>
+                  {name === "Roman Catechism" && <div style={{ fontSize: 10, fontStyle: "italic", color: "#a09070", marginTop: 4, paddingLeft: 6, lineHeight: 1.3 }}>AI responses may also reference the modern Catechism (1992) where teaching has developed.</div>}
                 </div>
               );
             })}
