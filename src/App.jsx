@@ -494,7 +494,7 @@ export default function TheologyAssistant() {
           <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
             {!selectedConfession && (
               <div style={{ textAlign: "center", padding: "60px 20px", color: mid }}>
-                <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Browse the Confession Texts</p>
+                <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Browse the Source Texts</p>
                 <p style={{ fontSize: 13, lineHeight: 1.7 }}>Select a confession from the left to read the original text. Click any section to get AI commentary on its historical context and theological significance.</p>
               </div>
             )}
