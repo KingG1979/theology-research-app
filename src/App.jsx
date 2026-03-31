@@ -294,7 +294,7 @@ export default function TheologyAssistant() {
       <div className="header-wrap" style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 24px", background: dark, flexShrink: 0 }}>
         <div className="header-title" style={{ flex: 1 }}>
           <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>Creeds, Confessions and Catechism Research</div>
-          <div style={{ fontSize: 10, color: gold, letterSpacing: 2, textTransform: "uppercase" }}>Westminster · Heidelberg · Augsburg · 1689 Baptist · Nicene · Orthodox · 39 Articles</div>
+          <div style={{ fontSize: 10, color: gold, letterSpacing: 2, textTransform: "uppercase" }}>Ecumenical Creeds · Westminster · Heidelberg · Augsburg · 1689 Baptist · Orthodox · 39 Articles</div>
         </div>
         <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
           {[
