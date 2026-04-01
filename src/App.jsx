@@ -3,6 +3,7 @@ import { ALL_TRADITIONS, COLORS, CONFESSIONS } from "./data/confessions";
 import { SYSTEM_PROMPT, CITATION_PROMPT, COMPARISON_PROMPT } from "./prompts";
 import { callAPI, extractText } from "./api";
 import { parseCitations, parseComparison } from "./utils/parsers";
+import { supabase } from "./supabase";
 
 const pulseKeyframes = `
 @keyframes pulse {
@@ -55,7 +56,169 @@ function ErrorBox({ message, onRetry }) {
   );
 }
 
+function AuthScreen({ onSuccess }) {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const gold = "#c9a84c";
+  const dark = "#2c2416";
+  const cream = "#faf8f4";
+  const border = "#d4c4a0";
+  const mid = "#8a7a5a";
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const { error: authError } = isSignUp
+        ? await supabase.auth.signUp({ email, password })
+        : await supabase.auth.signInWithPassword({ email, password });
+      if (authError) throw authError;
+      if (isSignUp) {
+        setError("Check your email to confirm your account, then sign in.");
+        setIsSignUp(false);
+        setPassword("");
+      }
+    } catch (err) {
+      setError(err.message || "Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError("");
+    try {
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (authError) throw authError;
+    } catch (err) {
+      setError(err.message || "Google Sign-In is not configured yet. Please use email/password.");
+    }
+  }
+
+  return (
+    <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: cream }}>
+      <div style={{ maxWidth: 400, width: "100%", padding: "40px 36px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
+        <div style={{ fontSize: 22, fontWeight: "bold", color: dark, marginBottom: 6 }}>
+          {isSignUp ? "Create Account" : "Sign In"}
+        </div>
+        <p style={{ fontSize: 13, color: mid, lineHeight: 1.6, marginBottom: 24 }}>
+          {isSignUp
+            ? "Create an account to access the research tools."
+            : "Sign in to access the research tools."}
+        </p>
+
+        <button
+          onClick={handleGoogleSignIn}
+          style={{
+            width: "100%", padding: "10px", background: "#fff", color: dark,
+            border: "1px solid " + border, borderRadius: 8, fontSize: 14,
+            cursor: "pointer", fontFamily: "Georgia, serif", marginBottom: 16,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#f5f0e8"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; }}
+        >
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Sign in with Google
+        </button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <div style={{ flex: 1, height: 1, background: border }} />
+          <span style={{ fontSize: 12, color: mid }}>or</span>
+          <div style={{ flex: 1, height: 1, background: border }} />
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email address"
+            required
+            style={{
+              width: "100%", padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif",
+              border: "1px solid " + border, borderRadius: 8, outline: "none", color: dark,
+              background: "#fff", marginBottom: 10, boxSizing: "border-box",
+            }}
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+            minLength={6}
+            style={{
+              width: "100%", padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif",
+              border: "1px solid " + border, borderRadius: 8, outline: "none", color: dark,
+              background: "#fff", marginBottom: 16, boxSizing: "border-box",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%", padding: "10px", background: loading ? border : gold, color: dark,
+              border: "none", borderRadius: 8, fontSize: 15, fontWeight: "bold",
+              cursor: loading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif",
+            }}
+          >
+            {loading ? "..." : isSignUp ? "Create Account" : "Sign In"}
+          </button>
+        </form>
+
+        {error && (
+          <div style={{
+            marginTop: 14, padding: "10px 14px", background: error.startsWith("Check your email") ? "#f0faf0" : "#fef2f2",
+            border: "1px solid " + (error.startsWith("Check your email") ? "#b4e8b4" : "#e8b4b4"),
+            borderRadius: 8, fontSize: 13,
+            color: error.startsWith("Check your email") ? "#2a6a2a" : "#7a2a2a", lineHeight: 1.5,
+          }}>
+            {error}
+          </div>
+        )}
+
+        <div style={{ marginTop: 18, fontSize: 13, color: mid }}>
+          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+          <button
+            onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
+            style={{
+              background: "none", border: "none", color: gold, fontFamily: "Georgia, serif",
+              fontSize: 13, cursor: "pointer", textDecoration: "underline", padding: 0,
+            }}
+          >
+            {isSignUp ? "Sign In" : "Sign Up"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TheologyAssistant() {
+  // Auth state
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Welcome screen - show on first visit
   const [showWelcome, setShowWelcome] = useState(() => {
     return !localStorage.getItem("cacr-welcomed");
@@ -65,6 +228,13 @@ export default function TheologyAssistant() {
     localStorage.setItem("cacr-welcomed", "true");
     setShowWelcome(false);
   }
+
+  const gold = "#c9a84c";
+  const dark = "#2c2416";
+  const cream = "#faf8f4";
+  const border = "#d4c4a0";
+  const mid = "#8a7a5a";
+  const light = "#f5f0e8";
 
   // VIP access via ?vip=blessed URL parameter
   useEffect(() => {
@@ -256,13 +426,6 @@ export default function TheologyAssistant() {
     finally { setCompareLoading(false); }
   }
 
-  const gold = "#c9a84c";
-  const dark = "#2c2416";
-  const cream = "#faf8f4";
-  const border = "#d4c4a0";
-  const mid = "#8a7a5a";
-  const light = "#f5f0e8";
-
   const confessionNames = Object.keys(CONFESSIONS);
 
   // Show welcome screen on first visit
@@ -295,6 +458,19 @@ export default function TheologyAssistant() {
       </div>
     );
   }
+  // Show auth screen if not logged in (after welcome screen)
+  if (authLoading) {
+    return (
+      <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: cream }}>
+        <LoadingDots text="Loading" color={mid} />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthScreen />;
+  }
+
   const currentConfession = selectedConfession ? CONFESSIONS[selectedConfession] : null;
   const currentChapter = selectedChapter !== null && currentConfession ? currentConfession.chapters[selectedChapter] : null;
 
@@ -319,6 +495,13 @@ export default function TheologyAssistant() {
             </button>
           ))}
           <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{isVip ? "Unlimited" : Math.max(0, 7 - aiUsageCount) + " of 7 AI queries remaining today"}</span>
+          <span style={{ fontSize: 10, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{session.user.email}</span>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            style={{ padding: "3px 10px", background: "transparent", color: "#a09070", border: "1px solid #a09070", borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 4, whiteSpace: "nowrap" }}
+          >
+            Sign Out
+          </button>
         </div>
       </div>
 
