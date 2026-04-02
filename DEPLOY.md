@@ -9,7 +9,7 @@ The whole process takes about 30-45 minutes the first time.
 
 - A free GitHub account (github.com)
 - A free Vercel account (vercel.com) - sign up with your GitHub account
-- Your Anthropic API key (console.anthropic.com)
+- Your OpenAI API key (platform.openai.com)
 - A password you want to use for Beta access
 
 ---
@@ -42,8 +42,8 @@ The whole process takes about 30-45 minutes the first time.
 5. Before clicking Deploy, click "Environment Variables"
 6. Add these two variables:
 
-   Name: ANTHROPIC_API_KEY
-   Value: (paste your Anthropic API key here)
+   Name: OPENAI_API_KEY
+   Value: (paste your OpenAI API key here)
 
    Name: APP_PASSWORD
    Value: (choose a password for your Beta testers)
@@ -80,8 +80,8 @@ No extra steps needed - GitHub and Vercel stay in sync automatically.
 
 - GitHub: Free
 - Vercel: Free for personal projects
-- Anthropic API: Pay per use. For a small Beta group doing research,
-  expect less than $5/month. You can set spending limits at console.anthropic.com
+- OpenAI API: Pay per use. For a small Beta group doing research,
+  expect less than $5/month. You can set spending limits at platform.openai.com
 
 ---
 
@@ -89,4 +89,4 @@ No extra steps needed - GitHub and Vercel stay in sync automatically.
 
 - Vercel shows you build logs - errors appear there in plain English
 - The most common issue is an environment variable name typo
-- Double-check ANTHROPIC_API_KEY and APP_PASSWORD are spelled exactly right
+- Double-check OPENAI_API_KEY and APP_PASSWORD are spelled exactly right

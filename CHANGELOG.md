@@ -2,6 +2,17 @@
 
 All notable changes to the Creeds, Confessions and Catechism Research app.
 
+## [2026-04-02]
+
+### Fixed
+
+- Corrected misleading Anthropic/Claude references in deployment docs and backend comments to correctly reference OpenAI (the actual API provider)
+
+### Added
+
+- SEO meta tags in index.html: description, keywords, canonical URL, Open Graph (og:title, og:description, og:type, og:url, og:site_name), and Twitter card tags
+- Welcome page now mentions "creeds" alongside confessions and catechisms
+
 ## [2026-03-31]
 
 ### Added

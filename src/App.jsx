@@ -435,7 +435,7 @@ export default function TheologyAssistant() {
         <div style={{ maxWidth: 520, padding: "48px 44px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
           <div style={{ fontSize: 24, fontWeight: "bold", color: dark, marginBottom: 16 }}>Creeds, Confessions and Catechism Research</div>
           <p style={{ fontSize: 14, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 28 }}>
-            Explore the historic confessions and catechisms of the Christian church. Compare what Reformed, Lutheran, Baptist, Anglican, Orthodox, and Catholic traditions teach on key doctrines — with AI-powered research and commentary.
+            Explore the historic creeds, confessions, and catechisms of the Christian church. Compare what Reformed, Lutheran, Baptist, Anglican, Orthodox, and Catholic traditions teach on key doctrines — with AI-powered research and commentary.
           </p>
           <div style={{ textAlign: "left", marginBottom: 32 }}>
             {[

@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     });
     const data = await response.json();
 
-    // Convert OpenAI response format to match Anthropic format
+    // Convert OpenAI response format to our expected format
     const text = data.choices?.[0]?.message?.content || "";
     return res.status(200).json({ content: [{ type: "text", text }] });
   } catch (error) {
