@@ -2,6 +2,13 @@
 
 All notable changes to the Creeds, Confessions and Catechism Research app.
 
+## [2026-04-03]
+
+### Added
+
+- Set up support@ccc-study.org via Zoho Mail (free tier)
+- Configured DNS records: MX (mx.zoho.eu, mx2.zoho.eu, mx3.zoho.eu), SPF, and DKIM for email deliverability
+
 ## [2026-04-02]
 
 ### Fixed

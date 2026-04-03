@@ -55,6 +55,7 @@ Note: For the Catholic tradition, the Roman Catechism is the primary embedded so
 | Supabase | Authentication + database | faewrhljljuactdxwema.supabase.co |
 | OpenAI | AI API for research/commentary | platform.openai.com |
 | Google Cloud Console | OAuth credentials for Google Sign-In | console.cloud.google.com |
+| Zoho Mail | Support email (support@ccc-study.org) | mail.zoho.eu |
 
 ## Environment Variables (Vercel)
 
