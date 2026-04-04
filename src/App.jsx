@@ -303,17 +303,30 @@ export default function TheologyAssistant() {
     }
   }, []);
 
+  // Load notes from Supabase when session changes
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("theology-notebook");
-      if (saved) setEntries(JSON.parse(saved));
-    } catch (e) { console.error(e); }
-  }, []);
-
-  useEffect(() => {
-    try { localStorage.setItem("theology-notebook", JSON.stringify(entries)); }
-    catch (e) { console.error(e); }
-  }, [entries]);
+    if (!session) { setEntries([]); return; }
+    async function fetchNotes() {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { console.error('Failed to load notes:', error); return; }
+      setEntries(data.map(row => {
+        let parsed = {};
+        try { parsed = JSON.parse(row.content); } catch {}
+        return {
+          id: row.id,
+          date: new Date(row.created_at).toLocaleDateString(),
+          question: row.title || "",
+          answer: parsed.answer || "",
+          note: parsed.note || "",
+          isStandalone: parsed.isStandalone || false,
+        };
+      }));
+    }
+    fetchNotes();
+  }, [session]);
 
   function resetResearch() {
     setMessages([]);
@@ -330,23 +343,50 @@ export default function TheologyAssistant() {
   const [newNoteText, setNewNoteText] = useState("");
   const [addingNewNote, setAddingNewNote] = useState(false);
 
-  function addStandaloneNote() {
-    if (!newNoteText.trim()) return;
-    const newEntry = { id: Date.now(), date: new Date().toLocaleDateString(), question: "", answer: "", note: newNoteText.trim(), isStandalone: true };
+  async function addStandaloneNote() {
+    if (!newNoteText.trim() || !session) return;
+    const content = JSON.stringify({ answer: "", note: newNoteText.trim(), isStandalone: true });
+    const { data, error } = await supabase
+      .from('notes')
+      .insert({ user_id: session.user.id, title: "", content })
+      .select()
+      .single();
+    if (error) { console.error('Failed to create note:', error); return; }
+    const newEntry = { id: data.id, date: new Date(data.created_at).toLocaleDateString(), question: "", answer: "", note: newNoteText.trim(), isStandalone: true };
     setEntries(prev => [newEntry, ...prev]);
     setNewNoteText("");
     setAddingNewNote(false);
   }
 
-  function saveEntry(question, answer) {
-    const newEntry = { id: Date.now(), date: new Date().toLocaleDateString(), question, answer, note: "", isStandalone: false };
+  async function saveEntry(question, answer) {
+    if (!session) return;
+    const content = JSON.stringify({ answer, note: "", isStandalone: false });
+    const { data, error } = await supabase
+      .from('notes')
+      .insert({ user_id: session.user.id, title: question, content })
+      .select()
+      .single();
+    if (error) { console.error('Failed to save entry:', error); return; }
+    const newEntry = { id: data.id, date: new Date(data.created_at).toLocaleDateString(), question, answer, note: "", isStandalone: false };
     setEntries(prev => [newEntry, ...prev]);
     setMode("notebook");
   }
 
-  function deleteEntry(id) { setEntries(prev => prev.filter(e => e.id !== id)); }
+  async function deleteEntry(id) {
+    const { error } = await supabase.from('notes').delete().eq('id', id);
+    if (error) { console.error('Failed to delete note:', error); return; }
+    setEntries(prev => prev.filter(e => e.id !== id));
+  }
 
-  function saveNote(id) {
+  async function saveNote(id) {
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    const content = JSON.stringify({ answer: entry.answer, note: editingNote, isStandalone: entry.isStandalone });
+    const { error } = await supabase
+      .from('notes')
+      .update({ title: entry.question, content, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) { console.error('Failed to update note:', error); return; }
     setEntries(prev => prev.map(e => e.id === id ? { ...e, note: editingNote } : e));
     setEditingId(null);
     setEditingNote("");

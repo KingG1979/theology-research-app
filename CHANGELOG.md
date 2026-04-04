@@ -2,6 +2,13 @@
 
 All notable changes to the Creeds, Confessions and Catechism Research app.
 
+## [2026-04-04]
+
+### Changed
+
+- Migrated notebook storage from localStorage to Supabase — notes are now per-user, private, and persisted server-side
+- Notes load automatically when the user signs in and reload on session change
+
 ## [2026-04-03]
 
 ### Added
