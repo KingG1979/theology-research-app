@@ -10,6 +10,9 @@ Maintained by **Stein Street Solutions (SSS)**.
 - Organization formally named **Stein Street Solutions (SSS)** — all project documentation updated to reflect the new name
 - Migrated notebook storage from localStorage to Supabase — notes are now per-user, private, and persisted server-side
 - Notes load automatically when the user signs in and reload on session change
+- Authentication is now optional — users go directly into the app after the welcome screen
+- Sign-in is only prompted when saving notes; a "Sign In" button is available in the header
+- All auth code (Supabase, Google Sign-In, email/password) remains intact, just no longer required to browse or research
 
 ## [2026-04-03]
 

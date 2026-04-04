@@ -104,15 +104,15 @@ function AuthScreen({ onSuccess }) {
   }
 
   return (
-    <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: cream }}>
+    <div style={{ fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ maxWidth: 400, width: "100%", padding: "40px 36px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
         <div style={{ fontSize: 22, fontWeight: "bold", color: dark, marginBottom: 6 }}>
           {isSignUp ? "Create Account" : "Sign In"}
         </div>
         <p style={{ fontSize: 13, color: mid, lineHeight: 1.6, marginBottom: 24 }}>
           {isSignUp
-            ? "Create an account to access the research tools."
-            : "Sign in to access the research tools."}
+            ? "Create an account to save your research notes."
+            : "Sign in to save your research notes."}
         </p>
 
         <button
@@ -223,6 +223,9 @@ export default function TheologyAssistant() {
   const [showWelcome, setShowWelcome] = useState(() => {
     return !localStorage.getItem("cacr-welcomed");
   });
+
+  // Auth overlay — shown on demand (e.g. when user clicks Sign In or tries to save without session)
+  const [showAuth, setShowAuth] = useState(false);
 
   function enterApp() {
     localStorage.setItem("cacr-welcomed", "true");
@@ -344,7 +347,8 @@ export default function TheologyAssistant() {
   const [addingNewNote, setAddingNewNote] = useState(false);
 
   async function addStandaloneNote() {
-    if (!newNoteText.trim() || !session) return;
+    if (!newNoteText.trim()) return;
+    if (!session) { setShowAuth(true); return; }
     const content = JSON.stringify({ answer: "", note: newNoteText.trim(), isStandalone: true });
     const { data, error } = await supabase
       .from('notes')
@@ -359,7 +363,7 @@ export default function TheologyAssistant() {
   }
 
   async function saveEntry(question, answer) {
-    if (!session) return;
+    if (!session) { setShowAuth(true); return; }
     const content = JSON.stringify({ answer, note: "", isStandalone: false });
     const { data, error } = await supabase
       .from('notes')
@@ -498,17 +502,12 @@ export default function TheologyAssistant() {
       </div>
     );
   }
-  // Show auth screen if not logged in (after welcome screen)
   if (authLoading) {
     return (
       <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: cream }}>
         <LoadingDots text="Loading" color={mid} />
       </div>
     );
-  }
-
-  if (!session) {
-    return <AuthScreen />;
   }
 
   const currentConfession = selectedConfession ? CONFESSIONS[selectedConfession] : null;
@@ -535,13 +534,24 @@ export default function TheologyAssistant() {
             </button>
           ))}
           <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{isVip ? "Unlimited" : Math.max(0, 7 - aiUsageCount) + " of 7 AI queries remaining today"}</span>
-          <span style={{ fontSize: 10, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{session.user.email}</span>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            style={{ padding: "3px 10px", background: "transparent", color: "#a09070", border: "1px solid #a09070", borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 4, whiteSpace: "nowrap" }}
-          >
-            Sign Out
-          </button>
+          {session ? (
+            <>
+              <span style={{ fontSize: 10, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{session.user.email}</span>
+              <button
+                onClick={() => supabase.auth.signOut()}
+                style={{ padding: "3px 10px", background: "transparent", color: "#a09070", border: "1px solid #a09070", borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 4, whiteSpace: "nowrap" }}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setShowAuth(true)}
+              style={{ padding: "3px 10px", background: "transparent", color: gold, border: "1px solid " + gold, borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 8, whiteSpace: "nowrap" }}
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
 
@@ -786,10 +796,17 @@ export default function TheologyAssistant() {
       {/* NOTEBOOK MODE */}
       {mode === "notebook" && (
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
+          {/* Sign-in prompt for unauthenticated users */}
+          {!session && (
+            <div style={{ marginBottom: 24, padding: "16px 20px", background: "#fffdf5", border: "1px solid " + border, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <span style={{ fontSize: 14, color: "#5a4a2a" }}>Sign in to save notes</span>
+              <button onClick={() => setShowAuth(true)} style={{ padding: "6px 18px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>Sign In</button>
+            </div>
+          )}
           {/* Add Note Panel */}
           <div style={{ marginBottom: 24 }}>
             {!addingNewNote ? (
-              <button onClick={() => setAddingNewNote(true)} style={{ padding: "8px 20px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add Note</button>
+              <button onClick={() => { if (!session) { setShowAuth(true); return; } setAddingNewNote(true); }} style={{ padding: "8px 20px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add Note</button>
             ) : (
               <div style={{ background: "#fff", border: "1px solid " + border, borderRadius: 10, padding: "16px 18px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>New Note</div>
@@ -874,6 +891,16 @@ export default function TheologyAssistant() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Auth overlay */}
+      {showAuth && !session && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(44,36,22,0.5)" }}>
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setShowAuth(false)} style={{ position: "absolute", top: 8, right: 12, background: "transparent", border: "none", fontSize: 20, color: mid, cursor: "pointer", fontFamily: "Georgia, serif", zIndex: 1 }}>×</button>
+            <AuthScreen />
+          </div>
         </div>
       )}
     </div>
