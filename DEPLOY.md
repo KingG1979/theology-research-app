@@ -1,5 +1,7 @@
 # Deployment Guide
 
+**Stein Street Solutions (SSS)**
+
 Follow these steps to get your app live on the internet.
 The whole process takes about 30-45 minutes the first time.
 

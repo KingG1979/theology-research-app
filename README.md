@@ -1,5 +1,7 @@
 # Creeds, Confessions and Catechism Research (CCCR)
 
+A project by **Stein Street Solutions (SSS)**
+
 ## About
 
 A web-based theology research tool for scholars, teachers, and educated laypeople. Browse, compare, and research historic Christian creeds, confessions, and catechisms across traditions — with AI-powered commentary and cross-tradition comparison.
@@ -71,3 +73,7 @@ npm run dev
 ## Deployment
 
 Push to `main` branch — Vercel auto-deploys.
+
+---
+
+© 2026 Stein Street Solutions (SSS). All rights reserved.
