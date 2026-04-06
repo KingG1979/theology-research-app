@@ -483,7 +483,7 @@ export default function TheologyAssistant() {
           </p>
           <div style={{ textAlign: "left", marginBottom: 32 }}>
             {[
-              { label: "Browse", desc: "Read the full texts of the Westminster Confession, Heidelberg Catechism, Augsburg Confession, 1689 Baptist Confession, 39 Articles, and more." },
+              { label: "Browse", desc: "Read the full texts of the historic creeds, confessions, and catechisms — including the Nicene Creed, Westminster Confession, Heidelberg Catechism, Augsburg Confession, 1689 Baptist Confession, 39 Articles, and more." },
               { label: "Compare", desc: "See how different traditions approach baptism, justification, the Lord\u2019s Supper, and other doctrines side by side." },
               { label: "Research", desc: "Ask any theological question and receive AI-powered answers grounded in confessional texts." },
             ].map(({ label, desc }) => (
@@ -618,7 +618,7 @@ export default function TheologyAssistant() {
               {loading && <div style={{ background: "#fff", border: "1px solid " + border, borderRadius: "2px 12px 12px 12px", padding: "12px 16px", animation: "pulse 2s ease-in-out infinite" }}><div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", color: mid, marginBottom: 5 }}>Research Assistant</div><LoadingDots text="Researching" color={mid} /></div>}
             </div>
             <div style={{ padding: "12px 20px 16px", borderTop: "1px solid " + border, display: "flex", gap: 10, background: cream }}>
-              <textarea style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, resize: "none", outline: "none" }} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askQuestion(); } }} placeholder="Ask about any doctrine, confession, or catechism..." rows={3} />
+              <textarea style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, resize: "none", outline: "none" }} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askQuestion(); } }} placeholder="Ask about any doctrine, creed, confession, or catechism..." rows={3} />
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <button onClick={askQuestion} disabled={loading} style={{ flex: 1, padding: "0 18px", background: loading ? border : gold, color: loading ? mid : dark, border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>{loading ? "..." : "Ask"}</button>
                 {messages.length > 0 && <button onClick={resetResearch} style={{ padding: "6px 10px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>↺ New Search</button>}
@@ -665,7 +665,7 @@ export default function TheologyAssistant() {
             </div>
           </div>
           {compareError && <ErrorBox message="Unable to complete the comparison. Please try again." onRetry={runComparison} />}
-          {compareLoading && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}><div style={{ fontSize: 18, color: "#5a4a2a" }}><LoadingDots text="Comparing traditions" color="#5a4a2a" /></div><div style={{ fontSize: 13, color: mid, fontStyle: "italic", animation: "pulse 2s ease-in-out infinite" }}>Consulting confessions and catechisms</div></div>}
+          {compareLoading && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}><div style={{ fontSize: 18, color: "#5a4a2a" }}><LoadingDots text="Comparing traditions" color="#5a4a2a" /></div><div style={{ fontSize: 13, color: mid, fontStyle: "italic", animation: "pulse 2s ease-in-out infinite" }}>Consulting creeds, confessions, and catechisms</div></div>}
           {!comparisonData && !compareLoading && !compareError && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", padding: 40, textAlign: "center" }}><p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Compare any doctrine across traditions</p><p style={{ fontSize: 13, color: mid, maxWidth: 440, lineHeight: 1.7, marginBottom: 16 }}>Select a suggested topic above or type your own. Use the filter bar to choose which traditions to include.</p></div>}
           {comparisonData && !compareLoading && (
             <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>

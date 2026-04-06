@@ -1414,6 +1414,7 @@ export const CONFESSIONS = {
           { number: 3, text: "For us and for our salvation he came down from heaven; he became incarnate by the Holy Spirit and the virgin Mary, and was made human. He was crucified for us under Pontius Pilate; he suffered and was buried. The third day he rose again, according to the Scriptures." },
           { number: 4, text: "And we believe in the Holy Spirit, the Lord, the giver of life. He proceeds from the Father and the Son, and with the Father and the Son is worshiped and glorified. He spoke through the prophets." },
           { number: 5, text: "We believe in one holy catholic and apostolic church. We affirm one baptism for the forgiveness of sins. We look forward to the resurrection of the dead, and to life in the world to come. Amen." },
+          { number: 6, text: "Note on the Filioque: This text includes the phrase 'and the Son' (Latin: filioque), as used in Western churches since the Council of Toledo (589 AD) and formally adopted in the West by 1014 AD. The original text of the 381 Council of Constantinople reads 'who proceeds from the Father' only, and is the version used in Eastern Orthodox churches to this day. The filioque was a contributing factor in the Great Schism of 1054 between East and West." },
         ]
       },
     ]

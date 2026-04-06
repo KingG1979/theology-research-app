@@ -3,6 +3,17 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-04-06]
+
+### Added
+
+- Filioque historical note added to the Nicene Creed (section 6), explaining the Western addition of "and the Son" and its role in the East-West Schism of 1054
+
+### Changed
+
+- Updated Welcome page Browse description and Compare loading text to explicitly mention creeds alongside confessions and catechisms
+- Updated Research mode placeholder to include "creed" in the prompt hint
+
 ## [2026-04-04]
 
 ### Changed
