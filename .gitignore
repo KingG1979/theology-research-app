@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+.env.local
+
+# Large data files - regenerate with scripts/collect-texts.py
+church-fathers-data/
