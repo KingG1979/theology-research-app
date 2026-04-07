@@ -112,3 +112,24 @@ AS $$
   GROUP BY c.work_title
   ORDER BY c.work_title;
 $$;
+
+-- ============================================================
+-- Suggestions / Feedback Table
+-- ============================================================
+CREATE TABLE IF NOT EXISTS suggestions (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  type text NOT NULL DEFAULT 'suggestion' CHECK (type IN ('suggestion', 'bug', 'content')),
+  message text NOT NULL,
+  user_email text,
+  page text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Only allow inserts from anyone; only authenticated users can read
+ALTER TABLE suggestions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can submit suggestions"
+  ON suggestions FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+CREATE POLICY "Authenticated users can read suggestions"
+  ON suggestions FOR SELECT TO authenticated USING (true);

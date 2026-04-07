@@ -227,6 +227,36 @@ export default function TheologyAssistant() {
   // Auth overlay — shown on demand (e.g. when user clicks Sign In or tries to save without session)
   const [showAuth, setShowAuth] = useState(false);
 
+  // About modal
+  const [showAbout, setShowAbout] = useState(false);
+
+  // Suggestion / feedback box
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackType, setFeedbackType] = useState("suggestion");
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackDone, setFeedbackDone] = useState(false);
+
+  async function submitFeedback() {
+    if (!feedbackText.trim()) return;
+    setFeedbackSubmitting(true);
+    try {
+      await supabase.from("suggestions").insert({
+        type: feedbackType,
+        message: feedbackText.trim(),
+        user_email: session?.user?.email || null,
+        page: mode,
+      });
+      setFeedbackDone(true);
+      setFeedbackText("");
+      setTimeout(() => { setShowFeedback(false); setFeedbackDone(false); }, 2000);
+    } catch (e) {
+      console.error("Feedback submit failed:", e);
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  }
+
   function enterApp() {
     localStorage.setItem("cacr-welcomed", "true");
     setShowWelcome(false);
@@ -396,6 +426,24 @@ export default function TheologyAssistant() {
     setEditingNote("");
   }
 
+  // Helper: try to match a citation string to a confession key in Browse
+  function findConfessionFromCitation(citation) {
+    if (!citation) return null;
+    const c = citation.toLowerCase();
+    if (c.includes("westminster") || /\bwcf\b/.test(c)) return "Westminster Confession of Faith";
+    if (c.includes("heidelberg") || /\bhc\b/.test(c)) return "Heidelberg Catechism";
+    if (c.includes("augsburg") || /\bca\b/.test(c)) return "Augsburg Confession";
+    if (c.includes("1689") || (c.includes("baptist") && !c.includes("roman"))) return "1689 Baptist Confession";
+    if (c.includes("nicene")) return "Nicene Creed";
+    if (c.includes("apostles")) return "Apostles' Creed";
+    if (c.includes("athanasian")) return "Athanasian Creed";
+    if (c.includes("chalcedon")) return "Definition of Chalcedon";
+    if (c.includes("orthodox") || c.includes("longer catechism")) return "Longer Catechism (Orthodox)";
+    if (c.includes("39 articles") || c.includes("thirty-nine")) return "39 Articles";
+    if (c.includes("roman catechism") || (c.includes("catechism") && c.includes("catholic"))) return "Roman Catechism";
+    return null;
+  }
+
   function toggleTradition(t) {
     setActiveTraditions(prev => {
       const next = new Set(prev);
@@ -520,7 +568,28 @@ export default function TheologyAssistant() {
       <div className="header-wrap" style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 24px", background: dark, flexShrink: 0 }}>
         <div className="header-title" style={{ flex: 1 }}>
           <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>Creeds, Confessions and Catechism Research</div>
-          <div style={{ fontSize: 10, color: gold, letterSpacing: 2, textTransform: "uppercase" }}>Ecumenical Creeds · Westminster · Heidelberg · Augsburg · 1689 Baptist · Orthodox · 39 Articles</div>
+          <div style={{ fontSize: 10, color: gold, letterSpacing: 1, textTransform: "uppercase", display: "flex", flexWrap: "wrap", gap: "0 2px", alignItems: "center" }}>
+            {[
+              { label: "Ecumenical Creeds", key: "Nicene Creed" },
+              { label: "Westminster", key: "Westminster Confession of Faith" },
+              { label: "Heidelberg", key: "Heidelberg Catechism" },
+              { label: "Augsburg", key: "Augsburg Confession" },
+              { label: "1689 Baptist", key: "1689 Baptist Confession" },
+              { label: "Orthodox", key: "Longer Catechism (Orthodox)" },
+              { label: "39 Articles", key: "39 Articles" },
+            ].map(({ label, key }, i, arr) => (
+              <span key={key} style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+                <button
+                  onClick={() => { setMode("browse"); setSelectedConfession(key); setSelectedChapter(null); }}
+                  title={"Browse " + key}
+                  style={{ background: "none", border: "none", color: gold, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: 1, textTransform: "uppercase", padding: "0 2px", opacity: 0.85, transition: "opacity 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                  onMouseLeave={e => e.currentTarget.style.opacity = "0.85"}
+                >{label}</button>
+                {i < arr.length - 1 && <span style={{ color: "#a09070", fontSize: 10 }}>·</span>}
+              </span>
+            ))}
+          </div>
         </div>
         <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
           {[
@@ -533,7 +602,8 @@ export default function TheologyAssistant() {
               {label}
             </button>
           ))}
-          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{isVip ? "Unlimited" : Math.max(0, 7 - aiUsageCount) + " of 7 AI queries remaining today"}</span>
+          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }} title="Query count resets at midnight local time">{isVip ? "Unlimited" : Math.max(0, 7 - aiUsageCount) + " of 7 AI queries · Resets midnight"}</span>
+          <button onClick={() => setShowAbout(true)} style={{ padding: "3px 10px", background: "transparent", color: "#a09070", border: "1px solid #a09070", borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 4, whiteSpace: "nowrap" }}>About</button>
           {session ? (
             <>
               <span style={{ fontSize: 10, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{session.user.email}</span>
@@ -671,7 +741,8 @@ export default function TheologyAssistant() {
             <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
               <h2 style={{ margin: "0 0 6px", fontSize: 20, color: dark }}>{comparisonData.topic}</h2>
               <p style={{ margin: "0 0 18px", fontSize: 13, color: "#5a4a2a", fontStyle: "italic", lineHeight: 1.7 }}>{comparisonData.summary}</p>
-              <div style={{ overflowX: "auto" }}>
+              {visibleTraditions.length > 4 && <p style={{ margin: "0 0 8px", fontSize: 11, color: mid, fontStyle: "italic", textAlign: "right" }}>← Scroll table to see all traditions →</p>}
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "thin", scrollbarColor: "#d4c4a0 transparent" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr>
@@ -685,7 +756,7 @@ export default function TheologyAssistant() {
                         <td style={{ padding: "12px 14px", fontWeight: "bold", fontSize: 12, color: dark, borderRight: "2px solid " + border, verticalAlign: "top", background: light }}>{row.aspect}</td>
                         {visibleTraditions.map(t => {
                           const cell = row[t]; const c = COLORS[t];
-                          return <td key={t} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{cell ? <div><div style={{ fontSize: 12, color: dark, lineHeight: 1.6, marginBottom: 3 }}>{cell.position}</div>{cell.citation && <div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>}</div> : <span style={{ color: "#ccc" }}>-</span>}</td>;
+                          return <td key={t} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{cell ? <div><div style={{ fontSize: 12, color: dark, lineHeight: 1.6, marginBottom: 3 }}>{cell.position}</div>{cell.citation && (() => { const confKey = findConfessionFromCitation(cell.citation); return confKey ? (<button onClick={() => { setMode("browse"); setSelectedConfession(confKey); setSelectedChapter(null); }} title={"Open in Browse: " + confKey} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 10 }}>↗</span></button>) : (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>); })()}</div> : <span style={{ color: "#ccc" }}>-</span>}</td>;
                         })}
                       </tr>
                     ))}
@@ -712,7 +783,12 @@ export default function TheologyAssistant() {
                 <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); }} style={{ padding: "10px 14px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "3px solid " + c.border : "3px solid transparent" }}>
                   <div style={{ fontSize: 12, fontWeight: "bold", color: active ? c.text : dark, lineHeight: 1.4 }}>{name}</div>
                   <div style={{ fontSize: 10, color: mid, marginTop: 2 }}>{conf.tradition} - {conf.year}</div>
-                  {name === "Roman Catechism" && <div style={{ fontSize: 10, fontStyle: "italic", color: "#a09070", marginTop: 4, paddingLeft: 6, lineHeight: 1.3 }}>AI responses may also reference the modern Catechism (1992) where teaching has developed.</div>}
+                  {name === "Roman Catechism" && (
+                    <div style={{ fontSize: 10, color: "#7a5a00", marginTop: 6, padding: "5px 8px", background: "#fdf3cd", border: "1px solid #e8c84a", borderRadius: 5, lineHeight: 1.5, display: "flex", gap: 5, alignItems: "flex-start" }}>
+                      <span style={{ flexShrink: 0, fontSize: 11 }}>ⓘ</span>
+                      <span>AI may also reference the 1992 Catechism where teaching has developed.</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -900,6 +976,83 @@ export default function TheologyAssistant() {
           <div style={{ position: "relative" }}>
             <button onClick={() => setShowAuth(false)} style={{ position: "absolute", top: 8, right: 12, background: "transparent", border: "none", fontSize: 20, color: mid, cursor: "pointer", fontFamily: "Georgia, serif", zIndex: 1 }}>×</button>
             <AuthScreen />
+          </div>
+        </div>
+      )}
+
+      {/* About modal */}
+      {showAbout && (
+        <div onClick={() => setShowAbout(false)} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(44,36,22,0.55)" }}>
+          <div onClick={e => e.stopPropagation()} style={{ maxWidth: 480, width: "90%", background: cream, border: "1px solid " + border, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "36px 36px 28px", position: "relative", fontFamily: "Georgia, serif" }}>
+            <button onClick={() => setShowAbout(false)} style={{ position: "absolute", top: 12, right: 16, background: "transparent", border: "none", fontSize: 20, color: mid, cursor: "pointer" }}>×</button>
+            <div style={{ fontSize: 18, fontWeight: "bold", color: dark, marginBottom: 14 }}>About This Project</div>
+            <p style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 16 }}>
+              <strong>Creeds, Confessions and Catechism Research (CACR)</strong> is a free scholarly tool for exploring the historic confessions of the Christian church — Reformed, Lutheran, Catholic, Baptist, Anglican, Orthodox, and the Ecumenical Creeds.
+            </p>
+            <p style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 16 }}>
+              All confessional texts are drawn from public domain sources. AI commentary and comparisons are powered by large language models grounded in these primary texts — always verify with the source documents.
+            </p>
+            <div style={{ borderTop: "1px solid " + border, paddingTop: 16, marginTop: 8 }}>
+              <div style={{ fontSize: 11, color: mid, marginBottom: 6, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase" }}>Documents Included</div>
+              <div style={{ fontSize: 12, color: "#5a4a2a", lineHeight: 1.9 }}>
+                Nicene Creed (381) · Apostles' Creed · Athanasian Creed · Chalcedon (451) · Westminster Confession (1647) · Heidelberg Catechism (1563) · Augsburg Confession (1530) · 1689 Baptist Confession · Longer Catechism (Orthodox, 1839) · 39 Articles (1571) · Roman Catechism (1566)
+              </div>
+            </div>
+            <div style={{ borderTop: "1px solid " + border, paddingTop: 16, marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ fontSize: 11, color: mid }}>
+                Questions or feedback?{" "}
+                <button onClick={() => { setShowAbout(false); setShowFeedback(true); }} style={{ background: "none", border: "none", color: gold, cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, textDecoration: "underline", padding: 0 }}>Send a suggestion</button>
+              </div>
+              <div style={{ fontSize: 10, color: "#baa080" }}>© 2025 CACR · All texts public domain</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Suggestion / Feedback box */}
+      <button
+        onClick={() => { setShowFeedback(true); setFeedbackDone(false); }}
+        title="Send feedback or a suggestion"
+        style={{ position: "fixed", bottom: 24, right: 24, zIndex: 900, background: dark, color: gold, border: "1px solid " + gold, borderRadius: 24, padding: "8px 16px", fontSize: 12, fontFamily: "Georgia, serif", cursor: "pointer", boxShadow: "0 2px 10px rgba(0,0,0,0.25)", display: "flex", alignItems: "center", gap: 6, transition: "opacity 0.2s", opacity: 0.85 }}
+        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+        onMouseLeave={e => e.currentTarget.style.opacity = "0.85"}
+      >
+        <span style={{ fontSize: 14 }}>✉</span> Feedback
+      </button>
+
+      {showFeedback && (
+        <div onClick={() => setShowFeedback(false)} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "flex-end", justifyContent: "flex-end", background: "rgba(44,36,22,0.35)", padding: 24 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: 340, background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", padding: "24px 24px 20px", fontFamily: "Georgia, serif" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: 15, fontWeight: "bold", color: dark }}>Send Feedback</div>
+              <button onClick={() => setShowFeedback(false)} style={{ background: "transparent", border: "none", fontSize: 18, color: mid, cursor: "pointer" }}>×</button>
+            </div>
+            {feedbackDone ? (
+              <div style={{ textAlign: "center", padding: "24px 0", color: "#2a6a2a", fontSize: 14 }}>✓ Thank you — feedback received!</div>
+            ) : (
+              <>
+                <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                  {["suggestion", "bug", "content"].map(type => (
+                    <button key={type} onClick={() => setFeedbackType(type)} style={{ flex: 1, padding: "5px 0", background: feedbackType === type ? dark : "#fff", color: feedbackType === type ? cream : mid, border: "1px solid " + (feedbackType === type ? dark : border), borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" }}>{type}</button>
+                  ))}
+                </div>
+                <textarea
+                  value={feedbackText}
+                  onChange={e => setFeedbackText(e.target.value)}
+                  placeholder={feedbackType === "suggestion" ? "What would make this tool better?" : feedbackType === "bug" ? "Describe what went wrong..." : "Missing document, wrong text, citation error..."}
+                  rows={4}
+                  style={{ width: "100%", padding: "10px 12px", fontSize: 13, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, resize: "none", outline: "none", color: dark, background: cream, boxSizing: "border-box", marginBottom: 12 }}
+                />
+                <button
+                  onClick={submitFeedback}
+                  disabled={feedbackSubmitting || !feedbackText.trim()}
+                  style={{ width: "100%", padding: "9px", background: feedbackSubmitting || !feedbackText.trim() ? border : gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: feedbackSubmitting || !feedbackText.trim() ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}
+                >
+                  {feedbackSubmitting ? "Sending..." : "Send Feedback"}
+                </button>
+                <div style={{ fontSize: 10, color: mid, marginTop: 8, textAlign: "center" }}>{session ? "Submitted as " + session.user.email : "Submitted anonymously"}</div>
+              </>
+            )}
           </div>
         </div>
       )}
