@@ -1,10 +1,51 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ALL_TRADITIONS, COLORS, CONFESSIONS } from "./data/confessions";
+import { CONFESSIONS_DE } from "./data/confessions_de";
+import { CONFESSIONS_DE_EXTRA } from "./data/confessions_de_extra";
 import { SYSTEM_PROMPT, CITATION_PROMPT, COMPARISON_PROMPT } from "./prompts";
 import { callAPI, extractText } from "./api";
 import { parseCitations, parseComparison } from "./utils/parsers";
 import { supabase } from "./supabase";
 import { useI18n } from "./i18n/index.jsx";
+
+// Merge all German confessions into one object
+const CONFESSIONS_DE_ALL = { ...CONFESSIONS_DE, ...CONFESSIONS_DE_EXTRA };
+
+// Map English confession keys ↔ German confession keys
+const EN_TO_DE_KEY = {
+  "Westminster Confession of Faith": "Westminsterbekenntnis",
+  "Heidelberg Catechism": "Heidelberger Katechismus",
+  "Augsburg Confession": "Augsburger Bekenntnis",
+  "1689 Baptist Confession": "Baptistisches Bekenntnis von 1689",
+  "Nicene Creed": "Nicänisches Glaubensbekenntnis",
+  "Apostles' Creed": "Apostolisches Glaubensbekenntnis",
+  "Athanasian Creed": "Athanasianisches Glaubensbekenntnis",
+  "Definition of Chalcedon": "Definition von Chalcedon",
+  "First Council of Constantinople — Canons": "Erstes Konzil von Konstantinopel — Kanones",
+  "Second Council of Constantinople — Anathemas": "Zweites Konzil von Konstantinopel — Anathemata",
+  "Third Council of Constantinople — Definition of Faith": "Drittes Konzil von Konstantinopel — Glaubensdefinition",
+  "Longer Catechism (Orthodox)": "Orthodoxer Katechismus",
+  "39 Articles": "39 Artikel der Kirche von England",
+  "Roman Catechism": "Römischer Katechismus",
+};
+const DE_TO_EN_KEY = Object.fromEntries(Object.entries(EN_TO_DE_KEY).map(([en, de]) => [de, en]));
+
+// Build German confessions object keyed by German names, preserving English order,
+// falling back to English text when German is unavailable
+function buildLocalizedConfessions(lang) {
+  if (lang !== "de") return CONFESSIONS;
+  const result = {};
+  for (const enKey of Object.keys(CONFESSIONS)) {
+    const deKey = EN_TO_DE_KEY[enKey];
+    if (deKey && CONFESSIONS_DE_ALL[deKey]) {
+      result[deKey] = CONFESSIONS_DE_ALL[deKey];
+    } else {
+      // Fallback: use English text with English key
+      result[enKey] = CONFESSIONS[enKey];
+    }
+  }
+  return result;
+}
 
 const pulseKeyframes = `
 @keyframes pulse {
@@ -206,6 +247,10 @@ function AuthScreen({ onSuccess }) {
 export default function TheologyAssistant() {
   const { lang, setLang, t } = useI18n();
 
+  // Localized confessions: German texts when lang=de, English otherwise (with fallback)
+  const localizedConfessions = useMemo(() => buildLocalizedConfessions(lang), [lang]);
+  const confessionNames = useMemo(() => Object.keys(localizedConfessions), [localizedConfessions]);
+
   // Auth state
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -340,6 +385,28 @@ export default function TheologyAssistant() {
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [commentary, setCommentary] = useState({});
   const [commentaryLoading, setCommentaryLoading] = useState(false);
+
+  // Remap selectedConfession when language changes
+  useEffect(() => {
+    if (!selectedConfession) return;
+    if (lang === "de") {
+      const deKey = EN_TO_DE_KEY[selectedConfession];
+      if (deKey && localizedConfessions[deKey]) {
+        setSelectedConfession(deKey);
+      } else if (!localizedConfessions[selectedConfession]) {
+        setSelectedConfession(null);
+        setSelectedChapter(null);
+      }
+    } else {
+      const enKey = DE_TO_EN_KEY[selectedConfession];
+      if (enKey && localizedConfessions[enKey]) {
+        setSelectedConfession(enKey);
+      } else if (!localizedConfessions[selectedConfession]) {
+        setSelectedConfession(null);
+        setSelectedChapter(null);
+      }
+    }
+  }, [lang]);
 
   // Inject CSS keyframes once
   useEffect(() => {
@@ -537,8 +604,6 @@ export default function TheologyAssistant() {
     finally { setCompareLoading(false); }
   }
 
-  const confessionNames = Object.keys(CONFESSIONS);
-
   // Footer element reused across welcome/loading screens
   const FooterBar = () => (
     <div style={{ padding: "6px 24px", background: dark, textAlign: "center", flexShrink: 0, borderTop: "1px solid " + border }}>
@@ -590,7 +655,7 @@ export default function TheologyAssistant() {
     );
   }
 
-  const currentConfession = selectedConfession ? CONFESSIONS[selectedConfession] : null;
+  const currentConfession = selectedConfession ? localizedConfessions[selectedConfession] : null;
   const currentChapter = selectedChapter !== null && currentConfession ? currentConfession.chapters[selectedChapter] : null;
 
   return (
@@ -602,25 +667,27 @@ export default function TheologyAssistant() {
           <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>{t.appTitle}</div>
           <div style={{ fontSize: 10, color: gold, letterSpacing: 1, textTransform: "uppercase", display: "flex", flexWrap: "wrap", gap: "0 2px", alignItems: "center" }}>
             {[
-              { label: "Ecumenical Creeds", key: "Nicene Creed" },
-              { label: "Westminster", key: "Westminster Confession of Faith" },
-              { label: "Heidelberg", key: "Heidelberg Catechism" },
-              { label: "Augsburg", key: "Augsburg Confession" },
-              { label: "1689 Baptist", key: "1689 Baptist Confession" },
-              { label: "Orthodox", key: "Longer Catechism (Orthodox)" },
-              { label: "39 Articles", key: "39 Articles" },
-            ].map(({ label, key }, i, arr) => (
-              <span key={key} style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+              { label: lang === "de" ? "Ökumenische Bekenntnisse" : "Ecumenical Creeds", enKey: "Nicene Creed" },
+              { label: "Westminster", enKey: "Westminster Confession of Faith" },
+              { label: "Heidelberg", enKey: "Heidelberg Catechism" },
+              { label: "Augsburg", enKey: "Augsburg Confession" },
+              { label: lang === "de" ? "1689 Baptistisch" : "1689 Baptist", enKey: "1689 Baptist Confession" },
+              { label: lang === "de" ? "Orthodox" : "Orthodox", enKey: "Longer Catechism (Orthodox)" },
+              { label: lang === "de" ? "39 Artikel" : "39 Articles", enKey: "39 Articles" },
+            ].map(({ label, enKey }, i, arr) => {
+              const confKey = lang === "de" ? (EN_TO_DE_KEY[enKey] || enKey) : enKey;
+              return (
+              <span key={enKey} style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
                 <button
-                  onClick={() => { setMode("browse"); setSelectedConfession(key); setSelectedChapter(null); }}
-                  title={"Browse " + key}
+                  onClick={() => { setMode("browse"); setSelectedConfession(confKey); setSelectedChapter(null); }}
+                  title={"Browse " + confKey}
                   style={{ background: "none", border: "none", color: gold, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: 1, textTransform: "uppercase", padding: "0 2px", opacity: 0.85, transition: "opacity 0.15s" }}
                   onMouseEnter={e => e.currentTarget.style.opacity = "1"}
                   onMouseLeave={e => e.currentTarget.style.opacity = "0.85"}
                 >{label}</button>
                 {i < arr.length - 1 && <span style={{ color: "#a09070", fontSize: 10 }}>·</span>}
               </span>
-            ))}
+            ); })}
           </div>
         </div>
         <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
@@ -821,14 +888,14 @@ export default function TheologyAssistant() {
           <div className="browse-sidebar" style={{ width: 200, borderRight: "2px solid " + border, overflowY: "auto", background: light, flexShrink: 0 }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid " + border, background: "#ede8dc", fontSize: 11, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase" }}>{t.confessions}</div>
             {confessionNames.map(name => {
-              const conf = CONFESSIONS[name];
+              const conf = localizedConfessions[name];
               const c = COLORS[conf.tradition];
               const active = selectedConfession === name;
               return (
                 <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); }} style={{ padding: "10px 14px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "3px solid " + c.border : "3px solid transparent" }}>
                   <div style={{ fontSize: 12, fontWeight: "bold", color: active ? c.text : dark, lineHeight: 1.4 }}>{name}</div>
                   <div style={{ fontSize: 10, color: mid, marginTop: 2 }}>{conf.tradition} - {conf.year}</div>
-                  {name === "Roman Catechism" && (
+                  {(name === "Roman Catechism" || name === "Römischer Katechismus") && (
                     <div style={{ fontSize: 10, color: "#7a5a00", marginTop: 6, padding: "5px 8px", background: "#fdf3cd", border: "1px solid #e8c84a", borderRadius: 5, lineHeight: 1.5, display: "flex", gap: 5, alignItems: "flex-start" }}>
                       <span style={{ flexShrink: 0, fontSize: 11 }}>ⓘ</span>
                       <span>{t.romanCatechismNote}</span>

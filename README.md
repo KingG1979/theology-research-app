@@ -14,7 +14,18 @@ Live at: https://ccc-study.org
 - **Research Mode** — Ask AI-powered questions about doctrine with cited sources
 - **Compare Mode** — Side-by-side comparison of how different traditions address the same doctrine
 - **Notebook** — Save personal notes (stored locally in browser)
+- **Feedback System** — Submit suggestions, bug reports, or content corrections directly from the app
+- **German Language Support** — Full German (Deutsch) localization for UI and confession texts; toggle EN/DE in the header
 - 7 traditions covered: Reformed, Lutheran, Catholic, Baptist, Ecumenical, Orthodox, Anglican
+
+## German Language Support
+
+The app includes full German localization:
+
+- **UI translations** — All labels, buttons, and instructions are available in German via the i18n system (`src/i18n/de.js`)
+- **German confession texts** — Original German texts for the Heidelberg Catechism, Augsburg Confession, and Ecumenical Creeds, plus German translations of all other confessions and catechisms
+- **Language toggle** — Switch between English and German using the EN/DE toggle in the header; the selected language persists across sessions
+- **Fallback** — If a German version of a document is not available, the English text is shown
 
 ## Source Texts Included
 

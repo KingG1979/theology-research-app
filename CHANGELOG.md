@@ -5,15 +5,18 @@ Maintained by **Stein Street Solutions (SSS)**.
 
 ## [2026-04-14]
 
+### Added
+
+- **German confession texts (Batch 1)** — Original German texts for Heidelberg Catechism (Heidelberger Katechismus), Augsburg Confession (Augsburger Bekenntnis), and 3 Ecumenical Creeds (Apostolisches, Nicänisches, Athanasianisches Glaubensbekenntnis)
+- **German confession texts (Batch 2)** — German translations for Westminster Confession (Westminsterbekenntnis), 1689 Baptist Confession, 39 Articles, Roman Catechism (Römischer Katechismus), Orthodox Catechism, and conciliar definitions (Chalcedon, Constantinople I/II/III)
+- **German text integration in Browse mode** — When language is set to German, Browse mode displays German confession titles and texts with automatic fallback to English for any missing translations
+- **Feedback system** — In-app feedback submission (suggestion, bug, content) with Supabase backend; `api/feedback.js` Vercel serverless endpoint prepared for email notifications via Zoho SMTP
+- Frontend now also POSTs to `/api/feedback` after Supabase insert, so enabling email later requires no frontend changes
+
 ### Fixed
 
 - Feedback submission now correctly inserts into Supabase `suggestions` table with proper error handling — users see a clear message on failure instead of silent errors
 - Anonymous submissions send `"anonymous"` as user_email instead of null
-
-### Added
-
-- `api/feedback.js` Vercel serverless endpoint prepared for email notifications via Zoho SMTP (commented-out nodemailer code ready to activate when credentials are configured)
-- Frontend now also POSTs to `/api/feedback` after Supabase insert, so enabling email later requires no frontend changes
 
 ## [2026-04-06]
 
