@@ -238,22 +238,35 @@ export default function TheologyAssistant() {
   const [feedbackType, setFeedbackType] = useState("suggestion");
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackDone, setFeedbackDone] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
 
   async function submitFeedback() {
     if (!feedbackText.trim()) return;
     setFeedbackSubmitting(true);
+    setFeedbackError("");
+    const payload = {
+      type: feedbackType || "suggestion",
+      message: feedbackText.trim(),
+      user_email: session?.user?.email || "anonymous",
+      page: mode || "unknown",
+    };
     try {
-      await supabase.from("suggestions").insert({
-        type: feedbackType,
-        message: feedbackText.trim(),
-        user_email: session?.user?.email || null,
-        page: mode,
-      });
+      const { error } = await supabase.from("suggestions").insert(payload);
+      if (error) throw error;
+
+      // Also send to email endpoint (fires and forgets — email delivery is secondary)
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+
       setFeedbackDone(true);
       setFeedbackText("");
       setTimeout(() => { setShowFeedback(false); setFeedbackDone(false); }, 2000);
     } catch (e) {
       console.error("Feedback submit failed:", e);
+      setFeedbackError("Could not send feedback — please try again.");
     } finally {
       setFeedbackSubmitting(false);
     }
@@ -1084,6 +1097,7 @@ export default function TheologyAssistant() {
                 >
                   {feedbackSubmitting ? t.sending : t.sendFeedback}
                 </button>
+                {feedbackError && <div style={{ fontSize: 12, color: "#a03030", marginTop: 8, textAlign: "center" }}>{feedbackError}</div>}
                 <div style={{ fontSize: 10, color: mid, marginTop: 8, textAlign: "center" }}>{session ? t.submittedAs(session.user.email) : t.submittedAnonymously}</div>
               </>
             )}

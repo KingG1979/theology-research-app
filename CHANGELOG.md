@@ -3,6 +3,18 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-04-14]
+
+### Fixed
+
+- Feedback submission now correctly inserts into Supabase `suggestions` table with proper error handling — users see a clear message on failure instead of silent errors
+- Anonymous submissions send `"anonymous"` as user_email instead of null
+
+### Added
+
+- `api/feedback.js` Vercel serverless endpoint prepared for email notifications via Zoho SMTP (commented-out nodemailer code ready to activate when credentials are configured)
+- Frontend now also POSTs to `/api/feedback` after Supabase insert, so enabling email later requires no frontend changes
+
 ## [2026-04-06]
 
 ### Added
