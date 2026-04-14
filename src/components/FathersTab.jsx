@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { callAPI, extractText } from "../api.js";
+import { useI18n } from "../i18n/index.jsx";
 
 const THEME = {
   gold: "#c9a84c",
@@ -55,7 +56,7 @@ function EraBadge({ era }) {
   );
 }
 
-function PassageCard({ result, expanded, onToggle }) {
+function PassageCard({ result, expanded, onToggle, t }) {
   const isLong = result.content.length > 300;
   const displayText = expanded || !isLong ? result.content : result.content.slice(0, 300) + "...";
   const similarity = Math.round((result.similarity || 0) * 100);
@@ -90,13 +91,14 @@ function PassageCard({ result, expanded, onToggle }) {
           marginTop: 8, padding: "3px 10px", background: "transparent",
           border: "1px solid " + border, borderRadius: 6, fontSize: 11,
           color: mid, cursor: "pointer", fontFamily: "Georgia, serif",
-        }}>{expanded ? "Show less" : "Read more"}</button>
+        }}>{expanded ? t.showLess : t.readMore}</button>
       )}
     </div>
   );
 }
 
 export default function FathersTab() {
+  const { lang, t } = useI18n();
   const [subMode, setSubMode] = useState("search");
   const [query, setQuery] = useState("");
   const [filterFather, setFilterFather] = useState("");
@@ -111,6 +113,10 @@ export default function FathersTab() {
   const [researchLoading, setResearchLoading] = useState(false);
   const [researchSources, setResearchSources] = useState([]);
   const [researchInput, setResearchInput] = useState("");
+
+  const systemPrompt = lang === "de"
+    ? FATHERS_SYSTEM_PROMPT + " Please respond in German (Deutsch)."
+    : FATHERS_SYSTEM_PROMPT;
 
   async function handleSearch() {
     if (!query.trim()) return;
@@ -149,7 +155,7 @@ export default function FathersTab() {
     try {
       const data = await callAPI({
         max_tokens: 1200,
-        system: FATHERS_SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: updated,
         mode: "fathers",
         query: researchInput,
@@ -180,17 +186,16 @@ export default function FathersTab() {
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }}>
         <div style={{ textAlign: "center", maxWidth: 500 }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>&#9853;</div>
-          <h2 style={{ fontSize: 20, color: dark, marginBottom: 8 }}>Church Fathers Database</h2>
+          <h2 style={{ fontSize: 20, color: dark, marginBottom: 8 }}>{t.churchFathersDb}</h2>
           <p style={{ fontSize: 14, color: mid, lineHeight: 1.7, marginBottom: 20 }}>
-            The Church Fathers search requires vector embeddings to be loaded into the Supabase database.
-            See DEPLOY.md for setup instructions.
+            {t.churchFathersDbDesc}
           </p>
           <div style={{ background: light, border: "1px solid " + border, borderRadius: 8, padding: "14px 18px", textAlign: "left", fontSize: 12, color: dark, lineHeight: 1.8 }}>
-            <strong>Required in Vercel environment:</strong><br />
+            <strong>{t.requiredInVercel}</strong><br />
             SUPABASE_URL — Your Supabase project URL<br />
             SUPABASE_ANON_KEY — Your Supabase anonymous key<br />
             <br />
-            <strong>Then run:</strong><br />
+            <strong>{t.thenRun}</strong><br />
             1. Apply supabase/migration.sql in Supabase SQL Editor<br />
             2. python3 scripts/collect-texts.py<br />
             3. node scripts/generate-embeddings.js
@@ -209,8 +214,8 @@ export default function FathersTab() {
         borderBottom: "1px solid " + border,
       }}>
         {[
-          { key: "search", label: "Browse by Doctrine" },
-          { key: "research", label: "AI Research" },
+          { key: "search", label: t.fathersBrowseByDoctrine },
+          { key: "research", label: t.fathersAIResearch },
         ].map(({ key, label }) => (
           <button key={key} onClick={() => setSubMode(key)} style={{
             padding: "5px 14px", borderRadius: 16, fontSize: 12,
@@ -229,12 +234,12 @@ export default function FathersTab() {
           <div style={{ padding: "14px 24px", background: cream, borderBottom: "1px solid " + border, flexShrink: 0 }}>
             <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
               <select value={filterFather} onChange={e => setFilterFather(e.target.value)} style={{ padding: "8px 12px", fontSize: 12, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, outline: "none" }}>
-                <option value="">All Fathers</option>
+                <option value="">{t.allFathers}</option>
                 <option value="St. Augustine">St. Augustine</option>
                 <option value="St. Athanasius">St. Athanasius</option>
               </select>
               <select value={filterEra} onChange={e => setFilterEra(e.target.value)} style={{ padding: "8px 12px", fontSize: 12, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, outline: "none" }}>
-                <option value="">All Eras</option>
+                <option value="">{t.allEras}</option>
                 <option value="Ante-Nicene">Ante-Nicene</option>
                 <option value="Nicene">Nicene</option>
                 <option value="Post-Nicene">Post-Nicene</option>
@@ -244,15 +249,26 @@ export default function FathersTab() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
-                placeholder="Search by doctrine, topic, or keyword..."
+                placeholder={t.searchPlaceholder}
               />
               <button onClick={handleSearch} disabled={searching} style={{ padding: "8px 18px", background: searching ? border : PARCHMENT.accent, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: searching ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>
-                {searching ? "Searching..." : "Search"}
+                {searching ? t.searchingEllipsis : t.search}
               </button>
             </div>
             <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-              {["Trinity", "Incarnation", "Justification", "Baptism", "Eucharist", "Original Sin", "Free Will", "Grace", "Predestination", "Scripture"].map(t => (
-                <button key={t} onClick={() => setQuery(t)} style={{ padding: "3px 10px", background: "#fff", border: "1px solid " + border, borderRadius: 12, fontSize: 11, color: PARCHMENT.accent, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t}</button>
+              {[
+                { label: t.topicTrinity, value: "Trinity" },
+                { label: t.topicIncarnation, value: "Incarnation" },
+                { label: t.topicJustification, value: "Justification" },
+                { label: t.topicBaptismFathers, value: "Baptism" },
+                { label: t.topicEucharist, value: "Eucharist" },
+                { label: t.topicOriginalSin, value: "Original Sin" },
+                { label: t.topicFreeWill, value: "Free Will" },
+                { label: t.topicGrace, value: "Grace" },
+                { label: t.topicPredestination, value: "Predestination" },
+                { label: t.topicScripture, value: "Scripture" },
+              ].map(({ label, value }) => (
+                <button key={value} onClick={() => setQuery(value)} style={{ padding: "3px 10px", background: "#fff", border: "1px solid " + border, borderRadius: 12, fontSize: 11, color: PARCHMENT.accent, cursor: "pointer", fontFamily: "Georgia, serif" }}>{label}</button>
               ))}
             </div>
           </div>
@@ -266,24 +282,23 @@ export default function FathersTab() {
             {!searching && results.length === 0 && !searchError && (
               <div style={{ textAlign: "center", padding: "60px 20px", color: mid }}>
                 <div style={{ fontSize: 40, marginBottom: 16 }}>&#9853;</div>
-                <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Search the Church Fathers</p>
+                <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>{t.searchTheFathers}</p>
                 <p style={{ fontSize: 13, lineHeight: 1.7, maxWidth: 460, margin: "0 auto" }}>
-                  Enter a doctrine or theological question to search through the writings
-                  of Augustine and Athanasius. Results are ranked by semantic similarity.
+                  {t.searchFathersDesc}
                 </p>
               </div>
             )}
             {searching && (
               <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                <div style={{ fontSize: 15, color: "#5a4a2a", marginBottom: 8 }}>Searching the Fathers...</div>
-                <div style={{ fontSize: 12, color: mid, fontStyle: "italic" }}>Finding relevant passages by meaning, not just keywords</div>
+                <div style={{ fontSize: 15, color: "#5a4a2a", marginBottom: 8 }}>{t.searchingTheFathers}</div>
+                <div style={{ fontSize: 12, color: mid, fontStyle: "italic" }}>{t.findingRelevant}</div>
               </div>
             )}
             {results.length > 0 && (
               <div>
-                <div style={{ fontSize: 12, color: mid, marginBottom: 16 }}>{results.length} passages found</div>
+                <div style={{ fontSize: 12, color: mid, marginBottom: 16 }}>{t.passagesFound(results.length)}</div>
                 {results.map((r, i) => (
-                  <PassageCard key={r.id || i} result={r} expanded={expandedCards.has(i)} onToggle={() => toggleExpand(i)} />
+                  <PassageCard key={r.id || i} result={r} expanded={expandedCards.has(i)} onToggle={() => toggleExpand(i)} t={t} />
                 ))}
               </div>
             )}
@@ -299,18 +314,18 @@ export default function FathersTab() {
               {researchMessages.length === 0 && (
                 <div style={{ textAlign: "center", padding: "40px 20px", color: mid }}>
                   <div style={{ fontSize: 40, marginBottom: 16 }}>&#9853;</div>
-                  <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 12 }}>Ask the Church Fathers</p>
-                  {["What did Augustine teach about grace and free will?", "How does Athanasius defend the divinity of Christ?", "Compare Augustine and Athanasius on the Trinity"].map(q => (
+                  <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 12 }}>{t.askTheFathers}</p>
+                  {[t.fathersSampleQ1, t.fathersSampleQ2, t.fathersSampleQ3].map(q => (
                     <p key={q} style={{ fontSize: 13, marginBottom: 6, fontStyle: "italic", cursor: "pointer", color: PARCHMENT.accent }} onClick={() => setResearchInput(q)}>{q}</p>
                   ))}
-                  <p style={{ fontSize: 11, color: mid, marginTop: 16 }}>Answers are grounded in actual patristic texts</p>
+                  <p style={{ fontSize: 11, color: mid, marginTop: 16 }}>{t.answersGrounded}</p>
                 </div>
               )}
               {researchMessages.map((msg, i) => (
                 <div key={i}>
                   <div style={{ background: msg.role === "user" ? PARCHMENT.headerBg : PARCHMENT.card, color: msg.role === "user" ? PARCHMENT.headerText : dark, borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px", padding: "12px 16px", border: msg.role === "user" ? "none" : "1px solid " + border, display: "inline-block", maxWidth: msg.role === "user" ? "75%" : "100%", float: msg.role === "user" ? "right" : "none", clear: "both" }}>
                     <div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5, color: msg.role === "user" ? gold : PARCHMENT.accent }}>
-                      {msg.role === "user" ? "You" : "Patristic Research"}
+                      {msg.role === "user" ? t.you : t.patristicResearch}
                     </div>
                     <div style={{ fontSize: 14, lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{msg.content}</div>
                   </div>
@@ -319,8 +334,8 @@ export default function FathersTab() {
               ))}
               {researchLoading && (
                 <div style={{ background: PARCHMENT.card, border: "1px solid " + border, borderRadius: "2px 12px 12px 12px", padding: "12px 16px" }}>
-                  <div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", color: PARCHMENT.accent, marginBottom: 5 }}>Patristic Research</div>
-                  <div style={{ fontSize: 13, color: mid, fontStyle: "italic" }}>Searching the Fathers and composing response...</div>
+                  <div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", color: PARCHMENT.accent, marginBottom: 5 }}>{t.patristicResearch}</div>
+                  <div style={{ fontSize: 13, color: mid, fontStyle: "italic" }}>{t.searchingAndComposing}</div>
                 </div>
               )}
             </div>
@@ -330,16 +345,16 @@ export default function FathersTab() {
                 value={researchInput}
                 onChange={e => setResearchInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleResearch(); } }}
-                placeholder="Ask about patristic theology..."
+                placeholder={t.askAboutPatristic}
                 rows={3}
               />
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <button onClick={handleResearch} disabled={researchLoading} style={{ flex: 1, padding: "0 18px", background: researchLoading ? border : PARCHMENT.accent, color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: researchLoading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>
-                  {researchLoading ? "..." : "Ask"}
+                  {researchLoading ? "..." : t.ask}
                 </button>
                 {researchMessages.length > 0 && (
                   <button onClick={() => { setResearchMessages([]); setResearchSources([]); }} style={{ padding: "6px 10px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>
-                    ↺ New
+                    {t.newConversation}
                   </button>
                 )}
               </div>
@@ -349,23 +364,23 @@ export default function FathersTab() {
           {/* Sources panel */}
           <div style={{ flex: 2, overflowY: "auto", background: PARCHMENT.bg }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid " + border, background: "#ede8dc" }}>
-              <span style={{ fontSize: 13, fontWeight: "bold", color: "#5a4a2a" }}>Patristic Sources</span>
+              <span style={{ fontSize: 13, fontWeight: "bold", color: "#5a4a2a" }}>{t.patristicSources}</span>
               {researchSources.length > 0 && (
                 <span style={{ fontSize: 11, color: mid, background: border, padding: "2px 8px", borderRadius: 10 }}>
-                  {researchSources.length} passages
+                  {t.passages(researchSources.length)}
                 </span>
               )}
             </div>
             {researchSources.length === 0 && (
               <div style={{ padding: "32px 20px", textAlign: "center", color: mid, fontSize: 13 }}>
-                Source passages from the Church Fathers will appear here when you ask a question.
+                {t.patristicSourcesPlaceholder}
               </div>
             )}
             {researchSources.map((source, i) => (
               <div key={i} style={{ margin: "10px 12px", padding: "12px 14px", background: PARCHMENT.card, borderRadius: 8, borderLeft: "4px solid " + PARCHMENT.accent }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                   <EraBadge era={source.era} />
-                  {source.similarity && <span style={{ fontSize: 10, color: mid }}>{Math.round(source.similarity * 100)}% match</span>}
+                  {source.similarity && <span style={{ fontSize: 10, color: mid }}>{t.match(Math.round(source.similarity * 100))}</span>}
                 </div>
                 <div style={{ fontSize: 13, fontWeight: "bold", color: dark, marginBottom: 2 }}>{source.father_name}</div>
                 <div style={{ fontSize: 12, color: PARCHMENT.accent, marginBottom: 6, fontStyle: "italic" }}>

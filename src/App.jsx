@@ -4,6 +4,7 @@ import { SYSTEM_PROMPT, CITATION_PROMPT, COMPARISON_PROMPT } from "./prompts";
 import { callAPI, extractText } from "./api";
 import { parseCitations, parseComparison } from "./utils/parsers";
 import { supabase } from "./supabase";
+import { useI18n } from "./i18n/index.jsx";
 
 const pulseKeyframes = `
 @keyframes pulse {
@@ -57,6 +58,7 @@ function ErrorBox({ message, onRetry }) {
 }
 
 function AuthScreen({ onSuccess }) {
+  const { t } = useI18n();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,12 +81,12 @@ function AuthScreen({ onSuccess }) {
         : await supabase.auth.signInWithPassword({ email, password });
       if (authError) throw authError;
       if (isSignUp) {
-        setError("Check your email to confirm your account, then sign in.");
+        setError(t.checkEmail);
         setIsSignUp(false);
         setPassword("");
       }
     } catch (err) {
-      setError(err.message || "Authentication failed. Please try again.");
+      setError(err.message || t.authFailed);
     } finally {
       setLoading(false);
     }
@@ -99,7 +101,7 @@ function AuthScreen({ onSuccess }) {
       });
       if (authError) throw authError;
     } catch (err) {
-      setError(err.message || "Google Sign-In is not configured yet. Please use email/password.");
+      setError(err.message || t.googleNotConfigured);
     }
   }
 
@@ -107,12 +109,10 @@ function AuthScreen({ onSuccess }) {
     <div style={{ fontFamily: "Georgia, serif", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ maxWidth: 400, width: "100%", padding: "40px 36px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
         <div style={{ fontSize: 22, fontWeight: "bold", color: dark, marginBottom: 6 }}>
-          {isSignUp ? "Create Account" : "Sign In"}
+          {isSignUp ? t.createAccount : t.signIn}
         </div>
         <p style={{ fontSize: 13, color: mid, lineHeight: 1.6, marginBottom: 24 }}>
-          {isSignUp
-            ? "Create an account to save your research notes."
-            : "Sign in to save your research notes."}
+          {isSignUp ? t.createAccountDesc : t.signInDesc}
         </p>
 
         <button
@@ -127,12 +127,12 @@ function AuthScreen({ onSuccess }) {
           onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; }}
         >
           <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-          Sign in with Google
+          {t.signInWithGoogle}
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
           <div style={{ flex: 1, height: 1, background: border }} />
-          <span style={{ fontSize: 12, color: mid }}>or</span>
+          <span style={{ fontSize: 12, color: mid }}>{t.or}</span>
           <div style={{ flex: 1, height: 1, background: border }} />
         </div>
 
@@ -141,7 +141,7 @@ function AuthScreen({ onSuccess }) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email address"
+            placeholder={t.emailPlaceholder}
             required
             style={{
               width: "100%", padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif",
@@ -153,7 +153,7 @@ function AuthScreen({ onSuccess }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
+            placeholder={t.passwordPlaceholder}
             required
             minLength={6}
             style={{
@@ -171,23 +171,23 @@ function AuthScreen({ onSuccess }) {
               cursor: loading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif",
             }}
           >
-            {loading ? "..." : isSignUp ? "Create Account" : "Sign In"}
+            {loading ? "..." : isSignUp ? t.createAccount : t.signIn}
           </button>
         </form>
 
         {error && (
           <div style={{
-            marginTop: 14, padding: "10px 14px", background: error.startsWith("Check your email") ? "#f0faf0" : "#fef2f2",
-            border: "1px solid " + (error.startsWith("Check your email") ? "#b4e8b4" : "#e8b4b4"),
+            marginTop: 14, padding: "10px 14px", background: error === t.checkEmail ? "#f0faf0" : "#fef2f2",
+            border: "1px solid " + (error === t.checkEmail ? "#b4e8b4" : "#e8b4b4"),
             borderRadius: 8, fontSize: 13,
-            color: error.startsWith("Check your email") ? "#2a6a2a" : "#7a2a2a", lineHeight: 1.5,
+            color: error === t.checkEmail ? "#2a6a2a" : "#7a2a2a", lineHeight: 1.5,
           }}>
             {error}
           </div>
         )}
 
         <div style={{ marginTop: 18, fontSize: 13, color: mid }}>
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+          {isSignUp ? t.alreadyHaveAccount : t.dontHaveAccount}{" "}
           <button
             onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
             style={{
@@ -195,7 +195,7 @@ function AuthScreen({ onSuccess }) {
               fontSize: 13, cursor: "pointer", textDecoration: "underline", padding: 0,
             }}
           >
-            {isSignUp ? "Sign In" : "Sign Up"}
+            {isSignUp ? t.signIn : t.signUp}
           </button>
         </div>
       </div>
@@ -204,6 +204,8 @@ function AuthScreen({ onSuccess }) {
 }
 
 export default function TheologyAssistant() {
+  const { lang, setLang, t } = useI18n();
+
   // Auth state
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -444,10 +446,10 @@ export default function TheologyAssistant() {
     return null;
   }
 
-  function toggleTradition(t) {
+  function toggleTradition(trad) {
     setActiveTraditions(prev => {
       const next = new Set(prev);
-      if (next.has(t)) { if (next.size > 1) next.delete(t); } else { next.add(t); }
+      if (next.has(trad)) { if (next.size > 1) next.delete(trad); } else { next.add(trad); }
       return next;
     });
   }
@@ -456,28 +458,29 @@ export default function TheologyAssistant() {
     const key = confessionName + "-" + chapterTitle + "-" + sectionNumber;
     if (commentary[key]) return;
     if (!canUseAI()) {
-      setAiLimitMessage("You've reached your daily limit of 7 AI queries. Your limit resets tomorrow.");
+      setAiLimitMessage(t.aiLimitReached);
       return;
     }
     setCommentaryLoading(key);
     try {
+      const systemPrompt = lang === "de" ? SYSTEM_PROMPT + " Please respond in German (Deutsch)." : SYSTEM_PROMPT;
       const prompt = "Provide a brief scholarly commentary (3-4 sentences) on this section from " + confessionName + ", " + chapterTitle + ": " + sectionText + " Note its historical context, theological significance, and how it relates to other traditions.";
-      const data = await callAPI({ max_tokens: 300, system: SYSTEM_PROMPT, messages: [{ role: "user", content: prompt }] });
+      const data = await callAPI({ max_tokens: 300, system: systemPrompt, messages: [{ role: "user", content: prompt }] });
       setCommentary(prev => ({ ...prev, [key]: extractText(data) }));
       incrementAIUsage();
     } catch (e) {
       console.error(e);
-      setCommentary(prev => ({ ...prev, [key]: { error: true, message: "Unable to load commentary. Please try again." } }));
+      setCommentary(prev => ({ ...prev, [key]: { error: true, message: t.unableToLoadCommentary } }));
     }
     finally { setCommentaryLoading(false); }
   }
 
-  const visibleTraditions = ALL_TRADITIONS.filter(t => activeTraditions.has(t));
+  const visibleTraditions = ALL_TRADITIONS.filter(trad => activeTraditions.has(trad));
 
   async function askQuestion() {
     if (!input.trim()) return;
     if (!canUseAI()) {
-      setAiLimitMessage("You've reached your daily limit of 7 AI queries. Your limit resets tomorrow.");
+      setAiLimitMessage(t.aiLimitReached);
       return;
     }
     const userMessage = { role: "user", content: input };
@@ -485,9 +488,11 @@ export default function TheologyAssistant() {
     const question = input;
     setMessages(updated); setInput(""); setLoading(true); setCitationsLoading(true); setCitations([]);
     try {
+      const systemPrompt = lang === "de" ? SYSTEM_PROMPT + " Please respond in German (Deutsch)." : SYSTEM_PROMPT;
+      const citationPrompt = lang === "de" ? CITATION_PROMPT + " Please respond in German (Deutsch)." : CITATION_PROMPT;
       const [ad, cd] = await Promise.all([
-        callAPI({ max_tokens: 1000, system: SYSTEM_PROMPT, messages: updated }),
-        callAPI({ max_tokens: 1000, system: CITATION_PROMPT, messages: [{ role: "user", content: question }] }),
+        callAPI({ max_tokens: 1000, system: systemPrompt, messages: updated }),
+        callAPI({ max_tokens: 1000, system: citationPrompt, messages: [{ role: "user", content: question }] }),
       ]);
       const answer = extractText(ad);
       setMessages([...updated, { role: "assistant", content: answer, question }]);
@@ -495,7 +500,7 @@ export default function TheologyAssistant() {
       incrementAIUsage();
     } catch (e) {
       console.error(e);
-      setMessages([...updated, { role: "assistant", content: "Unable to reach the AI service. Please try again.", isError: true }]);
+      setMessages([...updated, { role: "assistant", content: t.unableToReachAI, isError: true }]);
     }
     finally { setLoading(false); setCitationsLoading(false); }
   }
@@ -503,15 +508,16 @@ export default function TheologyAssistant() {
   async function runComparison() {
     if (!compareInput.trim()) return;
     if (!canUseAI()) {
-      setAiLimitMessage("You've reached your daily limit of 7 AI queries. Your limit resets tomorrow.");
+      setAiLimitMessage(t.aiLimitReached);
       return;
     }
     setCompareLoading(true); setComparisonData(null); setCompareError(null);
     try {
-      const data = await callAPI({ max_tokens: 1500, system: COMPARISON_PROMPT, messages: [{ role: "user", content: compareInput }] });
+      const comparisonPrompt = lang === "de" ? COMPARISON_PROMPT + " Please respond in German (Deutsch)." : COMPARISON_PROMPT;
+      const data = await callAPI({ max_tokens: 1500, system: comparisonPrompt, messages: [{ role: "user", content: compareInput }] });
       const text = extractText(data);
       const parsed = parseComparison(text);
-      if (!parsed.topic || parsed.rows.length === 0) throw new Error("Could not parse response. Please try again.");
+      if (!parsed.topic || parsed.rows.length === 0) throw new Error(t.couldNotParse);
       setComparisonData(parsed);
       incrementAIUsage();
     } catch (e) { console.error(e); setCompareError(e.message || "Unknown error."); }
@@ -520,40 +526,53 @@ export default function TheologyAssistant() {
 
   const confessionNames = Object.keys(CONFESSIONS);
 
+  // Footer element reused across welcome/loading screens
+  const FooterBar = () => (
+    <div style={{ padding: "6px 24px", background: dark, textAlign: "center", flexShrink: 0, borderTop: "1px solid " + border }}>
+      <a href="https://www.ccc-study.org" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#a09070", fontFamily: "Georgia, serif", letterSpacing: 1, textDecoration: "none", opacity: 0.7 }}>www.ccc-study.org</a>
+    </div>
+  );
+
   // Show welcome screen on first visit
   if (showWelcome) {
     return (
-      <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: cream }}>
-        <div style={{ maxWidth: 520, padding: "48px 44px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
-          <div style={{ fontSize: 24, fontWeight: "bold", color: dark, marginBottom: 16 }}>Creeds, Confessions and Catechism Research</div>
-          <p style={{ fontSize: 14, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 28 }}>
-            Explore the historic creeds, confessions, and catechisms of the Christian church. Compare what Reformed, Lutheran, Baptist, Anglican, Orthodox, and Catholic traditions teach on key doctrines — with AI-powered research and commentary.
-          </p>
-          <div style={{ textAlign: "left", marginBottom: 32 }}>
-            {[
-              { label: "Browse", desc: "Read the full texts of the historic creeds, confessions, and catechisms — including the Nicene Creed, Westminster Confession, Heidelberg Catechism, Augsburg Confession, 1689 Baptist Confession, 39 Articles, and more." },
-              { label: "Compare", desc: "See how different traditions approach baptism, justification, the Lord\u2019s Supper, and other doctrines side by side." },
-              { label: "Research", desc: "Ask any theological question and receive AI-powered answers grounded in confessional texts." },
-            ].map(({ label, desc }) => (
-              <div key={label} style={{ marginBottom: 16, paddingLeft: 20, borderLeft: "3px solid " + gold }}>
-                <div style={{ fontSize: 14, fontWeight: "bold", color: dark, marginBottom: 3 }}>{label}</div>
-                <div style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.7 }}>{desc}</div>
-              </div>
-            ))}
+      <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", flexDirection: "column", alignItems: "stretch", background: cream }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ maxWidth: 520, padding: "48px 44px", background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", textAlign: "center" }}>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: dark, marginBottom: 16 }}>{t.appTitle}</div>
+            <p style={{ fontSize: 14, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 28 }}>
+              {t.welcomeIntro}
+            </p>
+            <div style={{ textAlign: "left", marginBottom: 32 }}>
+              {[
+                { label: t.welcomeBrowseLabel, desc: t.welcomeBrowseDesc },
+                { label: t.welcomeCompareLabel, desc: t.welcomeCompareDesc },
+                { label: t.welcomeResearchLabel, desc: t.welcomeResearchDesc },
+              ].map(({ label, desc }) => (
+                <div key={label} style={{ marginBottom: 16, paddingLeft: 20, borderLeft: "3px solid " + gold }}>
+                  <div style={{ fontSize: 14, fontWeight: "bold", color: dark, marginBottom: 3 }}>{label}</div>
+                  <div style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.7 }}>{desc}</div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={enterApp}
+              style={{ width: "100%", padding: "12px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 16, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>
+              {t.startExploring}
+            </button>
           </div>
-          <button
-            onClick={enterApp}
-            style={{ width: "100%", padding: "12px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 16, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>
-            Start Exploring
-          </button>
         </div>
+        <FooterBar />
       </div>
     );
   }
   if (authLoading) {
     return (
-      <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: cream }}>
-        <LoadingDots text="Loading" color={mid} />
+      <div style={{ fontFamily: "Georgia, serif", height: "100vh", display: "flex", flexDirection: "column", alignItems: "stretch", background: cream }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <LoadingDots text={t.loading} color={mid} />
+        </div>
+        <FooterBar />
       </div>
     );
   }
@@ -567,7 +586,7 @@ export default function TheologyAssistant() {
       {/* Header */}
       <div className="header-wrap" style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 24px", background: dark, flexShrink: 0 }}>
         <div className="header-title" style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>Creeds, Confessions and Catechism Research</div>
+          <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>{t.appTitle}</div>
           <div style={{ fontSize: 10, color: gold, letterSpacing: 1, textTransform: "uppercase", display: "flex", flexWrap: "wrap", gap: "0 2px", alignItems: "center" }}>
             {[
               { label: "Ecumenical Creeds", key: "Nicene Creed" },
@@ -593,17 +612,22 @@ export default function TheologyAssistant() {
         </div>
         <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
           {[
-            { key: "research", label: "Research" },
-            { key: "compare", label: "Compare" },
-            { key: "browse", label: "Browse" },
-            { key: "notebook", label: "Notebook" + (entries.length > 0 ? " (" + entries.length + ")" : "") },
+            { key: "research", label: t.tabResearch },
+            { key: "compare", label: t.tabCompare },
+            { key: "browse", label: t.tabBrowse },
+            { key: "notebook", label: t.tabNotebook + (entries.length > 0 ? " (" + entries.length + ")" : "") },
           ].map(({ key, label }) => (
             <button key={key} onClick={() => setMode(key)} style={{ padding: "5px 12px", background: mode === key ? gold : "transparent", color: mode === key ? dark : gold, border: "1px solid " + gold, borderRadius: 20, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: mode === key ? "bold" : "normal", transition: "all 0.15s ease", borderBottom: mode === key ? "2px solid " + dark : "1px solid " + gold }}>
               {label}
             </button>
           ))}
-          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }} title="Query count resets at midnight local time">{isVip ? "Unlimited" : Math.max(0, 7 - aiUsageCount) + " of 7 AI queries · Resets midnight"}</span>
-          <button onClick={() => setShowAbout(true)} style={{ padding: "3px 10px", background: "transparent", color: "#a09070", border: "1px solid #a09070", borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 4, whiteSpace: "nowrap" }}>About</button>
+          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }} title="Query count resets at midnight local time">{isVip ? t.unlimited : t.aiQueriesRemaining(Math.max(0, 7 - aiUsageCount))}</span>
+          {/* Language toggle */}
+          <div style={{ display: "flex", gap: 2, marginLeft: 4 }}>
+            <button onClick={() => setLang("en")} style={{ padding: "2px 6px", background: lang === "en" ? gold : "transparent", color: lang === "en" ? dark : "#a09070", border: "1px solid " + (lang === "en" ? gold : "#a09070"), borderRadius: "6px 0 0 6px", fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: lang === "en" ? "bold" : "normal" }}>EN</button>
+            <button onClick={() => setLang("de")} style={{ padding: "2px 6px", background: lang === "de" ? gold : "transparent", color: lang === "de" ? dark : "#a09070", border: "1px solid " + (lang === "de" ? gold : "#a09070"), borderRadius: "0 6px 6px 0", fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: lang === "de" ? "bold" : "normal" }}>DE</button>
+          </div>
+          <button onClick={() => setShowAbout(true)} style={{ padding: "3px 10px", background: "transparent", color: "#a09070", border: "1px solid #a09070", borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 4, whiteSpace: "nowrap" }}>{t.about}</button>
           {session ? (
             <>
               <span style={{ fontSize: 10, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }}>{session.user.email}</span>
@@ -611,7 +635,7 @@ export default function TheologyAssistant() {
                 onClick={() => supabase.auth.signOut()}
                 style={{ padding: "3px 10px", background: "transparent", color: "#a09070", border: "1px solid #a09070", borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 4, whiteSpace: "nowrap" }}
               >
-                Sign Out
+                {t.signOut}
               </button>
             </>
           ) : (
@@ -619,7 +643,7 @@ export default function TheologyAssistant() {
               onClick={() => setShowAuth(true)}
               style={{ padding: "3px 10px", background: "transparent", color: gold, border: "1px solid " + gold, borderRadius: 12, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", marginLeft: 8, whiteSpace: "nowrap" }}
             >
-              Sign In
+              {t.signIn}
             </button>
           )}
         </div>
@@ -627,13 +651,13 @@ export default function TheologyAssistant() {
 
       {/* Tradition filter bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 24px", background: "#ede8dc", borderBottom: "1px solid " + border, flexShrink: 0, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 10, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase", marginRight: 4 }}>Show:</span>
-        {ALL_TRADITIONS.map(t => {
-          const active = activeTraditions.has(t);
-          const c = COLORS[t];
-          return <button key={t} onClick={() => toggleTradition(t)} style={{ padding: "4px 12px", background: active ? c.border : "#fff", color: active ? "#fff" : "#aaa", border: "2px solid " + (active ? c.border : "#ccc"), borderRadius: 12, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: active ? "bold" : "normal", opacity: active ? 1 : 0.6, transition: "all 0.15s ease" }}>{t}</button>;
+        <span style={{ fontSize: 10, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase", marginRight: 4 }}>{t.show}</span>
+        {ALL_TRADITIONS.map(trad => {
+          const active = activeTraditions.has(trad);
+          const c = COLORS[trad];
+          return <button key={trad} onClick={() => toggleTradition(trad)} style={{ padding: "4px 12px", background: active ? c.border : "#fff", color: active ? "#fff" : "#aaa", border: "2px solid " + (active ? c.border : "#ccc"), borderRadius: 12, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: active ? "bold" : "normal", opacity: active ? 1 : 0.6, transition: "all 0.15s ease" }}>{trad}</button>;
         })}
-        <button onClick={() => setActiveTraditions(new Set(ALL_TRADITIONS))} style={{ padding: "2px 8px", background: "transparent", color: mid, border: "none", fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", textDecoration: "underline" }}>All</button>
+        <button onClick={() => setActiveTraditions(new Set(ALL_TRADITIONS))} style={{ padding: "2px 8px", background: "transparent", color: mid, border: "none", fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", textDecoration: "underline" }}>{t.all}</button>
       </div>
 
       {/* AI limit notification */}
@@ -651,12 +675,12 @@ export default function TheologyAssistant() {
             <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
               {messages.length === 0 && (
                 <div style={{ textAlign: "center", padding: "40px 20px", color: mid }}>
-                  <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 16 }}>Ask a theological question</p>
+                  <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 16 }}>{t.askTheologicalQuestion}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
                     {[
-                      "What does the Westminster Confession teach about justification?",
-                      "Compare baptism across Reformed and Lutheran traditions",
-                      "Explain the Heidelberg Catechism's view of the Lord's Supper",
+                      t.sampleQuestion1,
+                      t.sampleQuestion2,
+                      t.sampleQuestion3,
                     ].map((q) => (
                       <button key={q} onClick={() => setInput(q)} style={{ padding: "8px 16px", background: "#fff", border: "1px solid " + border, borderRadius: 8, fontSize: 13, color: "#5a4a2a", cursor: "pointer", fontFamily: "Georgia, serif", fontStyle: "italic", lineHeight: 1.5, maxWidth: 440, transition: "all 0.15s ease" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.background = light; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = border; e.currentTarget.style.background = "#fff"; }}>
                         {q}
@@ -672,36 +696,36 @@ export default function TheologyAssistant() {
                       <span style={{ fontSize: 16, color: "#aa5a5a", lineHeight: 1, flexShrink: 0, marginTop: 1 }}>!</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, color: "#7a2a2a", lineHeight: 1.6 }}>{msg.content}</div>
-                        <button onClick={askQuestion} style={{ marginTop: 8, padding: "4px 14px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 12, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>Try Again</button>
+                        <button onClick={askQuestion} style={{ marginTop: 8, padding: "4px 14px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 12, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.tryAgain}</button>
                       </div>
                     </div>
                   ) : (
                   <div style={{ background: msg.role === "user" ? dark : "#fff", color: msg.role === "user" ? cream : dark, borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "2px 12px 12px 12px", padding: "12px 16px", border: msg.role === "user" ? "none" : "1px solid " + border, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", display: "inline-block", maxWidth: msg.role === "user" ? "75%" : "100%", float: msg.role === "user" ? "right" : "none", clear: "both" }}>
-                    <div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5, color: msg.role === "user" ? gold : mid }}>{msg.role === "user" ? "You" : "Research Assistant"}</div>
+                    <div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5, color: msg.role === "user" ? gold : mid }}>{msg.role === "user" ? t.you : t.researchAssistant}</div>
                     <div style={{ fontSize: 14, lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{msg.content}</div>
-                    {msg.role === "assistant" && <button onClick={() => saveEntry(msg.question || "", msg.content)} style={{ marginTop: 10, padding: "4px 12px", background: light, border: "1px solid " + border, borderRadius: 8, fontSize: 12, color: mid, cursor: "pointer", fontFamily: "Georgia, serif" }}>Save to Notebook</button>}
+                    {msg.role === "assistant" && <button onClick={() => saveEntry(msg.question || "", msg.content)} style={{ marginTop: 10, padding: "4px 12px", background: light, border: "1px solid " + border, borderRadius: 8, fontSize: 12, color: mid, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.saveToNotebook}</button>}
                   </div>
                   )}
                   <div style={{ clear: "both" }} />
                 </div>
               ))}
-              {loading && <div style={{ background: "#fff", border: "1px solid " + border, borderRadius: "2px 12px 12px 12px", padding: "12px 16px", animation: "pulse 2s ease-in-out infinite" }}><div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", color: mid, marginBottom: 5 }}>Research Assistant</div><LoadingDots text="Researching" color={mid} /></div>}
+              {loading && <div style={{ background: "#fff", border: "1px solid " + border, borderRadius: "2px 12px 12px 12px", padding: "12px 16px", animation: "pulse 2s ease-in-out infinite" }}><div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", color: mid, marginBottom: 5 }}>{t.researchAssistant}</div><LoadingDots text={t.researching} color={mid} /></div>}
             </div>
             <div style={{ padding: "12px 20px 16px", borderTop: "1px solid " + border, display: "flex", gap: 10, background: cream }}>
-              <textarea style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, resize: "none", outline: "none" }} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askQuestion(); } }} placeholder="Ask about any doctrine, creed, confession, or catechism..." rows={3} />
+              <textarea style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, resize: "none", outline: "none" }} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askQuestion(); } }} placeholder={t.askPlaceholder} rows={3} />
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <button onClick={askQuestion} disabled={loading} style={{ flex: 1, padding: "0 18px", background: loading ? border : gold, color: loading ? mid : dark, border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>{loading ? "..." : "Ask"}</button>
-                {messages.length > 0 && <button onClick={resetResearch} style={{ padding: "6px 10px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>↺ New Search</button>}
+                <button onClick={askQuestion} disabled={loading} style={{ flex: 1, padding: "0 18px", background: loading ? border : gold, color: loading ? mid : dark, border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>{loading ? "..." : t.ask}</button>
+                {messages.length > 0 && <button onClick={resetResearch} style={{ padding: "6px 10px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.newSearch}</button>}
               </div>
             </div>
           </div>
           <div className="research-sources" style={{ flex: 2, overflowY: "auto", background: light, display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid " + border, background: "#ede8dc" }}>
-              <span style={{ fontSize: 13, fontWeight: "bold", color: "#5a4a2a" }}>Sources</span>
-              {citations.length > 0 && <span style={{ fontSize: 11, color: mid, background: border, padding: "2px 8px", borderRadius: 10 }}>{citations.length} references</span>}
+              <span style={{ fontSize: 13, fontWeight: "bold", color: "#5a4a2a" }}>{t.sources}</span>
+              {citations.length > 0 && <span style={{ fontSize: 11, color: mid, background: border, padding: "2px 8px", borderRadius: 10 }}>{t.references(citations.length)}</span>}
             </div>
-            {citationsLoading && <div style={{ padding: "24px", textAlign: "center" }}><LoadingDots text="Identifying sources" color={mid} /></div>}
-            {!citationsLoading && citations.length === 0 && <div style={{ padding: "32px 20px", textAlign: "center", color: mid, fontSize: 13 }}>Sources will appear here after your first question.</div>}
+            {citationsLoading && <div style={{ padding: "24px", textAlign: "center" }}><LoadingDots text={t.identifyingSources} color={mid} /></div>}
+            {!citationsLoading && citations.length === 0 && <div style={{ padding: "32px 20px", textAlign: "center", color: mid, fontSize: 13 }}>{t.sourcesPlaceholder}</div>}
             {!citationsLoading && citations.filter(c => activeTraditions.has(c.tradition)).map((cite, i) => {
               const c = COLORS[cite.tradition] || COLORS.Ecumenical;
               return (
@@ -722,41 +746,49 @@ export default function TheologyAssistant() {
       {mode === "compare" && (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <div style={{ padding: "18px 24px", borderBottom: "1px solid " + border, background: cream, flexShrink: 0 }}>
-            <p style={{ margin: "0 0 10px", fontSize: 14, color: "#5a4a2a" }}>Enter a doctrine or topic to compare across traditions:</p>
+            <p style={{ margin: "0 0 10px", fontSize: 14, color: "#5a4a2a" }}>{t.enterDoctrinePrompt}</p>
             <div style={{ display: "flex", gap: 10 }}>
-              <input style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, outline: "none", color: dark, background: "#fff" }} value={compareInput} onChange={(e) => setCompareInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runComparison(); }} placeholder="e.g. Baptism, Justification, Theosis" />
-              <button onClick={runComparison} disabled={compareLoading} style={{ padding: "0 18px", background: compareLoading ? border : gold, color: compareLoading ? mid : dark, border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: compareLoading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>{compareLoading ? "Comparing..." : "Compare"}</button>
-              {comparisonData && <button onClick={resetCompare} style={{ padding: "0 14px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: "Georgia, serif" }}>↺ New</button>}
+              <input style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, outline: "none", color: dark, background: "#fff" }} value={compareInput} onChange={(e) => setCompareInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runComparison(); }} placeholder={t.comparePlaceholder} />
+              <button onClick={runComparison} disabled={compareLoading} style={{ padding: "0 18px", background: compareLoading ? border : gold, color: compareLoading ? mid : dark, border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: compareLoading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>{compareLoading ? t.comparing : t.compare}</button>
+              {comparisonData && <button onClick={resetCompare} style={{ padding: "0 14px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.newCompare}</button>}
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-              {["Baptism", "Justification", "The Lord's Supper", "Original Sin", "Scripture", "Predestination", "The Church"].map((t) => (
-                <button key={t} onClick={() => setCompareInput(t)} style={{ padding: "3px 12px", background: "#fff", border: "1px solid " + border, borderRadius: 14, fontSize: 12, color: "#5a4a2a", cursor: "pointer", fontFamily: "Georgia, serif", transition: "all 0.15s ease" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.background = light; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = border; e.currentTarget.style.background = "#fff"; }}>{t}</button>
+              {[
+                { label: t.topicBaptism, value: "Baptism" },
+                { label: t.topicJustification, value: "Justification" },
+                { label: t.topicLordsSupper, value: "The Lord's Supper" },
+                { label: t.topicOriginalSin, value: "Original Sin" },
+                { label: t.topicScripture, value: "Scripture" },
+                { label: t.topicPredestination, value: "Predestination" },
+                { label: t.topicTheChurch, value: "The Church" },
+              ].map(({ label, value }) => (
+                <button key={value} onClick={() => setCompareInput(value)} style={{ padding: "3px 12px", background: "#fff", border: "1px solid " + border, borderRadius: 14, fontSize: 12, color: "#5a4a2a", cursor: "pointer", fontFamily: "Georgia, serif", transition: "all 0.15s ease" }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = gold; e.currentTarget.style.background = light; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = border; e.currentTarget.style.background = "#fff"; }}>{label}</button>
               ))}
             </div>
           </div>
-          {compareError && <ErrorBox message="Unable to complete the comparison. Please try again." onRetry={runComparison} />}
-          {compareLoading && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}><div style={{ fontSize: 18, color: "#5a4a2a" }}><LoadingDots text="Comparing traditions" color="#5a4a2a" /></div><div style={{ fontSize: 13, color: mid, fontStyle: "italic", animation: "pulse 2s ease-in-out infinite" }}>Consulting creeds, confessions, and catechisms</div></div>}
-          {!comparisonData && !compareLoading && !compareError && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", padding: 40, textAlign: "center" }}><p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Compare any doctrine across traditions</p><p style={{ fontSize: 13, color: mid, maxWidth: 440, lineHeight: 1.7, marginBottom: 16 }}>Select a suggested topic above or type your own. Use the filter bar to choose which traditions to include.</p></div>}
+          {compareError && <ErrorBox message={t.unableToCompare} onRetry={runComparison} />}
+          {compareLoading && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}><div style={{ fontSize: 18, color: "#5a4a2a" }}><LoadingDots text={t.comparingTraditions} color="#5a4a2a" /></div><div style={{ fontSize: 13, color: mid, fontStyle: "italic", animation: "pulse 2s ease-in-out infinite" }}>{t.consultingTexts}</div></div>}
+          {!comparisonData && !compareLoading && !compareError && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", padding: 40, textAlign: "center" }}><p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>{t.compareAnyDoctrine}</p><p style={{ fontSize: 13, color: mid, maxWidth: 440, lineHeight: 1.7, marginBottom: 16 }}>{t.compareInstructions}</p></div>}
           {comparisonData && !compareLoading && (
             <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
               <h2 style={{ margin: "0 0 6px", fontSize: 20, color: dark }}>{comparisonData.topic}</h2>
               <p style={{ margin: "0 0 18px", fontSize: 13, color: "#5a4a2a", fontStyle: "italic", lineHeight: 1.7 }}>{comparisonData.summary}</p>
-              {visibleTraditions.length > 4 && <p style={{ margin: "0 0 8px", fontSize: 11, color: mid, fontStyle: "italic", textAlign: "right" }}>← Scroll table to see all traditions →</p>}
+              {visibleTraditions.length > 4 && <p style={{ margin: "0 0 8px", fontSize: 11, color: mid, fontStyle: "italic", textAlign: "right" }}>{t.scrollHint}</p>}
               <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "thin", scrollbarColor: "#d4c4a0 transparent" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr>
-                      <th style={{ padding: "10px 14px", background: dark, color: cream, textAlign: "left", fontSize: 12, minWidth: 110 }}>Aspect</th>
-                      {visibleTraditions.map(t => <th key={t} style={{ padding: "10px 14px", background: COLORS[t].header, color: "#fff", textAlign: "left", fontSize: 12, minWidth: 155 }}>{t}</th>)}
+                      <th style={{ padding: "10px 14px", background: dark, color: cream, textAlign: "left", fontSize: 12, minWidth: 110 }}>{t.aspect}</th>
+                      {visibleTraditions.map(trad => <th key={trad} style={{ padding: "10px 14px", background: COLORS[trad].header, color: "#fff", textAlign: "left", fontSize: 12, minWidth: 155 }}>{trad}</th>)}
                     </tr>
                   </thead>
                   <tbody>
                     {comparisonData.rows.map((row, i) => (
                       <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : cream }}>
                         <td style={{ padding: "12px 14px", fontWeight: "bold", fontSize: 12, color: dark, borderRight: "2px solid " + border, verticalAlign: "top", background: light }}>{row.aspect}</td>
-                        {visibleTraditions.map(t => {
-                          const cell = row[t]; const c = COLORS[t];
-                          return <td key={t} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{cell ? <div><div style={{ fontSize: 12, color: dark, lineHeight: 1.6, marginBottom: 3 }}>{cell.position}</div>{cell.citation && (() => { const confKey = findConfessionFromCitation(cell.citation); return confKey ? (<button onClick={() => { setMode("browse"); setSelectedConfession(confKey); setSelectedChapter(null); }} title={"Open in Browse: " + confKey} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 10 }}>↗</span></button>) : (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>); })()}</div> : <span style={{ color: "#ccc" }}>-</span>}</td>;
+                        {visibleTraditions.map(trad => {
+                          const cell = row[trad]; const c = COLORS[trad];
+                          return <td key={trad} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{cell ? <div><div style={{ fontSize: 12, color: dark, lineHeight: 1.6, marginBottom: 3 }}>{cell.position}</div>{cell.citation && (() => { const confKey = findConfessionFromCitation(cell.citation); return confKey ? (<button onClick={() => { setMode("browse"); setSelectedConfession(confKey); setSelectedChapter(null); }} title={"Open in Browse: " + confKey} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 10 }}>↗</span></button>) : (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>); })()}</div> : <span style={{ color: "#ccc" }}>-</span>}</td>;
                         })}
                       </tr>
                     ))}
@@ -774,7 +806,7 @@ export default function TheologyAssistant() {
 
           {/* Confession list */}
           <div className="browse-sidebar" style={{ width: 200, borderRight: "2px solid " + border, overflowY: "auto", background: light, flexShrink: 0 }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid " + border, background: "#ede8dc", fontSize: 11, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase" }}>Confessions</div>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid " + border, background: "#ede8dc", fontSize: 11, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase" }}>{t.confessions}</div>
             {confessionNames.map(name => {
               const conf = CONFESSIONS[name];
               const c = COLORS[conf.tradition];
@@ -786,7 +818,7 @@ export default function TheologyAssistant() {
                   {name === "Roman Catechism" && (
                     <div style={{ fontSize: 10, color: "#7a5a00", marginTop: 6, padding: "5px 8px", background: "#fdf3cd", border: "1px solid #e8c84a", borderRadius: 5, lineHeight: 1.5, display: "flex", gap: 5, alignItems: "flex-start" }}>
                       <span style={{ flexShrink: 0, fontSize: 11 }}>ⓘ</span>
-                      <span>AI may also reference the 1992 Catechism where teaching has developed.</span>
+                      <span>{t.romanCatechismNote}</span>
                     </div>
                   )}
                 </div>
@@ -797,13 +829,13 @@ export default function TheologyAssistant() {
           {/* Chapter list */}
           {currentConfession && (
             <div className="browse-chapters" style={{ width: 200, borderRight: "2px solid " + border, overflowY: "auto", background: "#fff", flexShrink: 0 }}>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid " + border, background: "#ede8dc", fontSize: 11, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase" }}>Chapters</div>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid " + border, background: "#ede8dc", fontSize: 11, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase" }}>{t.chapters}</div>
               {currentConfession.chapters.map((ch, idx) => {
                 const active = selectedChapter === idx;
                 const c = COLORS[currentConfession.tradition];
                 return (
                   <div key={idx} onClick={() => setSelectedChapter(idx)} style={{ padding: "10px 14px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "3px solid " + c.border : "3px solid transparent" }}>
-                    <div style={{ fontSize: 11, color: mid, marginBottom: 2 }}>Chapter {ch.number}</div>
+                    <div style={{ fontSize: 11, color: mid, marginBottom: 2 }}>{t.chapter} {ch.number}</div>
                     <div style={{ fontSize: 12, fontWeight: active ? "bold" : "normal", color: active ? c.text : dark, lineHeight: 1.4 }}>{ch.title}</div>
                   </div>
                 );
@@ -815,20 +847,20 @@ export default function TheologyAssistant() {
           <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
             {!selectedConfession && (
               <div style={{ textAlign: "center", padding: "60px 20px", color: mid }}>
-                <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Browse the Source Texts</p>
-                <p style={{ fontSize: 13, lineHeight: 1.7 }}>Select a document from the left to read the original text. Click any section to get AI commentary on its historical context and theological significance.</p>
+                <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>{t.browseSourceTexts}</p>
+                <p style={{ fontSize: 13, lineHeight: 1.7 }}>{t.browseInstructions}</p>
               </div>
             )}
             {selectedConfession && !selectedChapter === true && selectedChapter !== 0 && (
               <div style={{ textAlign: "center", padding: "60px 20px", color: mid }}>
-                <p style={{ fontSize: 15, color: "#5a4a2a" }}>Select a chapter to begin reading</p>
+                <p style={{ fontSize: 15, color: "#5a4a2a" }}>{t.selectChapter}</p>
               </div>
             )}
             {currentChapter && (
               <div>
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ fontSize: 11, color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{selectedConfession} - {currentConfession.year}</div>
-                  <h2 style={{ margin: "0 0 4px", fontSize: 20, color: dark }}>Chapter {currentChapter.number}</h2>
+                  <h2 style={{ margin: "0 0 4px", fontSize: 20, color: dark }}>{t.chapter} {currentChapter.number}</h2>
                   <h3 style={{ margin: 0, fontSize: 15, color: "#5a4a2a", fontWeight: "normal" }}>{currentChapter.title}</h3>
                 </div>
                 {currentChapter.sections.map((section) => {
@@ -837,26 +869,26 @@ export default function TheologyAssistant() {
                   const isLoading = commentaryLoading === key;
                   return (
                     <div key={section.number} style={{ marginBottom: 28, paddingBottom: 28, borderBottom: "1px solid " + border }}>
-                      <div style={{ fontSize: 11, fontWeight: "bold", color: COLORS[currentConfession.tradition].header, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Section {section.number}</div>
+                      <div style={{ fontSize: 11, fontWeight: "bold", color: COLORS[currentConfession.tradition].header, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{t.section} {section.number}</div>
                       <p style={{ fontSize: 15, lineHeight: 1.85, color: dark, margin: "0 0 12px", fontStyle: "italic" }}>{section.text}</p>
                       {!hasCommentary && !isLoading && (
                         <button onClick={() => getCommentary(selectedConfession, currentChapter.title, section.number, section.text)} style={{ padding: "4px 12px", background: "#fff", border: "1px solid " + border, borderRadius: 6, fontSize: 12, color: mid, cursor: "pointer", fontFamily: "Georgia, serif" }}>
-                          Get Commentary
+                          {t.getCommentary}
                         </button>
                       )}
-                      {isLoading && <div style={{ fontSize: 12, color: mid }}><LoadingDots text="Loading commentary" color={mid} /></div>}
+                      {isLoading && <div style={{ fontSize: 12, color: mid }}><LoadingDots text={t.loadingCommentary} color={mid} /></div>}
                       {hasCommentary && hasCommentary.error && (
                         <div style={{ marginTop: 10, padding: "12px 14px", background: "#fef2f2", border: "1px solid #e8b4b4", borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 10 }}>
                           <span style={{ fontSize: 14, color: "#aa5a5a", lineHeight: 1, flexShrink: 0, marginTop: 1 }}>!</span>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 12, color: "#7a2a2a", lineHeight: 1.5 }}>{hasCommentary.message}</div>
-                            <button onClick={() => { setCommentary(prev => { const next = { ...prev }; delete next[key]; return next; }); getCommentary(selectedConfession, currentChapter.title, section.number, section.text); }} style={{ marginTop: 6, padding: "3px 12px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 11, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>Try Again</button>
+                            <button onClick={() => { setCommentary(prev => { const next = { ...prev }; delete next[key]; return next; }); getCommentary(selectedConfession, currentChapter.title, section.number, section.text); }} style={{ marginTop: 6, padding: "3px 12px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 11, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.tryAgain}</button>
                           </div>
                         </div>
                       )}
                       {hasCommentary && !hasCommentary.error && (
                         <div style={{ marginTop: 10, padding: "12px 14px", background: light, borderRadius: 8, borderLeft: "3px solid " + COLORS[currentConfession.tradition].border }}>
-                          <div style={{ fontSize: 10, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Commentary</div>
+                          <div style={{ fontSize: 10, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{t.commentary}</div>
                           <div style={{ fontSize: 13, color: dark, lineHeight: 1.7 }}>{hasCommentary}</div>
                         </div>
                       )}
@@ -875,27 +907,27 @@ export default function TheologyAssistant() {
           {/* Sign-in prompt for unauthenticated users */}
           {!session && (
             <div style={{ marginBottom: 24, padding: "16px 20px", background: "#fffdf5", border: "1px solid " + border, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-              <span style={{ fontSize: 14, color: "#5a4a2a" }}>Sign in to save notes</span>
-              <button onClick={() => setShowAuth(true)} style={{ padding: "6px 18px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>Sign In</button>
+              <span style={{ fontSize: 14, color: "#5a4a2a" }}>{t.signInToSaveNotes}</span>
+              <button onClick={() => setShowAuth(true)} style={{ padding: "6px 18px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.signIn}</button>
             </div>
           )}
           {/* Add Note Panel */}
           <div style={{ marginBottom: 24 }}>
             {!addingNewNote ? (
-              <button onClick={() => { if (!session) { setShowAuth(true); return; } setAddingNewNote(true); }} style={{ padding: "8px 20px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>+ Add Note</button>
+              <button onClick={() => { if (!session) { setShowAuth(true); return; } setAddingNewNote(true); }} style={{ padding: "8px 20px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.addNote}</button>
             ) : (
               <div style={{ background: "#fff", border: "1px solid " + border, borderRadius: 10, padding: "16px 18px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>New Note</div>
+                <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{t.newNote}</div>
                 <textarea
                   style={{ width: "100%", padding: "10px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 6, color: dark, resize: "vertical", outline: "none", minHeight: 100, boxSizing: "border-box" }}
                   value={newNoteText}
                   onChange={(e) => setNewNoteText(e.target.value)}
-                  placeholder="Write your note, reflection, or observation..."
+                  placeholder={t.notePlaceholder}
                   autoFocus
                 />
                 <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                  <button onClick={addStandaloneNote} style={{ padding: "6px 18px", background: gold, color: dark, border: "none", borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: "bold" }}>Save Note</button>
-                  <button onClick={() => { setAddingNewNote(false); setNewNoteText(""); }} style={{ padding: "6px 14px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>Cancel</button>
+                  <button onClick={addStandaloneNote} style={{ padding: "6px 18px", background: gold, color: dark, border: "none", borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: "bold" }}>{t.saveNote}</button>
+                  <button onClick={() => { setAddingNewNote(false); setNewNoteText(""); }} style={{ padding: "6px 14px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.cancel}</button>
                 </div>
               </div>
             )}
@@ -903,23 +935,23 @@ export default function TheologyAssistant() {
 
           {entries.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", color: mid }}>
-              <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>Your research notebook is empty</p>
-              <p style={{ fontSize: 13 }}>Click <strong>+ Add Note</strong> to write your own notes, or ask a question in Research mode and click Save to Notebook.</p>
+              <p style={{ fontSize: 17, color: "#5a4a2a", marginBottom: 8 }}>{t.notebookEmpty}</p>
+              <p style={{ fontSize: 13 }} dangerouslySetInnerHTML={{ __html: t.notebookEmptyDesc }} />
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h2 style={{ margin: 0, fontSize: 18, color: dark }}>Research Notebook</h2>
-                <span style={{ fontSize: 12, color: mid }}>{entries.length} saved {entries.length === 1 ? "entry" : "entries"}</span>
+                <h2 style={{ margin: 0, fontSize: 18, color: dark }}>{t.researchNotebook}</h2>
+                <span style={{ fontSize: 12, color: mid }}>{t.savedEntries(entries.length)}</span>
               </div>
               {entries.map((entry) => (
                 <div key={entry.id} style={{ background: "#fff", border: "1px solid " + border, borderRadius: 10, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                   <div style={{ padding: "12px 18px", background: light, borderBottom: "1px solid " + border, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ fontSize: 12, color: mid }}>{entry.date}</div>
-                      {entry.isStandalone && <span style={{ fontSize: 10, padding: "2px 8px", background: "#fffdf5", border: "1px solid " + border, borderRadius: 10, color: mid, letterSpacing: 1, textTransform: "uppercase" }}>Note</span>}
+                      {entry.isStandalone && <span style={{ fontSize: 10, padding: "2px 8px", background: "#fffdf5", border: "1px solid " + border, borderRadius: 10, color: mid, letterSpacing: 1, textTransform: "uppercase" }}>{t.note}</span>}
                     </div>
-                    <button onClick={() => deleteEntry(entry.id)} style={{ background: "transparent", border: "none", color: "#cc6666", fontSize: 12, cursor: "pointer", fontFamily: "Georgia, serif" }}>Delete</button>
+                    <button onClick={() => deleteEntry(entry.id)} style={{ background: "transparent", border: "none", color: "#cc6666", fontSize: 12, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.delete}</button>
                   </div>
                   <div style={{ padding: "14px 18px" }}>
                     {entry.isStandalone ? (
@@ -928,36 +960,36 @@ export default function TheologyAssistant() {
                           <div>
                             <textarea style={{ width: "100%", padding: "10px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 6, color: dark, resize: "vertical", outline: "none", minHeight: 80, boxSizing: "border-box" }} value={editingNote} onChange={(e) => setEditingNote(e.target.value)} autoFocus />
                             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                              <button onClick={() => saveNote(entry.id)} style={{ padding: "5px 16px", background: gold, color: dark, border: "none", borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: "bold" }}>Save</button>
-                              <button onClick={() => { setEditingId(null); setEditingNote(""); }} style={{ padding: "5px 16px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>Cancel</button>
+                              <button onClick={() => saveNote(entry.id)} style={{ padding: "5px 16px", background: gold, color: dark, border: "none", borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: "bold" }}>{t.saveNote}</button>
+                              <button onClick={() => { setEditingId(null); setEditingNote(""); }} style={{ padding: "5px 16px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.cancel}</button>
                             </div>
                           </div>
                         ) : (
                           <div>
                             <div style={{ fontSize: 14, color: dark, lineHeight: 1.75, whiteSpace: "pre-wrap", marginBottom: 10 }}>{entry.note}</div>
-                            <button onClick={() => { setEditingId(entry.id); setEditingNote(entry.note); }} style={{ padding: "5px 14px", background: "#fff", border: "1px solid " + border, borderRadius: 6, fontSize: 12, color: mid, cursor: "pointer", fontFamily: "Georgia, serif" }}>Edit Note</button>
+                            <button onClick={() => { setEditingId(entry.id); setEditingNote(entry.note); }} style={{ padding: "5px 14px", background: "#fff", border: "1px solid " + border, borderRadius: 6, fontSize: 12, color: mid, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.editNote}</button>
                           </div>
                         )}
                       </div>
                     ) : (
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Question</div>
+                        <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{t.question}</div>
                         <div style={{ fontSize: 14, color: dark, marginBottom: 14, fontStyle: "italic" }}>{entry.question}</div>
-                        <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Response</div>
+                        <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{t.response}</div>
                         <div style={{ fontSize: 14, color: dark, lineHeight: 1.75, whiteSpace: "pre-wrap", marginBottom: 14 }}>{entry.answer}</div>
-                        <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Your Notes</div>
+                        <div style={{ fontSize: 12, fontWeight: "bold", color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{t.yourNotes}</div>
                         {editingId === entry.id ? (
                           <div>
-                            <textarea style={{ width: "100%", padding: "10px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 6, color: dark, resize: "vertical", outline: "none", minHeight: 80, boxSizing: "border-box" }} value={editingNote} onChange={(e) => setEditingNote(e.target.value)} placeholder="Add your own notes, reflections, or follow-up questions..." autoFocus />
+                            <textarea style={{ width: "100%", padding: "10px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 6, color: dark, resize: "vertical", outline: "none", minHeight: 80, boxSizing: "border-box" }} value={editingNote} onChange={(e) => setEditingNote(e.target.value)} placeholder={t.notesEditPlaceholder} autoFocus />
                             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                              <button onClick={() => saveNote(entry.id)} style={{ padding: "5px 16px", background: gold, color: dark, border: "none", borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: "bold" }}>Save Note</button>
-                              <button onClick={() => { setEditingId(null); setEditingNote(""); }} style={{ padding: "5px 16px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>Cancel</button>
+                              <button onClick={() => saveNote(entry.id)} style={{ padding: "5px 16px", background: gold, color: dark, border: "none", borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: "bold" }}>{t.saveNote}</button>
+                              <button onClick={() => { setEditingId(null); setEditingNote(""); }} style={{ padding: "5px 16px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 6, fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.cancel}</button>
                             </div>
                           </div>
                         ) : (
                           <div>
                             {entry.note && <div style={{ padding: "8px 10px", border: "1px solid " + border, borderRadius: 6, fontSize: 14, color: dark, lineHeight: 1.6, whiteSpace: "pre-wrap", marginBottom: 8, background: "#fffdf5" }}>{entry.note}</div>}
-                            <button onClick={() => { setEditingId(entry.id); setEditingNote(entry.note); }} style={{ padding: "5px 14px", background: "#fff", border: "1px solid " + border, borderRadius: 6, fontSize: 12, color: mid, cursor: "pointer", fontFamily: "Georgia, serif" }}>{entry.note ? "Edit Note" : "+ Add a Note"}</button>
+                            <button onClick={() => { setEditingId(entry.id); setEditingNote(entry.note); }} style={{ padding: "5px 14px", background: "#fff", border: "1px solid " + border, borderRadius: 6, fontSize: 12, color: mid, cursor: "pointer", fontFamily: "Georgia, serif" }}>{entry.note ? t.editNote : t.addANote}</button>
                           </div>
                         )}
                       </div>
@@ -985,25 +1017,23 @@ export default function TheologyAssistant() {
         <div onClick={() => setShowAbout(false)} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(44,36,22,0.55)" }}>
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: 480, width: "90%", background: cream, border: "1px solid " + border, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", padding: "36px 36px 28px", position: "relative", fontFamily: "Georgia, serif" }}>
             <button onClick={() => setShowAbout(false)} style={{ position: "absolute", top: 12, right: 16, background: "transparent", border: "none", fontSize: 20, color: mid, cursor: "pointer" }}>×</button>
-            <div style={{ fontSize: 18, fontWeight: "bold", color: dark, marginBottom: 14 }}>About This Project</div>
+            <div style={{ fontSize: 18, fontWeight: "bold", color: dark, marginBottom: 14 }}>{t.aboutThisProject}</div>
+            <p style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 16 }} dangerouslySetInnerHTML={{ __html: t.aboutDescription }} />
             <p style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 16 }}>
-              <strong>Creeds, Confessions and Catechism Research (CACR)</strong> is a free scholarly tool for exploring the historic confessions of the Christian church — Reformed, Lutheran, Catholic, Baptist, Anglican, Orthodox, and the Ecumenical Creeds.
-            </p>
-            <p style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 16 }}>
-              All confessional texts are drawn from public domain sources. AI commentary and comparisons are powered by large language models grounded in these primary texts — always verify with the source documents.
+              {t.aboutAINote}
             </p>
             <div style={{ borderTop: "1px solid " + border, paddingTop: 16, marginTop: 8 }}>
-              <div style={{ fontSize: 11, color: mid, marginBottom: 6, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase" }}>Documents Included</div>
+              <div style={{ fontSize: 11, color: mid, marginBottom: 6, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase" }}>{t.documentsIncluded}</div>
               <div style={{ fontSize: 12, color: "#5a4a2a", lineHeight: 1.9 }}>
-                Nicene Creed (381) · Apostles' Creed · Athanasian Creed · Chalcedon (451) · Westminster Confession (1647) · Heidelberg Catechism (1563) · Augsburg Confession (1530) · 1689 Baptist Confession · Longer Catechism (Orthodox, 1839) · 39 Articles (1571) · Roman Catechism (1566)
+                {t.documentsList}
               </div>
             </div>
             <div style={{ borderTop: "1px solid " + border, paddingTop: 16, marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
               <div style={{ fontSize: 11, color: mid }}>
-                Questions or feedback?{" "}
-                <button onClick={() => { setShowAbout(false); setShowFeedback(true); }} style={{ background: "none", border: "none", color: gold, cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, textDecoration: "underline", padding: 0 }}>Send a suggestion</button>
+                {t.questionsOrFeedback}{" "}
+                <button onClick={() => { setShowAbout(false); setShowFeedback(true); }} style={{ background: "none", border: "none", color: gold, cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, textDecoration: "underline", padding: 0 }}>{t.sendSuggestion}</button>
               </div>
-              <div style={{ fontSize: 10, color: "#baa080" }}>© 2025 CACR · All texts public domain</div>
+              <div style={{ fontSize: 10, color: "#baa080" }}>{t.copyright}</div>
             </div>
           </div>
         </div>
@@ -1017,29 +1047,33 @@ export default function TheologyAssistant() {
         onMouseEnter={e => e.currentTarget.style.opacity = "1"}
         onMouseLeave={e => e.currentTarget.style.opacity = "0.85"}
       >
-        <span style={{ fontSize: 14 }}>✉</span> Feedback
+        <span style={{ fontSize: 14 }}>✉</span> {t.feedback}
       </button>
 
       {showFeedback && (
         <div onClick={() => setShowFeedback(false)} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "flex-end", justifyContent: "flex-end", background: "rgba(44,36,22,0.35)", padding: 24 }}>
           <div onClick={e => e.stopPropagation()} style={{ width: 340, background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", padding: "24px 24px 20px", fontFamily: "Georgia, serif" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <div style={{ fontSize: 15, fontWeight: "bold", color: dark }}>Send Feedback</div>
+              <div style={{ fontSize: 15, fontWeight: "bold", color: dark }}>{t.sendFeedback}</div>
               <button onClick={() => setShowFeedback(false)} style={{ background: "transparent", border: "none", fontSize: 18, color: mid, cursor: "pointer" }}>×</button>
             </div>
             {feedbackDone ? (
-              <div style={{ textAlign: "center", padding: "24px 0", color: "#2a6a2a", fontSize: 14 }}>✓ Thank you — feedback received!</div>
+              <div style={{ textAlign: "center", padding: "24px 0", color: "#2a6a2a", fontSize: 14 }}>{t.feedbackReceived}</div>
             ) : (
               <>
                 <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-                  {["suggestion", "bug", "content"].map(type => (
-                    <button key={type} onClick={() => setFeedbackType(type)} style={{ flex: 1, padding: "5px 0", background: feedbackType === type ? dark : "#fff", color: feedbackType === type ? cream : mid, border: "1px solid " + (feedbackType === type ? dark : border), borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" }}>{type}</button>
+                  {[
+                    { key: "suggestion", label: t.feedbackSuggestion },
+                    { key: "bug", label: t.feedbackBug },
+                    { key: "content", label: t.feedbackContent },
+                  ].map(({ key: ftype, label }) => (
+                    <button key={ftype} onClick={() => setFeedbackType(ftype)} style={{ flex: 1, padding: "5px 0", background: feedbackType === ftype ? dark : "#fff", color: feedbackType === ftype ? cream : mid, border: "1px solid " + (feedbackType === ftype ? dark : border), borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", textTransform: "capitalize" }}>{label}</button>
                   ))}
                 </div>
                 <textarea
                   value={feedbackText}
                   onChange={e => setFeedbackText(e.target.value)}
-                  placeholder={feedbackType === "suggestion" ? "What would make this tool better?" : feedbackType === "bug" ? "Describe what went wrong..." : "Missing document, wrong text, citation error..."}
+                  placeholder={feedbackType === "suggestion" ? t.suggestionPlaceholder : feedbackType === "bug" ? t.bugPlaceholder : t.contentPlaceholder}
                   rows={4}
                   style={{ width: "100%", padding: "10px 12px", fontSize: 13, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, resize: "none", outline: "none", color: dark, background: cream, boxSizing: "border-box", marginBottom: 12 }}
                 />
@@ -1048,14 +1082,19 @@ export default function TheologyAssistant() {
                   disabled={feedbackSubmitting || !feedbackText.trim()}
                   style={{ width: "100%", padding: "9px", background: feedbackSubmitting || !feedbackText.trim() ? border : gold, color: dark, border: "none", borderRadius: 8, fontSize: 13, fontWeight: "bold", cursor: feedbackSubmitting || !feedbackText.trim() ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}
                 >
-                  {feedbackSubmitting ? "Sending..." : "Send Feedback"}
+                  {feedbackSubmitting ? t.sending : t.sendFeedback}
                 </button>
-                <div style={{ fontSize: 10, color: mid, marginTop: 8, textAlign: "center" }}>{session ? "Submitted as " + session.user.email : "Submitted anonymously"}</div>
+                <div style={{ fontSize: 10, color: mid, marginTop: 8, textAlign: "center" }}>{session ? t.submittedAs(session.user.email) : t.submittedAnonymously}</div>
               </>
             )}
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <div style={{ padding: "6px 24px", background: dark, textAlign: "center", flexShrink: 0, borderTop: "1px solid " + border }}>
+        <a href="https://www.ccc-study.org" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#a09070", fontFamily: "Georgia, serif", letterSpacing: 1, textDecoration: "none", opacity: 0.7 }}>www.ccc-study.org</a>
+      </div>
     </div>
   );
 }
