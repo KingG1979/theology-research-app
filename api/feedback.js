@@ -1,20 +1,17 @@
-// Vercel serverless function — receives feedback and (eventually) emails it.
-//
-// Currently: validates the payload and returns 200.
-// Later:     uncomment the nodemailer block below and add ZOHO_EMAIL +
-//            ZOHO_PASSWORD to your Vercel environment variables.
+// Vercel serverless function — receives feedback and emails it.
+// Requires ZOHO_EMAIL and ZOHO_PASSWORD in Vercel environment variables.
 
-// TODO: Uncomment when SMTP credentials are added to Vercel env vars
-// const nodemailer = require('nodemailer');
-// const transporter = nodemailer.createTransport({
-//   host: 'smtp.zoho.eu',
-//   port: 465,
-//   secure: true,
-//   auth: {
-//     user: process.env.ZOHO_EMAIL,     // support@ccc-study.org
-//     pass: process.env.ZOHO_PASSWORD,  // App-specific password
-//   }
-// });
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp.zoho.eu',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.ZOHO_EMAIL,
+    pass: process.env.ZOHO_PASSWORD,
+  },
+});
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -30,28 +27,28 @@ export default async function handler(req, res) {
   const feedbackType = type || "suggestion";
   const from = user_email || "anonymous";
   const feedbackPage = page || "unknown";
+  const timestamp = new Date().toISOString();
 
-  // TODO: Uncomment when SMTP credentials are available
-  // try {
-  //   await transporter.sendMail({
-  //     from: `"CCC Study Feedback" <${process.env.ZOHO_EMAIL}>`,
-  //     to: 'support@ccc-study.org',
-  //     subject: `[${feedbackType.toUpperCase()}] New feedback from ${from}`,
-  //     text: [
-  //       `Type: ${feedbackType}`,
-  //       `From: ${from}`,
-  //       `Page: ${feedbackPage}`,
-  //       ``,
-  //       message.trim(),
-  //     ].join('\n'),
-  //   });
-  // } catch (err) {
-  //   console.error('Email send failed:', err);
-  //   return res.status(500).json({ error: 'Failed to send email' });
-  // }
+  try {
+    await transporter.sendMail({
+      from: 'support@ccc-study.org',
+      to: 'support@ccc-study.org',
+      subject: `CCCR Feedback: ${feedbackType}`,
+      text: [
+        `Type:      ${feedbackType}`,
+        `From:      ${from}`,
+        `Page:      ${feedbackPage}`,
+        `Timestamp: ${timestamp}`,
+        ``,
+        `Message:`,
+        `--------`,
+        message.trim(),
+      ].join('\n'),
+    });
+  } catch (err) {
+    console.error('Email send failed:', err);
+    // Supabase is the primary store; email is only a notification.
+  }
 
-  return res.status(200).json({
-    ok: true,
-    note: "Email delivery is not yet active — feedback was stored in Supabase.",
-  });
+  return res.status(200).json({ ok: true });
 }
