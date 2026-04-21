@@ -5,6 +5,18 @@ import { CONFESSIONS_DE_EXTRA } from "./data/confessions_de_extra";
 import { SYSTEM_PROMPT, RESEARCH_JSON_PROMPT, COMPARISON_PROMPT } from "./prompts";
 import { callAPI, extractText } from "./api";
 import { parseComparison } from "./utils/parsers";
+import {
+  buildAnchorId,
+  buildBrowseRoute,
+  parseBrowseHash,
+  docIdForConfessionName,
+  confessionNameForDocId,
+  normalizeLocation,
+  findChapterIndex,
+  findChapterIndexBySection,
+  parseCitationString,
+  scrollToAnchorAndHighlight,
+} from "./utils/anchors";
 import { supabase } from "./supabase";
 import { useI18n } from "./i18n/index.jsx";
 
@@ -56,6 +68,39 @@ const pulseKeyframes = `
   0%, 20% { opacity: 0; }
   40%, 100% { opacity: 1; }
 }
+@keyframes cccrHighlight {
+  0%   { background-color: #fff2a8; box-shadow: 0 0 0 4px #fff2a8; }
+  80%  { background-color: #fffceb; box-shadow: 0 0 0 4px #fffceb; }
+  100% { background-color: transparent; box-shadow: 0 0 0 4px transparent; }
+}
+.cccr-anchor-highlight {
+  animation: cccrHighlight 2.2s ease-out 1;
+  border-radius: 6px;
+}
+.cccr-deeplink {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.cccr-deeplink:hover { opacity: 0.8; }
+.cccr-citation-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.cccr-citation-card:hover { transform: translateY(-1px); }
+.cccr-citation-card:focus { outline: 2px solid #c9a84c; outline-offset: 2px; }
 .compare-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: auto; scrollbar-color: #b8a878 #f2ead8; }
 .compare-scroll::-webkit-scrollbar { height: 14px; -webkit-appearance: none; }
 .compare-scroll::-webkit-scrollbar-track { background: #f2ead8; border-radius: 7px; }
@@ -460,6 +505,80 @@ export default function TheologyAssistant() {
     setCompareError(null);
   }
 
+  // Deep-link: open Browse mode at a specific document + chapter + section,
+  // then scroll and briefly highlight the matching anchor. `location` is the
+  // structured {chapter?, section?, question?, article?, canon?} payload from
+  // a Research citation (or from Compare). Unknown/partial locations fall
+  // back to the document's top.
+  function openBrowseAt(docId, location) {
+    if (!docId) return;
+    const confName = confessionNameForDocId(docId, localizedConfessions);
+    if (!confName || !localizedConfessions[confName]) {
+      // Unknown document — just switch to Browse mode.
+      setMode("browse");
+      return;
+    }
+    const conf = localizedConfessions[confName];
+    const loc = normalizeLocation(location || {});
+
+    // Find chapter index: prefer explicit chapter, else infer from section
+    // (Heidelberg question numbers, 39 Articles article numbers span chapters).
+    let chIdx = findChapterIndex(conf, loc.chapter);
+    if (chIdx < 0 && loc.section !== undefined) {
+      chIdx = findChapterIndexBySection(conf, loc.section);
+    }
+
+    setMode("browse");
+    setSelectedConfession(confName);
+    setSelectedChapter(chIdx >= 0 ? chIdx : null);
+
+    // Build the anchor for the actual chapter number we resolved to (so it
+    // matches the id rendered by the Browse view).
+    const resolvedChapter = chIdx >= 0 ? conf.chapters[chIdx].number : undefined;
+    const anchorId = buildAnchorId({
+      docId,
+      chapter: resolvedChapter,
+      section: loc.section,
+    });
+    const route = buildBrowseRoute({
+      docId,
+      chapter: resolvedChapter,
+      section: loc.section,
+    });
+    // Update the hash for shareable URLs, but don't add history spam.
+    try { history.replaceState(null, "", route); } catch {}
+    // Wait for the next paint so the Browse tree has mounted the chapter.
+    setTimeout(() => scrollToAnchorAndHighlight(anchorId), 60);
+  }
+
+  // On first mount (and on hash changes), honour ?mode=browse or #browse/...
+  // deep links. Also handles the legacy ?mode=browse&doc=... shape.
+  useEffect(() => {
+    function applyFromLocation() {
+      const params = new URLSearchParams(window.location.search);
+      const parsedHash = parseBrowseHash(window.location.hash);
+      const queryMode = params.get("mode");
+      const queryDoc = params.get("doc");
+
+      const wantsBrowse = parsedHash?.mode === "browse" || queryMode === "browse";
+      if (!wantsBrowse) return;
+
+      const docId = parsedHash?.docId || queryDoc;
+      if (!docId) {
+        setMode("browse");
+        return;
+      }
+      openBrowseAt(docId, {
+        chapter: parsedHash?.chapter,
+        section: parsedHash?.section,
+      });
+    }
+    applyFromLocation();
+    window.addEventListener("hashchange", applyFromLocation);
+    return () => window.removeEventListener("hashchange", applyFromLocation);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localizedConfessions]);
+
   const [newNoteText, setNewNoteText] = useState("");
   const [addingNewNote, setAddingNewNote] = useState(false);
 
@@ -603,6 +722,8 @@ export default function TheologyAssistant() {
           .map(c => ({
             tradition: c.tradition,
             confession: c.document || c.confession || "",
+            doc_id: c.doc_id || docIdForConfessionName(c.document || c.confession || "") || null,
+            location: c.location || null,
             reference: c.reference || "",
             quote: c.quote || "",
             relevance: c.context || c.relevance || "",
@@ -849,14 +970,33 @@ export default function TheologyAssistant() {
             {!citationsLoading && citations.length === 0 && <div style={{ padding: "32px 20px", textAlign: "center", color: mid, fontSize: 13 }}>{t.sourcesPlaceholder}</div>}
             {!citationsLoading && citations.filter(c => activeTraditions.has(c.tradition)).map((cite, i) => {
               const c = COLORS[cite.tradition] || COLORS.Ecumenical;
+              const docId = cite.doc_id || docIdForConfessionName(cite.confession);
+              const linkable = !!docId;
+              const openTarget = () => openBrowseAt(docId, cite.location || {});
               return (
-                <div key={i} style={{ margin: "10px 12px", padding: "12px 14px", background: "#fff", borderRadius: 8, borderLeft: "4px solid " + c.border, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                <button
+                  key={i}
+                  type="button"
+                  onClick={linkable ? openTarget : undefined}
+                  onKeyDown={(e) => { if (linkable && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openTarget(); } }}
+                  className={linkable ? "cccr-citation-card" : undefined}
+                  disabled={!linkable}
+                  title={linkable ? (t.openInBrowse || "Open in Browse") : undefined}
+                  style={{ margin: "10px 12px", padding: "12px 14px", background: "#fff", borderRadius: 8, borderLeft: "4px solid " + c.border, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: linkable ? "pointer" : "default", transition: "transform 0.12s ease, box-shadow 0.12s ease" }}
+                  onMouseEnter={(e) => { if (linkable) { e.currentTarget.style.boxShadow = "0 3px 10px rgba(0,0,0,0.12)"; } }}
+                  onMouseLeave={(e) => { if (linkable) { e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"; } }}
+                >
                   <div style={{ display: "inline-block", fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", padding: "2px 8px", borderRadius: 10, marginBottom: 6, background: c.bg, color: c.text }}>{cite.tradition}</div>
                   <div style={{ fontSize: 13, fontWeight: "bold", color: dark, marginBottom: 2 }}>{cite.confession}</div>
-                  <div style={{ fontSize: 12, color: mid, marginBottom: 6, fontStyle: "italic" }}>{cite.reference}</div>
+                  {cite.reference && <div style={{ fontSize: 12, color: mid, marginBottom: 6, fontStyle: "italic" }}>{cite.reference}</div>}
                   {cite.quote && <div style={{ fontSize: 12, color: "#4a3a1a", lineHeight: 1.6, borderLeft: "2px solid " + border, paddingLeft: 8, marginBottom: 6, fontStyle: "italic" }}>{cite.quote}</div>}
-                  {cite.relevance && <div style={{ fontSize: 11, color: mid }}>{cite.relevance}</div>}
-                </div>
+                  {cite.relevance && <div style={{ fontSize: 11, color: mid, marginBottom: linkable ? 6 : 0 }}>{cite.relevance}</div>}
+                  {linkable && (
+                    <div style={{ fontSize: 11, fontWeight: "bold", color: c.header, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                      {t.openInBrowse || "Open in Browse"} <span style={{ fontSize: 12 }}>→</span>
+                    </div>
+                  )}
+                </button>
               );
             })}
           </div>
@@ -909,7 +1049,13 @@ export default function TheologyAssistant() {
                         <td style={{ padding: "12px 14px", fontWeight: "bold", fontSize: 12, color: dark, borderRight: "2px solid " + border, verticalAlign: "top", background: light }}>{row.aspect}</td>
                         {visibleTraditions.map(trad => {
                           const cell = row[trad]; const c = COLORS[trad];
-                          return <td key={trad} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{cell ? <div><div style={{ fontSize: 12, color: dark, lineHeight: 1.6, marginBottom: 3 }}>{cell.position}</div>{cell.citation && (() => { const confKey = findConfessionFromCitation(cell.citation); return confKey ? (<button onClick={() => { setMode("browse"); setSelectedConfession(confKey); setSelectedChapter(null); }} title={"Open in Browse: " + confKey} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 10 }}>↗</span></button>) : (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>); })()}</div> : <span style={{ color: "#ccc" }}>-</span>}</td>;
+                          return <td key={trad} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{cell ? <div><div style={{ fontSize: 12, color: dark, lineHeight: 1.6, marginBottom: 3 }}>{cell.position}</div>{cell.citation && (() => {
+                            const confKey = findConfessionFromCitation(cell.citation);
+                            const docId = confKey ? docIdForConfessionName(confKey) : null;
+                            if (!docId) return (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>);
+                            const loc = parseCitationString(cell.citation);
+                            return (<button onClick={() => openBrowseAt(docId, loc)} title={"Open in Browse: " + cell.citation} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 10 }}>↗</span></button>);
+                          })()}</div> : <span style={{ color: "#ccc" }}>-</span>}</td>;
                         })}
                       </tr>
                     ))}
@@ -977,9 +1123,14 @@ export default function TheologyAssistant() {
                 <p style={{ fontSize: 15, color: "#5a4a2a" }}>{t.selectChapter}</p>
               </div>
             )}
-            {currentChapter && (
+            {currentChapter && (() => {
+              const browseDocId = docIdForConfessionName(selectedConfession);
+              const chapterAnchor = buildAnchorId({ docId: browseDocId, chapter: currentChapter.number });
+              const docTopAnchor = browseDocId ? "doc-" + browseDocId : null;
+              return (
               <div>
-                <div style={{ marginBottom: 24 }}>
+                {docTopAnchor && <span id={docTopAnchor} />}
+                <div id={chapterAnchor || undefined} style={{ marginBottom: 24 }}>
                   <div style={{ fontSize: 11, color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{selectedConfession} - {currentConfession.year}</div>
                   <h2 style={{ margin: "0 0 4px", fontSize: 20, color: dark }}>{t.chapter} {currentChapter.number}</h2>
                   <h3 style={{ margin: 0, fontSize: 15, color: "#5a4a2a", fontWeight: "normal" }}>{currentChapter.title}</h3>
@@ -988,8 +1139,9 @@ export default function TheologyAssistant() {
                   const key = selectedConfession + "-" + currentChapter.title + "-" + section.number;
                   const hasCommentary = commentary[key];
                   const isLoading = commentaryLoading === key;
+                  const sectionAnchor = buildAnchorId({ docId: browseDocId, chapter: currentChapter.number, section: section.number });
                   return (
-                    <div key={section.number} style={{ marginBottom: 28, paddingBottom: 28, borderBottom: "1px solid " + border }}>
+                    <div key={section.number} id={sectionAnchor || undefined} style={{ marginBottom: 28, paddingBottom: 28, borderBottom: "1px solid " + border }}>
                       <div style={{ fontSize: 11, fontWeight: "bold", color: COLORS[currentConfession.tradition].header, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{t.section} {section.number}</div>
                       <p style={{ fontSize: 15, lineHeight: 1.85, color: dark, margin: "0 0 12px", fontStyle: "italic" }}>{section.text}</p>
                       {!hasCommentary && !isLoading && (
@@ -1017,7 +1169,8 @@ export default function TheologyAssistant() {
                   );
                 })}
               </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}

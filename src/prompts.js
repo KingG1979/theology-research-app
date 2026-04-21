@@ -17,7 +17,15 @@ You MUST respond with a single valid JSON object — no prose before or after, n
     {
       "tradition": "Reformed | Lutheran | Catholic | Baptist | Orthodox | Anglican | Ecumenical",
       "document": "e.g. Westminster Confession of Faith",
-      "reference": "e.g. Chapter 1, Section 4 — OPTIONAL, omit field entirely if you are not certain of the exact location",
+      "doc_id": "one of: westminster, heidelberg, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3",
+      "location": {
+        "chapter": "integer — chapter number if the document has chapters (Westminster, 1689 Baptist, Roman Catechism, Orthodox Longer) — OPTIONAL",
+        "section": "integer — section number within the chapter — OPTIONAL",
+        "question": "integer — question number (Heidelberg Q#, Orthodox Longer question#) — OPTIONAL",
+        "article": "integer — article number (Augsburg Article#, 39 Articles Article#) — OPTIONAL",
+        "canon": "integer — canon/anathema number for conciliar documents (Constantinople I–III) — OPTIONAL"
+      },
+      "reference": "e.g. Chapter 1, Section 4 — human-readable label that MATCHES location; keep short",
       "quote": "a short verbatim or close-paraphrase snippet that is ON-TOPIC for the user's question",
       "context": "one short sentence explaining why this citation matters for the question"
     }
@@ -35,7 +43,16 @@ STRICT RULES for the citations array:
    Wrong output: { "tradition": "Anglican", "document": "39 Articles", "quote": "We are accounted righteous before God only for the merit of our Lord and Saviour Jesus Christ by faith" }
    This is WRONG because the quote is about justification, not Scripture. The correct fix is either to emit an on-topic Scripture quote (e.g. Article VI "Of the Sufficiency of the Holy Scriptures for Salvation: Holy Scripture containeth all things necessary to salvation...") OR to omit the 39 Articles citation entirely if no on-topic quote can be produced confidently.
 
-3. Do NOT fabricate the "reference" location. If you are not confident of the exact chapter / question / article / section number, OMIT the "reference" field for that citation. It is better to return a citation with no reference than a wrong reference.
+3. Do NOT fabricate the "reference" location. If you are not confident of the exact chapter / question / article / section number, OMIT the "reference" AND "location" fields for that citation. It is better to return a citation with no reference than a wrong reference. When you are confident, populate BOTH "location" (structured) and "reference" (human-readable) — the structured "location" is used for deep-linking and the values MUST match.
+
+   Which location sub-fields to populate per document:
+   - westminster / baptist1689 / roman-catechism / orthodox-longer: use {chapter, section}.
+   - heidelberg: use {question} (1–129). Chapter (Lord's Day) is optional.
+   - augsburg / thirtynine-articles: use {article}.
+   - constantinople-1 / constantinople-2 / constantinople-3: use {canon} (the canon / anathema / section number).
+   - apostles-creed / nicene-creed / athanasian-creed / chalcedon: use {section} for the clause number; chapter/location is optional.
+
+   "doc_id" MUST be one of the exact strings listed in the schema. If the document is not in that list, omit the citation.
 
 4. For Catholic citations, prefer the Roman Catechism (Catechism of the Council of Trent, 1566). You may cite the 1992 Catechism of the Catholic Church only when explicitly distinguishing modern teaching.
 

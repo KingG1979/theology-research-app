@@ -5,6 +5,10 @@ Maintained by **Stein Street Solutions (SSS)**.
 
 ## [2026-04-21]
 
+### Added
+
+- **Deep-linking from citations to exact passages** — Citations in the Research mode Sources sidebar and in Compare mode now link to the specific chapter/section/question/article/canon inside Browse mode, not just the document top. Browse renders stable anchor ids (`{docId}-ch{n}-s{n}`) on every section, chapter, and document root; a new `src/utils/anchors.js` handles doc-id resolution, location normalisation, route building, and scroll-plus-fade-highlight. The Research JSON prompt now emits a structured `{doc_id, location: {chapter?, section?, question?, article?, canon?}}` payload per citation so deep-links work without heuristic parsing of free-text references. Compare citation strings (e.g. "Westminster 1.4", "Heidelberg Q60") are parsed heuristically and routed to the same anchor. Sample URL: `/#browse/westminster/1/4`. EN and DE share the same anchor scheme, so citations deep-link correctly in both locales. Missing or unknown anchors gracefully fall back to the document top
+
 ### Fixed
 
 - **Compare mode horizontal scroll** — Added a visible horizontal scrollbar to the comparison table so desktop/trackpad users (e.g. Surface Pro) no longer need touch scrolling to see the full set of tradition columns

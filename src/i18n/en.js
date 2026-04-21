@@ -65,6 +65,7 @@ const en = {
   references: (n) => `${n} ${n === 1 ? "reference" : "references"}`,
   identifyingSources: "Identifying sources",
   sourcesPlaceholder: "Sources will appear here after your first question.",
+  openInBrowse: "Open in Browse",
   tryAgain: "Try Again",
   unableToReachAI: "Unable to reach the AI service. Please try again.",
 

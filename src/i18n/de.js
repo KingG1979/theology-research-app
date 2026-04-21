@@ -65,6 +65,7 @@ const de = {
   references: (n) => `${n} ${n === 1 ? "Referenz" : "Referenzen"}`,
   identifyingSources: "Quellen werden identifiziert",
   sourcesPlaceholder: "Quellen erscheinen hier nach Ihrer ersten Frage.",
+  openInBrowse: "Im Lesen öffnen",
   tryAgain: "Erneut versuchen",
   unableToReachAI: "Der KI-Dienst ist nicht erreichbar. Bitte versuchen Sie es erneut.",
 
