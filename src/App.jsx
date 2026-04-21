@@ -575,13 +575,21 @@ export default function TheologyAssistant() {
     try {
       const systemPrompt = lang === "de" ? SYSTEM_PROMPT + " Please respond in German (Deutsch)." : SYSTEM_PROMPT;
       const citationPrompt = lang === "de" ? CITATION_PROMPT + " Please respond in German (Deutsch)." : CITATION_PROMPT;
-      const [ad, cd] = await Promise.all([
-        callAPI({ max_tokens: 1000, system: systemPrompt, messages: updated }),
-        callAPI({ max_tokens: 1000, system: citationPrompt, messages: [{ role: "user", content: question }] }),
-      ]);
+      const ad = await callAPI({ max_tokens: 1000, system: systemPrompt, messages: updated });
       const answer = extractText(ad);
       setMessages([...updated, { role: "assistant", content: answer, question }]);
-      try { setCitations(parseCitations(extractText(cd))); } catch { setCitations([]); }
+      setLoading(false);
+      try {
+        const cd = await callAPI({
+          max_tokens: 1200,
+          system: citationPrompt,
+          messages: [{
+            role: "user",
+            content: `User question:\n${question}\n\nAnswer that was given:\n${answer}\n\nReturn one citation block per tradition/document that is actually referenced or would support the answer above, strictly following the format in your instructions.`,
+          }],
+        });
+        setCitations(parseCitations(extractText(cd)));
+      } catch { setCitations([]); }
       incrementAIUsage();
     } catch (e) {
       console.error(e);

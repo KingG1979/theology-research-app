@@ -62,7 +62,7 @@ const en = {
   ask: "Ask",
   newSearch: "↺ New Search",
   sources: "Sources",
-  references: (n) => `${n} references`,
+  references: (n) => `${n} ${n === 1 ? "reference" : "references"}`,
   identifyingSources: "Identifying sources",
   sourcesPlaceholder: "Sources will appear here after your first question.",
   tryAgain: "Try Again",

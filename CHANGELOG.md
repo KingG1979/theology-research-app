@@ -9,6 +9,8 @@ Maintained by **Stein Street Solutions (SSS)**.
 
 - **Compare mode horizontal scroll** — Added a visible horizontal scrollbar to the comparison table so desktop/trackpad users (e.g. Surface Pro) no longer need touch scrolling to see the full set of tradition columns
 - **Research mode summary placement** — Updated the Research system prompt so the AI leads with a brief summary of commonalities and differences before the detailed per-tradition analysis, instead of placing the summary at the end
+- **Research mode Sources sidebar — too few / mismatched citations** — The Sources sidebar sometimes showed only one citation (e.g. a single Orthodox entry for a question that discussed Roman Catholic, Westminster, and Orthodox positions) and sometimes showed a quote unrelated to the question (e.g. a justification quote for a Scripture question). Root cause: the citation extractor was called in parallel with the answer generator and only saw the raw user question, with a weak prompt that did not require topical grounding or multi-tradition coverage. Fixed by (1) sequencing the citation call after the answer so the extractor is given both the question and the answer for grounding, and (2) tightening `CITATION_PROMPT` to require one citation per relevant tradition, to forbid off-topic quotes, and to require omitting the `REFERENCE` location instead of hallucinating when the exact chapter/article is not known
+- **"1 references" grammar** — The Sources sidebar header pluralized incorrectly when the count was 1. Now renders as "1 reference" / "N references" in English and "1 Referenz" / "N Referenzen" in German
 
 ### Changed
 

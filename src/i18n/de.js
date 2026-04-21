@@ -62,7 +62,7 @@ const de = {
   ask: "Fragen",
   newSearch: "↺ Neue Suche",
   sources: "Quellen",
-  references: (n) => `${n} Referenzen`,
+  references: (n) => `${n} ${n === 1 ? "Referenz" : "Referenzen"}`,
   identifyingSources: "Quellen werden identifiziert",
   sourcesPlaceholder: "Quellen erscheinen hier nach Ihrer ersten Frage.",
   tryAgain: "Erneut versuchen",
