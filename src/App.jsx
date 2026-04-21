@@ -56,6 +56,11 @@ const pulseKeyframes = `
   0%, 20% { opacity: 0; }
   40%, 100% { opacity: 1; }
 }
+.compare-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: auto; scrollbar-color: #b8a878 #f2ead8; }
+.compare-scroll::-webkit-scrollbar { height: 14px; -webkit-appearance: none; }
+.compare-scroll::-webkit-scrollbar-track { background: #f2ead8; border-radius: 7px; }
+.compare-scroll::-webkit-scrollbar-thumb { background: #b8a878; border-radius: 7px; border: 2px solid #f2ead8; }
+.compare-scroll::-webkit-scrollbar-thumb:hover { background: #8a7a5a; }
 @media (max-width: 768px) {
   .browse-layout { flex-direction: column !important; }
   .browse-sidebar { width: 100% !important; max-height: 160px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; }
@@ -854,8 +859,8 @@ export default function TheologyAssistant() {
               <h2 style={{ margin: "0 0 6px", fontSize: 20, color: dark }}>{comparisonData.topic}</h2>
               <p style={{ margin: "0 0 18px", fontSize: 13, color: "#5a4a2a", fontStyle: "italic", lineHeight: 1.7 }}>{comparisonData.summary}</p>
               {visibleTraditions.length > 4 && <p style={{ margin: "0 0 8px", fontSize: 11, color: mid, fontStyle: "italic", textAlign: "right" }}>{t.scrollHint}</p>}
-              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "thin", scrollbarColor: "#d4c4a0 transparent" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <div className="compare-scroll">
+                <table style={{ minWidth: 820, borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr>
                       <th style={{ padding: "10px 14px", background: dark, color: cream, textAlign: "left", fontSize: 12, minWidth: 110 }}>{t.aspect}</th>

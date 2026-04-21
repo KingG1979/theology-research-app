@@ -3,6 +3,17 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-04-21]
+
+### Fixed
+
+- **Compare mode horizontal scroll** — Added a visible horizontal scrollbar to the comparison table so desktop/trackpad users (e.g. Surface Pro) no longer need touch scrolling to see the full set of tradition columns
+- **Research mode summary placement** — Updated the Research system prompt so the AI leads with a brief summary of commonalities and differences before the detailed per-tradition analysis, instead of placing the summary at the end
+
+### Changed
+
+- **About page branding** — Replaced remaining "CACR" references with the correct app abbreviation "CCCR" (Creeds, Confessions and Catechism Research) in the English and German About descriptions and footer copyright
+
 ## [2026-04-14]
 
 ### Added

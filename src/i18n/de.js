@@ -127,13 +127,13 @@ const de = {
 
   // About modal
   aboutThisProject: "Über dieses Projekt",
-  aboutDescription: "<strong>Bekenntnisse, Konfessionen und Katechismus-Forschung (CACR)</strong> ist ein kostenloses wissenschaftliches Werkzeug zur Erforschung der historischen Bekenntnisse der christlichen Kirche — reformiert, lutherisch, katholisch, baptistisch, anglikanisch, orthodox und die ökumenischen Glaubensbekenntnisse.",
+  aboutDescription: "<strong>Bekenntnisse, Konfessionen und Katechismus-Forschung (CCCR)</strong> ist ein kostenloses wissenschaftliches Werkzeug zur Erforschung der historischen Bekenntnisse der christlichen Kirche — reformiert, lutherisch, katholisch, baptistisch, anglikanisch, orthodox und die ökumenischen Glaubensbekenntnisse.",
   aboutAINote: "Alle Bekenntnistexte stammen aus gemeinfreien Quellen. KI-Kommentare und Vergleiche werden von großen Sprachmodellen generiert, die auf diesen Primärtexten basieren — bitte überprüfen Sie stets die Quelldokumente.",
   documentsIncluded: "Enthaltene Dokumente",
   documentsList: "Nizänisches Glaubensbekenntnis (381) · Apostolisches Glaubensbekenntnis · Athanasisches Glaubensbekenntnis · Chalcedon (451) · Westminsterbekenntnis (1647) · Heidelberger Katechismus (1563) · Augsburger Bekenntnis (1530) · Baptistisches Bekenntnis von 1689 · Längerer Katechismus (Orthodox, 1839) · 39 Artikel (1571) · Römischer Katechismus (1566)",
   questionsOrFeedback: "Fragen oder Feedback?",
   sendSuggestion: "Einen Vorschlag senden",
-  copyright: "© 2025 CACR · Alle Texte gemeinfrei",
+  copyright: "© 2025 CCCR · Alle Texte gemeinfrei",
 
   // Feedback
   feedback: "Feedback",

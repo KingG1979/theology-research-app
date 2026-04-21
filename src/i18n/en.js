@@ -127,13 +127,13 @@ const en = {
 
   // About modal
   aboutThisProject: "About This Project",
-  aboutDescription: "<strong>Creeds, Confessions and Catechism Research (CACR)</strong> is a free scholarly tool for exploring the historic confessions of the Christian church — Reformed, Lutheran, Catholic, Baptist, Anglican, Orthodox, and the Ecumenical Creeds.",
+  aboutDescription: "<strong>Creeds, Confessions and Catechism Research (CCCR)</strong> is a free scholarly tool for exploring the historic confessions of the Christian church — Reformed, Lutheran, Catholic, Baptist, Anglican, Orthodox, and the Ecumenical Creeds.",
   aboutAINote: "All confessional texts are drawn from public domain sources. AI commentary and comparisons are powered by large language models grounded in these primary texts — always verify with the source documents.",
   documentsIncluded: "Documents Included",
   documentsList: "Nicene Creed (381) · Apostles' Creed · Athanasian Creed · Chalcedon (451) · Westminster Confession (1647) · Heidelberg Catechism (1563) · Augsburg Confession (1530) · 1689 Baptist Confession · Longer Catechism (Orthodox, 1839) · 39 Articles (1571) · Roman Catechism (1566)",
   questionsOrFeedback: "Questions or feedback?",
   sendSuggestion: "Send a suggestion",
-  copyright: "© 2025 CACR · All texts public domain",
+  copyright: "© 2025 CCCR · All texts public domain",
 
   // Feedback
   feedback: "Feedback",
