@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { ALL_TRADITIONS, COLORS, CONFESSIONS } from "./data/confessions";
 import { CONFESSIONS_DE } from "./data/confessions_de";
 import { CONFESSIONS_DE_EXTRA } from "./data/confessions_de_extra";
-import { SYSTEM_PROMPT, CITATION_PROMPT, COMPARISON_PROMPT } from "./prompts";
+import { SYSTEM_PROMPT, RESEARCH_JSON_PROMPT, COMPARISON_PROMPT } from "./prompts";
 import { callAPI, extractText } from "./api";
-import { parseCitations, parseComparison } from "./utils/parsers";
+import { parseComparison } from "./utils/parsers";
 import { supabase } from "./supabase";
 import { useI18n } from "./i18n/index.jsx";
 
@@ -573,23 +573,51 @@ export default function TheologyAssistant() {
     const question = input;
     setMessages(updated); setInput(""); setLoading(true); setCitationsLoading(true); setCitations([]);
     try {
-      const systemPrompt = lang === "de" ? SYSTEM_PROMPT + " Please respond in German (Deutsch)." : SYSTEM_PROMPT;
-      const citationPrompt = lang === "de" ? CITATION_PROMPT + " Please respond in German (Deutsch)." : CITATION_PROMPT;
-      const ad = await callAPI({ max_tokens: 1000, system: systemPrompt, messages: updated });
-      const answer = extractText(ad);
-      setMessages([...updated, { role: "assistant", content: answer, question }]);
-      setLoading(false);
+      const systemPrompt = lang === "de"
+        ? RESEARCH_JSON_PROMPT + " Please respond in German (Deutsch). All string values in the JSON (summary, answer, quote, context) MUST be in German. Field names and the 'tradition' enum stay in English."
+        : RESEARCH_JSON_PROMPT;
+
+      // Single structured-JSON call: produces summary + answer + citations
+      // in one generation so citations are tied to the doctrine actually
+      // discussed (no more off-topic / drifting citation extraction).
+      const data = await callAPI({
+        max_tokens: 2200,
+        system: systemPrompt,
+        mode: "research_json",
+        messages: updated,
+      });
+      const raw = extractText(data);
+
+      let summary = "";
+      let answer = "";
+      let parsedCitations = [];
       try {
-        const cd = await callAPI({
-          max_tokens: 1200,
-          system: citationPrompt,
-          messages: [{
-            role: "user",
-            content: `User question:\n${question}\n\nAnswer that was given:\n${answer}\n\nReturn one citation block per tradition/document that is actually referenced or would support the answer above, strictly following the format in your instructions.`,
-          }],
-        });
-        setCitations(parseCitations(extractText(cd)));
-      } catch { setCitations([]); }
+        // Strip stray markdown code fences if the model added them despite instructions
+        const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "");
+        const parsed = JSON.parse(cleaned);
+        summary = (parsed.summary || "").trim();
+        answer = (parsed.answer || "").trim();
+        const cites = Array.isArray(parsed.citations) ? parsed.citations : [];
+        parsedCitations = cites
+          .filter(c => c && c.tradition && (c.document || c.confession))
+          .map(c => ({
+            tradition: c.tradition,
+            confession: c.document || c.confession || "",
+            reference: c.reference || "",
+            quote: c.quote || "",
+            relevance: c.context || c.relevance || "",
+          }));
+      } catch (parseErr) {
+        console.error("Research JSON parse failed, falling back to raw text:", parseErr);
+        answer = raw;
+      }
+
+      const displayContent = summary
+        ? `Summary\n${summary}\n\n${answer}`
+        : answer;
+
+      setMessages([...updated, { role: "assistant", content: displayContent, question }]);
+      setCitations(parsedCitations);
       incrementAIUsage();
     } catch (e) {
       console.error(e);

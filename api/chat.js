@@ -78,17 +78,26 @@ export default async function handler(req, res) {
       ? [{ role: "system", content: systemPrompt }, ...messages]
       : messages;
 
+    const openAIBody = {
+      model: "gpt-4o",
+      max_tokens: max_tokens || 1000,
+      messages: openAIMessages,
+    };
+
+    // Research mode uses a single structured-JSON call (one generation that
+    // produces both the narrative answer and the citations array). JSON mode
+    // is supported on gpt-4o, gpt-4o-mini, and gpt-4-turbo.
+    if (mode === "research_json") {
+      openAIBody.response_format = { type: "json_object" };
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        max_tokens: max_tokens || 1000,
-        messages: openAIMessages,
-      }),
+      body: JSON.stringify(openAIBody),
     });
     const data = await response.json();
 
