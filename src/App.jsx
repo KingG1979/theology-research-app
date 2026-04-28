@@ -708,10 +708,16 @@ export default function TheologyAssistant() {
       setAiLimitMessage(t.aiLimitReached);
       return;
     }
-    const userMessage = { role: "user", content: input };
-    const updated = [...messages, userMessage];
     const question = input;
-    setMessages(updated); setInput(""); setLoading(true); setCitationsLoading(true); setCitations([]);
+    const userMessage = { role: "user", content: question };
+    // Single-query mode: replace prior chat + citations atomically so the
+    // answer pane and sources sidebar stay in sync on each new query.
+    const updated = [userMessage];
+    setMessages(updated);
+    setCitations([]);
+    setInput("");
+    setLoading(true);
+    setCitationsLoading(true);
     try {
       const systemPrompt = lang === "de"
         ? RESEARCH_JSON_PROMPT + " Please respond in German (Deutsch). All string values in the JSON (summary, answer, quote, context) MUST be in German. Field names and the 'tradition' enum stay in English."
@@ -731,6 +737,7 @@ export default function TheologyAssistant() {
       let summary = "";
       let answer = "";
       let parsedCitations = [];
+      let parseFailed = false;
       try {
         // Strip stray markdown code fences if the model added them despite instructions
         const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "");
@@ -768,20 +775,25 @@ export default function TheologyAssistant() {
             };
           });
       } catch (parseErr) {
-        console.error("Research JSON parse failed, falling back to raw text:", parseErr);
-        answer = raw;
+        console.error("Research JSON parse failed:", parseErr);
+        parseFailed = true;
       }
 
-      const displayContent = summary
-        ? `Summary\n${summary}\n\n${answer}`
-        : answer;
-
-      setMessages([...updated, { role: "assistant", content: displayContent, question }]);
-      setCitations(parsedCitations);
-      incrementAIUsage();
+      if (parseFailed || (!summary && !answer)) {
+        setMessages([...updated, { role: "assistant", content: t.couldNotParse, isError: true }]);
+        setCitations([]);
+      } else {
+        const displayContent = summary
+          ? `Summary\n${summary}\n\n${answer}`
+          : answer;
+        setMessages([...updated, { role: "assistant", content: displayContent, question }]);
+        setCitations(parsedCitations);
+        incrementAIUsage();
+      }
     } catch (e) {
       console.error(e);
       setMessages([...updated, { role: "assistant", content: t.unableToReachAI, isError: true }]);
+      setCitations([]);
     }
     finally { setLoading(false); setCitationsLoading(false); }
   }
