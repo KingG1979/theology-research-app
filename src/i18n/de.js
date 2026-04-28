@@ -66,6 +66,9 @@ const de = {
   identifyingSources: "Quellen werden identifiziert",
   sourcesPlaceholder: "Quellen erscheinen hier nach Ihrer ersten Frage.",
   openInBrowse: "Im Lesen öffnen",
+  allDocuments: "Alle Dokumente",
+  allDocumentsTitle: "Alle Dokumente — Verzeichnis",
+  allDocumentsIntro: "Alle Glaubensbekenntnisse, Bekenntnisse und Katechismen dieser Bibliothek, mit direkten Links zu jedem Kapitel, jeder Frage, jedem Artikel und jedem Kanon.",
   tryAgain: "Erneut versuchen",
   unableToReachAI: "Der KI-Dienst ist nicht erreichbar. Bitte versuchen Sie es erneut.",
 

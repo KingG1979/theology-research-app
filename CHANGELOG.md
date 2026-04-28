@@ -3,6 +3,21 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-04-28]
+
+### Added
+
+- **SEO prerendering — per-document, per-chapter, per-section static HTML** — The build pipeline now prerenders a static HTML page for every document, chapter, and section in the library at `dist/browse/{docId}[/{chapter}[/{section}]]/index.html` (and `dist/de/browse/...` for German). Each page contains a real, crawlable `<h1>`, breadcrumb, full passage text, and a `<noscript>` fallback so Googlebot indexes content without waiting on a JS render pass. The hydrating SPA hides the prerender block on first paint via `documentElement.classList.add('cccr-spa-ready')`. A new `scripts/prerender.mjs` runs after `vite build`. Sample URL: `https://ccc-study.org/browse/westminster/1/4`
+- **Auto-generated sitemap.xml** — `dist/sitemap.xml` is now generated at build time from the confession data files, listing every prerendered URL (~6,000 URLs covering homepage, all-documents index, document landings, chapters, and sections in EN and DE) with `<lastmod>`, `<changefreq>`, `<priority>` (1.0 homepage, 0.9 doc, 0.7 chapter, 0.5 section), and `<xhtml:link rel="alternate" hreflang>` annotations for cross-language linking. Replaces the previous hardcoded single-URL `public/sitemap.xml`
+- **JSON-LD structured data on every page** — Homepage emits `WebSite` schema with `SearchAction`; document pages emit `Book` schema with author/datePublished/inLanguage; chapter and section pages emit `Article` schema referencing the parent `Book` and including `articleBody` with the actual passage text
+- **Path-based routing for deep links (`/browse/...`)** — Added `parseBrowsePath()` and `buildBrowsePath()` to `src/utils/anchors.js`. The SPA boot effect now reads `location.pathname` in addition to `location.hash` and honours both `/browse/{docId}/{chapter}/{section}` and the legacy `#browse/...` form. Citation clicks now `history.replaceState` to the path-based URL so shared links match the prerendered SEO URL. Locale prefix (`/de/browse/...`) auto-switches the UI language. `popstate` listener added so browser back/forward navigates between deep-links
+- **All-documents index page** — A new `/all-documents` (and `/de/all-documents`) page lists every document with chapter-level links inside Browse mode and on the prerendered static page. Linked from the footer for human discovery and Googlebot crawl breadth
+- **vercel.json** — SPA fallback rewrite (`/((?!api/).*) → /index.html`) so paths without prerendered files still render the SPA. Static prerendered files take precedence; API routes pass through unchanged
+
+### Fixed
+
+- **Research sidebar "Open in Browse" deep-link bug** — User reported that the "Open in Browse" link in the Research Sources sidebar was opening the document top page rather than the specific passage. Root cause: the model occasionally returned a citation with an empty/missing `location` object, so the deep-link helper had nothing to scroll to. Fixed in two places: (1) tightened `RESEARCH_JSON_PROMPT` with a "LOCATION IS REQUIRED" rule — the model must emit at least one of `{chapter, section, question, article, canon}` per citation, or omit the citation entirely; (2) added a fallback in `App.jsx` that, if the structured `location` is missing/empty, parses the human-readable `reference` string with `parseCitationString()` (the same heuristic parser Compare mode uses, which handles "Chapter 1, Section 4", "Q60", "Art. VI", "Canon 3", "1.4", etc.), and as a last resort scans the `quote` text for an embedded reference. Deep-links now reliably scroll to the exact section for chapter/section, question (catechisms), article (Augsburg / 39 Articles), and canon (Constantinople I–III) citations
+
 ## [2026-04-21]
 
 ### Added

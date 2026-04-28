@@ -66,6 +66,9 @@ const en = {
   identifyingSources: "Identifying sources",
   sourcesPlaceholder: "Sources will appear here after your first question.",
   openInBrowse: "Open in Browse",
+  allDocuments: "All Documents",
+  allDocumentsTitle: "All Documents — Index",
+  allDocumentsIntro: "Every creed, confession, and catechism in this library, with direct links to each chapter, question, article, and canon.",
   tryAgain: "Try Again",
   unableToReachAI: "Unable to reach the AI service. Please try again.",
 

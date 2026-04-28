@@ -8,7 +8,9 @@ import { parseComparison } from "./utils/parsers";
 import {
   buildAnchorId,
   buildBrowseRoute,
+  buildBrowsePath,
   parseBrowseHash,
+  parseBrowsePath,
   docIdForConfessionName,
   confessionNameForDocId,
   normalizeLocation,
@@ -16,6 +18,7 @@ import {
   findChapterIndexBySection,
   parseCitationString,
   scrollToAnchorAndHighlight,
+  DOC_ID_TO_EN_NAME,
 } from "./utils/anchors";
 import { supabase } from "./supabase";
 import { useI18n } from "./i18n/index.jsx";
@@ -540,42 +543,60 @@ export default function TheologyAssistant() {
       chapter: resolvedChapter,
       section: loc.section,
     });
-    const route = buildBrowseRoute({
+    const path = buildBrowsePath({
       docId,
       chapter: resolvedChapter,
       section: loc.section,
+      lang,
     });
-    // Update the hash for shareable URLs, but don't add history spam.
-    try { history.replaceState(null, "", route); } catch {}
+    // Update the path for shareable, crawlable URLs without history spam.
+    try { history.replaceState(null, "", path); } catch {}
     // Wait for the next paint so the Browse tree has mounted the chapter.
     setTimeout(() => scrollToAnchorAndHighlight(anchorId), 60);
   }
 
-  // On first mount (and on hash changes), honour ?mode=browse or #browse/...
-  // deep links. Also handles the legacy ?mode=browse&doc=... shape.
+  // On first mount (and on hash/path changes), honour /browse/..., #browse/...
+  // deep links, /all-documents, and the legacy ?mode=browse&doc=... shape.
   useEffect(() => {
     function applyFromLocation() {
       const params = new URLSearchParams(window.location.search);
       const parsedHash = parseBrowseHash(window.location.hash);
+      const parsedPath = parseBrowsePath(window.location.pathname);
       const queryMode = params.get("mode");
       const queryDoc = params.get("doc");
 
-      const wantsBrowse = parsedHash?.mode === "browse" || queryMode === "browse";
+      // Auto-switch language if the URL says /de/...
+      if (parsedPath?.lang === "de" && lang !== "de") setLang("de");
+      if (parsedPath?.lang === "en" && lang !== "en") setLang("en");
+
+      if (parsedPath?.mode === "all-documents") {
+        setMode("all-documents");
+        return;
+      }
+
+      const wantsBrowse =
+        parsedPath?.mode === "browse" ||
+        parsedHash?.mode === "browse" ||
+        queryMode === "browse";
       if (!wantsBrowse) return;
 
-      const docId = parsedHash?.docId || queryDoc;
+      const docId = parsedPath?.docId || parsedHash?.docId || queryDoc;
       if (!docId) {
         setMode("browse");
         return;
       }
       openBrowseAt(docId, {
-        chapter: parsedHash?.chapter,
-        section: parsedHash?.section,
+        chapter: parsedPath?.chapter ?? parsedHash?.chapter,
+        section: parsedPath?.section ?? parsedHash?.section,
       });
     }
     applyFromLocation();
     window.addEventListener("hashchange", applyFromLocation);
-    return () => window.removeEventListener("hashchange", applyFromLocation);
+    window.addEventListener("popstate", applyFromLocation);
+    return () => {
+      window.removeEventListener("hashchange", applyFromLocation);
+      window.removeEventListener("popstate", applyFromLocation);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localizedConfessions]);
 
@@ -719,15 +740,33 @@ export default function TheologyAssistant() {
         const cites = Array.isArray(parsed.citations) ? parsed.citations : [];
         parsedCitations = cites
           .filter(c => c && c.tradition && (c.document || c.confession))
-          .map(c => ({
-            tradition: c.tradition,
-            confession: c.document || c.confession || "",
-            doc_id: c.doc_id || docIdForConfessionName(c.document || c.confession || "") || null,
-            location: c.location || null,
-            reference: c.reference || "",
-            quote: c.quote || "",
-            relevance: c.context || c.relevance || "",
-          }));
+          .map(c => {
+            // Normalise location: prefer the model's structured `location`,
+            // but if it's empty/partial, fall back to parsing the human
+            // `reference` string (e.g. "Chapter 1, Section 4", "Q60", "Art VI"),
+            // and finally the inline-citation pattern in `quote`.
+            const rawLoc = (c.location && typeof c.location === "object") ? c.location : {};
+            const norm = normalizeLocation(rawLoc);
+            let loc = norm;
+            if (loc.chapter === undefined && loc.section === undefined) {
+              const refStr = c.reference || "";
+              const fromRef = parseCitationString(refStr);
+              if (fromRef.chapter !== undefined || fromRef.section !== undefined) loc = fromRef;
+            }
+            if (loc.chapter === undefined && loc.section === undefined && c.quote) {
+              const fromQuote = parseCitationString(c.quote);
+              if (fromQuote.chapter !== undefined || fromQuote.section !== undefined) loc = fromQuote;
+            }
+            return {
+              tradition: c.tradition,
+              confession: c.document || c.confession || "",
+              doc_id: c.doc_id || docIdForConfessionName(c.document || c.confession || "") || null,
+              location: loc,
+              reference: c.reference || "",
+              quote: c.quote || "",
+              relevance: c.context || c.relevance || "",
+            };
+          });
       } catch (parseErr) {
         console.error("Research JSON parse failed, falling back to raw text:", parseErr);
         answer = raw;
@@ -1276,6 +1315,46 @@ export default function TheologyAssistant() {
         </div>
       )}
 
+      {/* ALL-DOCUMENTS INDEX (sitemap-style page for crawl + human navigation) */}
+      {mode === "all-documents" && (
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+          <h1 style={{ margin: "0 0 8px", fontSize: 22, color: dark }}>{t.allDocumentsTitle}</h1>
+          <p style={{ margin: "0 0 24px", fontSize: 14, color: "#5a4a2a", lineHeight: 1.7, maxWidth: 720 }}>{t.allDocumentsIntro}</p>
+          {confessionNames.map(name => {
+            const conf = localizedConfessions[name];
+            const enName = DE_TO_EN_KEY[name] || name;
+            const docId = docIdForConfessionName(enName);
+            if (!docId) return null;
+            const c = COLORS[conf.tradition] || COLORS.Ecumenical;
+            return (
+              <section key={name} style={{ marginBottom: 28, paddingBottom: 18, borderBottom: "1px solid " + border }}>
+                <h2 style={{ margin: "0 0 4px", fontSize: 17, color: dark }}>
+                  <a
+                    href={buildBrowsePath({ docId, lang })}
+                    onClick={(e) => { e.preventDefault(); openBrowseAt(docId, {}); }}
+                    style={{ color: c.header, textDecoration: "none" }}
+                  >{name}</a>
+                </h2>
+                <div style={{ fontSize: 11, color: mid, marginBottom: 10 }}>{conf.tradition} · {conf.year}</div>
+                <ul style={{ margin: 0, paddingLeft: 20, columns: 2, columnGap: 24, fontSize: 13, lineHeight: 1.8 }}>
+                  {conf.chapters.map((ch) => (
+                    <li key={ch.number} style={{ breakInside: "avoid", marginBottom: 4 }}>
+                      <a
+                        href={buildBrowsePath({ docId, chapter: ch.number, lang })}
+                        onClick={(e) => { e.preventDefault(); openBrowseAt(docId, { chapter: ch.number }); }}
+                        style={{ color: dark, textDecoration: "none" }}
+                      >
+                        <span style={{ color: mid }}>{t.chapter} {ch.number}.</span> {ch.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
+      )}
+
       {/* Auth overlay */}
       {showAuth && !session && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(44,36,22,0.5)" }}>
@@ -1367,8 +1446,18 @@ export default function TheologyAssistant() {
       )}
 
       {/* Footer */}
-      <div style={{ padding: "6px 24px", background: dark, textAlign: "center", flexShrink: 0, borderTop: "1px solid " + border }}>
+      <div style={{ padding: "6px 24px", background: dark, textAlign: "center", flexShrink: 0, borderTop: "1px solid " + border, display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
         <a href="https://www.ccc-study.org" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#a09070", fontFamily: "Georgia, serif", letterSpacing: 1, textDecoration: "none", opacity: 0.7 }}>www.ccc-study.org</a>
+        <a
+          href={lang === "de" ? "/de/all-documents" : "/all-documents"}
+          onClick={(e) => {
+            e.preventDefault();
+            const path = lang === "de" ? "/de/all-documents" : "/all-documents";
+            try { history.pushState(null, "", path); } catch {}
+            setMode("all-documents");
+          }}
+          style={{ fontSize: 10, color: "#a09070", fontFamily: "Georgia, serif", letterSpacing: 1, textDecoration: "none", opacity: 0.7 }}
+        >{t.allDocuments}</a>
       </div>
     </div>
   );

@@ -158,8 +158,9 @@ export function findChapterIndexBySection(confession, section) {
   return -1;
 }
 
-// Build the in-app route URL for a deep link. Hash-only (the app has no
-// router). Format: #browse/{docId}[/{chapter}[/{section}]]
+// Build the in-app route URL for a deep link. Hash-based (legacy — kept for
+// backwards compatibility with previously-shared links). Format:
+// #browse/{docId}[/{chapter}[/{section}]]
 export function buildBrowseRoute({ docId, chapter, section }) {
   if (!docId) return "#browse";
   const parts = ["#browse", docId];
@@ -172,6 +173,22 @@ export function buildBrowseRoute({ docId, chapter, section }) {
   return parts.join("/");
 }
 
+// Build a path-based crawlable URL for a deep link. This is the SEO-facing
+// route shape. Format: /browse/{docId}[/{chapter}[/{section}]]
+// Optional locale prefix ("de") yields /de/browse/...
+export function buildBrowsePath({ docId, chapter, section, lang }) {
+  const prefix = lang === "de" ? "/de" : "";
+  if (!docId) return prefix + "/browse";
+  const parts = [prefix, "browse", docId];
+  if (chapter !== undefined && chapter !== null && chapter !== "") {
+    parts.push(String(chapter));
+    if (section !== undefined && section !== null && section !== "") {
+      parts.push(String(section));
+    }
+  }
+  return parts.join("/").replace(/\/+/g, "/");
+}
+
 // Parse a hash back into {docId, chapter, section}.
 export function parseBrowseHash(hash) {
   if (!hash) return null;
@@ -181,6 +198,33 @@ export function parseBrowseHash(hash) {
   const [, docId, chapter, section] = parts;
   if (!docId) return { mode: "browse" };
   return { mode: "browse", docId, chapter, section };
+}
+
+// Parse a path-based browse URL back into {mode, lang?, docId?, chapter?, section?}.
+// Accepts /browse/..., /de/browse/..., /all-documents, /de/all-documents.
+export function parseBrowsePath(pathname) {
+  if (!pathname) return null;
+  const segs = pathname.split("/").filter(Boolean);
+  let lang = null;
+  let i = 0;
+  if (segs[0] === "de" || segs[0] === "en") {
+    lang = segs[0];
+    i = 1;
+  }
+  if (segs[i] === "all-documents") {
+    return { mode: "all-documents", lang };
+  }
+  if (segs[i] !== "browse") return null;
+  const docId = segs[i + 1];
+  if (!docId) return { mode: "browse", lang };
+  // Path may be /browse/{docId}/{chapter}/{section} OR
+  // /browse/{docId}/q/{question} OR /browse/{docId}/art/{article}.
+  const a = segs[i + 2];
+  const b = segs[i + 3];
+  if (a === "q" || a === "art" || a === "canon") {
+    return { mode: "browse", lang, docId, section: b };
+  }
+  return { mode: "browse", lang, docId, chapter: a, section: b };
 }
 
 // Best-effort parser for free-text citation strings emitted by the Compare
