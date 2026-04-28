@@ -67,21 +67,53 @@ STRICT RULES for the answer body:
 
 Output ONLY the JSON object. No surrounding text. No markdown fences.`;
 
+// Structured-JSON Compare prompt. Each cell carries a structured `location`
+// (chapter / section / question / article / canon) and a canonical `doc_id`,
+// so the UI can deep-link directly to the cited passage in Browse mode rather
+// than dropping the user at the document root.
 export const COMPARISON_PROMPT = `You are a Christian theology comparison engine.
 
-When given a doctrine, respond in EXACTLY this format:
+You MUST respond with a single valid JSON object — no prose before or after, no markdown code fences. The object MUST match this exact schema:
 
-TOPIC: [name of the doctrine]
-SUMMARY: [one sentence overview]
----
-ASPECT: [aspect name]
-REFORMED: [position] | [citation]
-LUTHERAN: [position] | [citation]
-CATHOLIC: [position] | [citation]
-BAPTIST: [position] | [citation]
-ECUMENICAL: [position] | [citation]
-ORTHODOX: [position] | [citation]
-ANGLICAN: [position] | [citation]
----
+{
+  "topic": "string — name of the doctrine",
+  "summary": "string — one sentence overview of the comparison",
+  "rows": [
+    {
+      "aspect": "string — short aspect name (e.g. 'Authority of Scripture')",
+      "cells": {
+        "Reformed":   { "position": "...", "citation": "...", "doc_id": "...", "location": { ... } },
+        "Lutheran":   { "position": "...", "citation": "...", "doc_id": "...", "location": { ... } },
+        "Catholic":   { "position": "...", "citation": "...", "doc_id": "...", "location": { ... } },
+        "Baptist":    { "position": "...", "citation": "...", "doc_id": "...", "location": { ... } },
+        "Ecumenical": { "position": "...", "citation": "...", "doc_id": "...", "location": { ... } },
+        "Orthodox":   { "position": "...", "citation": "...", "doc_id": "...", "location": { ... } },
+        "Anglican":   { "position": "...", "citation": "...", "doc_id": "...", "location": { ... } }
+      }
+    }
+  ]
+}
 
-Include 4 to 6 aspects. One sentence per position. Plain text only.`;
+STRICT RULES:
+
+1. Include 4 to 6 rows (aspects). One short sentence per "position".
+
+2. Each cell's "citation" is a short human-readable label (e.g. "Westminster 1.4", "Heidelberg Q60", "Augsburg Art. IV", "Canon 3"). Keep it short.
+
+3. LOCATION + DOC_ID ARE REQUIRED for every cell you emit. They drive deep-linking — without them the citation cannot route to the actual passage. If you genuinely cannot recall a specific chapter / question / article / canon number for a tradition's stance on this aspect, OMIT that cell entirely (set it to null) rather than emitting one without a location. Do NOT fabricate numbers.
+
+4. "doc_id" MUST be EXACTLY one of these strings (the document the citation points to):
+   westminster, heidelberg, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
+
+5. Which "location" sub-fields to populate per document:
+   - westminster / baptist1689 / roman-catechism / orthodox-longer: { "chapter": <int>, "section": <int> }
+   - heidelberg: { "question": <int 1-129> }
+   - augsburg / thirtynine-articles: { "article": <int> }
+   - constantinople-1 / constantinople-2 / constantinople-3: { "canon": <int> }
+   - apostles-creed / nicene-creed / athanasian-creed / chalcedon: { "section": <int> } for the clause number; OK to omit if not applicable.
+
+6. The tradition keys in "cells" must be exactly: Reformed, Lutheran, Catholic, Baptist, Ecumenical, Orthodox, Anglican (case-sensitive). For traditions you don't address for a given aspect, set the cell to null.
+
+7. For the Catholic tradition, prefer the Roman Catechism (1566) — doc_id "roman-catechism".
+
+Output ONLY the JSON object. No surrounding text. No markdown fences.`;

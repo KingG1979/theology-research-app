@@ -806,8 +806,10 @@ export default function TheologyAssistant() {
     }
     setCompareLoading(true); setComparisonData(null); setCompareError(null);
     try {
-      const comparisonPrompt = lang === "de" ? COMPARISON_PROMPT + " Please respond in German (Deutsch)." : COMPARISON_PROMPT;
-      const data = await callAPI({ max_tokens: 1500, system: comparisonPrompt, messages: [{ role: "user", content: compareInput }] });
+      const comparisonPrompt = lang === "de"
+        ? COMPARISON_PROMPT + " Please respond in German (Deutsch). All string values in the JSON (topic, summary, aspect, position, citation) MUST be in German. Field names and the tradition keys stay in English."
+        : COMPARISON_PROMPT;
+      const data = await callAPI({ max_tokens: 1800, system: comparisonPrompt, mode: "compare_json", messages: [{ role: "user", content: compareInput }] });
       const text = extractText(data);
       const parsed = parseComparison(text);
       if (!parsed.topic || parsed.rows.length === 0) throw new Error(t.couldNotParse);
@@ -1101,10 +1103,22 @@ export default function TheologyAssistant() {
                         {visibleTraditions.map(trad => {
                           const cell = row[trad]; const c = COLORS[trad];
                           return <td key={trad} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{cell ? <div><div style={{ fontSize: 12, color: dark, lineHeight: 1.6, marginBottom: 3 }}>{cell.position}</div>{cell.citation && (() => {
-                            const confKey = findConfessionFromCitation(cell.citation);
-                            const docId = confKey ? docIdForConfessionName(confKey) : null;
+                            // Prefer the structured doc_id + location returned
+                            // by the JSON Compare prompt (drives deep-linking
+                            // straight to the cited passage). Fall back to
+                            // parsing the human citation string only if the
+                            // model omitted the structured fields.
+                            let docId = cell.doc_id || null;
+                            if (!docId) {
+                              const confKey = findConfessionFromCitation(cell.citation);
+                              if (confKey) docId = docIdForConfessionName(confKey);
+                            }
                             if (!docId) return (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>);
-                            const loc = parseCitationString(cell.citation);
+                            let loc = normalizeLocation(cell.location || {});
+                            if (loc.chapter === undefined && loc.section === undefined) {
+                              const fromText = parseCitationString(cell.citation);
+                              if (fromText.chapter !== undefined || fromText.section !== undefined) loc = fromText;
+                            }
                             return (<button onClick={() => openBrowseAt(docId, loc)} title={"Open in Browse: " + cell.citation} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 10 }}>↗</span></button>);
                           })()}</div> : <span style={{ color: "#ccc" }}>-</span>}</td>;
                         })}

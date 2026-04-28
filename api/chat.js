@@ -85,9 +85,11 @@ export default async function handler(req, res) {
     };
 
     // Research mode uses a single structured-JSON call (one generation that
-    // produces both the narrative answer and the citations array). JSON mode
-    // is supported on gpt-4o, gpt-4o-mini, and gpt-4-turbo.
-    if (mode === "research_json") {
+    // produces both the narrative answer and the citations array). Compare
+    // mode also returns structured JSON so each per-tradition cell can carry
+    // a {doc_id, location} pair for deep-linking. JSON mode is supported on
+    // gpt-4o, gpt-4o-mini, and gpt-4-turbo.
+    if (mode === "research_json" || mode === "compare_json") {
       openAIBody.response_format = { type: "json_object" };
     }
 

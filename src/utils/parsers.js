@@ -18,7 +18,48 @@ export function parseCitations(text) {
   return results;
 }
 
+// Parse the JSON Compare response. The model returns:
+//   { topic, summary, rows: [ { aspect, cells: { Reformed: {position, citation, doc_id, location}, ... } } ] }
+// We flatten each row's cells onto the row object itself (row[tradition] = cell)
+// so the rendering code can keep its existing row[trad].position / .citation
+// access pattern. We additionally surface row[trad].doc_id and .location for
+// deep-linking.
 export function parseComparison(text) {
+  const result = { topic: "", summary: "", rows: [] };
+  if (!text || typeof text !== "string") return result;
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "");
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    return parseComparisonLegacy(text);
+  }
+  if (!parsed || typeof parsed !== "object") return result;
+  result.topic = typeof parsed.topic === "string" ? parsed.topic.trim() : "";
+  result.summary = typeof parsed.summary === "string" ? parsed.summary.trim() : "";
+  const rows = Array.isArray(parsed.rows) ? parsed.rows : [];
+  for (const r of rows) {
+    if (!r || typeof r !== "object") continue;
+    const row = { aspect: typeof r.aspect === "string" ? r.aspect.trim() : "" };
+    const cells = r.cells && typeof r.cells === "object" ? r.cells : {};
+    for (const t of ALL_TRADITIONS) {
+      const cell = cells[t];
+      if (!cell || typeof cell !== "object") continue;
+      row[t] = {
+        position: typeof cell.position === "string" ? cell.position.trim() : "",
+        citation: typeof cell.citation === "string" ? cell.citation.trim() : "",
+        doc_id: typeof cell.doc_id === "string" ? cell.doc_id.trim() : null,
+        location: cell.location && typeof cell.location === "object" ? cell.location : null,
+      };
+    }
+    if (row.aspect || ALL_TRADITIONS.some(t => row[t])) result.rows.push(row);
+  }
+  return result;
+}
+
+// Legacy plain-text Compare parser — kept as a fallback when the model
+// disregards the JSON instruction.
+function parseComparisonLegacy(text) {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
   const result = { topic: "", summary: "", rows: [] };
   let currentRow = null;
