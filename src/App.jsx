@@ -1102,7 +1102,14 @@ export default function TheologyAssistant() {
                         <td style={{ padding: "12px 14px", fontWeight: "bold", fontSize: 12, color: dark, borderRight: "2px solid " + border, verticalAlign: "top", background: light }}>{row.aspect}</td>
                         {visibleTraditions.map(trad => {
                           const cell = row[trad]; const c = COLORS[trad];
-                          return <td key={trad} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{cell ? <div><div style={{ fontSize: 12, color: dark, lineHeight: 1.6, marginBottom: 3 }}>{cell.position}</div>{cell.citation && (() => {
+                          // Compare must NEVER show a blank cell. If the
+                          // model dropped this tradition, render a clear
+                          // fallback rather than nothing. If the model
+                          // returned a cell but with no position, still
+                          // surface citation-only content if available.
+                          const missing = !cell || cell.missing;
+                          const positionText = cell && cell.position ? cell.position : (missing ? t.compareNoResponseForTradition : "");
+                          return <td key={trad} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{<div><div style={{ fontSize: 12, color: missing ? mid : dark, fontStyle: missing ? "italic" : "normal", lineHeight: 1.6, marginBottom: 3 }}>{positionText}</div>{cell && cell.citation && (() => {
                             // Prefer the structured doc_id + location returned
                             // by the JSON Compare prompt (drives deep-linking
                             // straight to the cited passage). Fall back to
@@ -1120,7 +1127,7 @@ export default function TheologyAssistant() {
                               if (fromText.chapter !== undefined || fromText.section !== undefined) loc = fromText;
                             }
                             return (<button onClick={() => openBrowseAt(docId, loc)} title={"Open in Browse: " + cell.citation} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 10 }}>↗</span></button>);
-                          })()}</div> : <span style={{ color: "#ccc" }}>-</span>}</td>;
+                          })()}</div>}</td>;
                         })}
                       </tr>
                     ))}

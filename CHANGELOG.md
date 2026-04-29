@@ -3,6 +3,12 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-04-29]
+
+### Fixed
+
+- **Compare mode regression — every selected tradition now produces content; deep-link is supplementary, not required** — Following the 2026-04-28 switch to a structured-JSON Compare response, users reported blank cells for some traditions. Root cause: the new `COMPARISON_PROMPT` instructed the model to "OMIT that cell entirely (set it to null)" whenever it could not recall a specific chapter/question/article/canon — a rule carried over from Research, where missing-citation = omit-from-sidebar makes sense, but is wrong for Compare where every selected tradition column must be populated. The model was therefore dropping cells whenever it lacked a specific location, leaving the renderer to show a "-" placeholder. Fix: (1) `COMPARISON_PROMPT` rewritten so `position` is REQUIRED for every tradition in every row — if a tradition does not address an aspect, the model must say so explicitly ("This tradition does not address this question directly") rather than returning null. Citation/`doc_id`/`location` are now optional per cell — included when known, omitted when not, but their absence never causes a blank cell. (2) `parseComparison()` in `src/utils/parsers.js` now emits a `missing: true` placeholder for any tradition the model omitted, and falls back to `quote + context` when `position` is empty. (3) Compare cell renderer in `App.jsx` shows a clear "No response received for this tradition." fallback (italic, muted) when a cell is missing — no more blank/dash cells. New `compareNoResponseForTradition` translation in EN and DE. Deep-links continue to work for cells where the model did supply a location
+
 ## [2026-04-28]
 
 ### Added

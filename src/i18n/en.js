@@ -84,6 +84,7 @@ const en = {
   compareInstructions: "Select a suggested topic above or type your own. Use the filter bar to choose which traditions to include.",
   scrollHint: "← Scroll table to see all traditions →",
   aspect: "Aspect",
+  compareNoResponseForTradition: "No response received for this tradition.",
   unableToCompare: "Unable to complete the comparison. Please try again.",
   couldNotParse: "Could not parse response. Please try again.",
 

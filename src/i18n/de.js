@@ -84,6 +84,7 @@ const de = {
   compareInstructions: "Wählen Sie ein vorgeschlagenes Thema oben oder geben Sie ein eigenes ein. Nutzen Sie die Filterleiste, um Traditionen auszuwählen.",
   scrollHint: "← Tabelle scrollen, um alle Traditionen zu sehen →",
   aspect: "Aspekt",
+  compareNoResponseForTradition: "Keine Antwort für diese Tradition erhalten.",
   unableToCompare: "Der Vergleich konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
   couldNotParse: "Die Antwort konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut.",
 

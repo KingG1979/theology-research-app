@@ -98,22 +98,27 @@ STRICT RULES:
 
 1. Include 4 to 6 rows (aspects). One short sentence per "position".
 
-2. Each cell's "citation" is a short human-readable label (e.g. "Westminster 1.4", "Heidelberg Q60", "Augsburg Art. IV", "Canon 3"). Keep it short.
+2. EVERY tradition key (Reformed, Lutheran, Catholic, Baptist, Ecumenical, Orthodox, Anglican) MUST be present in every row's "cells" object, and EVERY cell MUST have a non-empty "position" string. Never set a cell to null. Never leave "position" blank. The "position" field is the analytical content shown to the user — it is REQUIRED.
 
-3. LOCATION + DOC_ID ARE REQUIRED for every cell you emit. They drive deep-linking — without them the citation cannot route to the actual passage. If you genuinely cannot recall a specific chapter / question / article / canon number for a tradition's stance on this aspect, OMIT that cell entirely (set it to null) rather than emitting one without a location. Do NOT fabricate numbers.
+   - If the tradition has a clear stance on this aspect, summarise it in 1-2 sentences in "position".
+   - If the tradition does not directly address this aspect (e.g. an ecumenical creed on a post-Reformation distinctive, or a Reformation confession on a question it simply does not raise), say so explicitly in "position" — e.g. "This tradition does not address this question directly" or "The Apostles' Creed does not speak to this distinction." Still emit the cell. Never blank.
 
-4. "doc_id" MUST be EXACTLY one of these strings (the document the citation points to):
+3. CITATION + LOCATION + DOC_ID are OPTIONAL per cell — include them only when you can recall a specific passage. They drive deep-linking when present, but their absence MUST NOT cause you to drop the cell or blank the "position". When you cannot recall a specific location, simply omit the "citation", "doc_id", and "location" fields (or set them to null / empty string) and keep the "position" populated. Do NOT fabricate chapter / question / article / canon numbers.
+
+4. Each cell's "citation" (when present) is a short human-readable label (e.g. "Westminster 1.4", "Heidelberg Q60", "Augsburg Art. IV", "Canon 3"). Keep it short.
+
+5. "doc_id" (when present) MUST be EXACTLY one of these strings:
    westminster, heidelberg, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
 
-5. Which "location" sub-fields to populate per document:
+6. Which "location" sub-fields to populate per document (when location is provided):
    - westminster / baptist1689 / roman-catechism / orthodox-longer: { "chapter": <int>, "section": <int> }
    - heidelberg: { "question": <int 1-129> }
    - augsburg / thirtynine-articles: { "article": <int> }
    - constantinople-1 / constantinople-2 / constantinople-3: { "canon": <int> }
    - apostles-creed / nicene-creed / athanasian-creed / chalcedon: { "section": <int> } for the clause number; OK to omit if not applicable.
 
-6. The tradition keys in "cells" must be exactly: Reformed, Lutheran, Catholic, Baptist, Ecumenical, Orthodox, Anglican (case-sensitive). For traditions you don't address for a given aspect, set the cell to null.
+7. The tradition keys in "cells" must be exactly: Reformed, Lutheran, Catholic, Baptist, Ecumenical, Orthodox, Anglican (case-sensitive). All seven MUST appear in every row.
 
-7. For the Catholic tradition, prefer the Roman Catechism (1566) — doc_id "roman-catechism".
+8. For the Catholic tradition, prefer the Roman Catechism (1566) — doc_id "roman-catechism".
 
 Output ONLY the JSON object. No surrounding text. No markdown fences.`;

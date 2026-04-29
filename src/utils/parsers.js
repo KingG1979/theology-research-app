@@ -44,15 +44,28 @@ export function parseComparison(text) {
     const cells = r.cells && typeof r.cells === "object" ? r.cells : {};
     for (const t of ALL_TRADITIONS) {
       const cell = cells[t];
-      if (!cell || typeof cell !== "object") continue;
+      if (!cell || typeof cell !== "object") {
+        // Model dropped this tradition entirely — still emit a placeholder so
+        // the renderer never shows a blank column. Compare mode requires
+        // every selected tradition to surface SOME content.
+        row[t] = { position: "", citation: "", doc_id: null, location: null, missing: true };
+        continue;
+      }
+      const position = typeof cell.position === "string" ? cell.position.trim() : "";
+      const quote = typeof cell.quote === "string" ? cell.quote.trim() : "";
+      const context = typeof cell.context === "string" ? cell.context.trim() : "";
+      // Position is the primary content. If the model omitted it, fall back
+      // to quote+context so the cell still has something readable.
+      const fallback = position || [quote, context].filter(Boolean).join(" — ");
       row[t] = {
-        position: typeof cell.position === "string" ? cell.position.trim() : "",
+        position: fallback,
         citation: typeof cell.citation === "string" ? cell.citation.trim() : "",
         doc_id: typeof cell.doc_id === "string" ? cell.doc_id.trim() : null,
         location: cell.location && typeof cell.location === "object" ? cell.location : null,
+        missing: false,
       };
     }
-    if (row.aspect || ALL_TRADITIONS.some(t => row[t])) result.rows.push(row);
+    if (row.aspect || ALL_TRADITIONS.some(t => row[t] && (row[t].position || row[t].citation))) result.rows.push(row);
   }
   return result;
 }
