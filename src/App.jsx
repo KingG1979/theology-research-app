@@ -14,6 +14,8 @@ import {
   docIdForConfessionName,
   confessionNameForDocId,
   normalizeLocation,
+  normalizeDocId,
+  normalizeCitation,
   findChapterIndex,
   findChapterIndexBySection,
   parseCitationString,
@@ -513,16 +515,23 @@ export default function TheologyAssistant() {
   // structured {chapter?, section?, question?, article?, canon?} payload from
   // a Research citation (or from Compare). Unknown/partial locations fall
   // back to the document's top.
-  function openBrowseAt(docId, location) {
-    if (!docId) return;
+  function openBrowseAt(rawDocId, location) {
+    if (!rawDocId) return;
+    // Always normalise the doc_id first — the model often emits aliases like
+    // "WCF" or "Westminster Confession of Faith". Without this the entire
+    // deep-link silently drops to Browse root.
+    const docId = normalizeDocId(rawDocId) || rawDocId;
     const confName = confessionNameForDocId(docId, localizedConfessions);
     if (!confName || !localizedConfessions[confName]) {
       // Unknown document — just switch to Browse mode.
+      console.warn("[deeplink] Unknown doc_id after normalisation:", rawDocId);
       setMode("browse");
       return;
     }
     const conf = localizedConfessions[confName];
-    const loc = normalizeLocation(location || {});
+    // Doc-aware normaliser: maps {article, question, canon, anathema, ...}
+    // to the {chapter, section} shape the data files actually use.
+    const loc = normalizeLocation(location || {}, docId);
 
     // Find chapter index: prefer explicit chapter, else infer from section
     // (Heidelberg question numbers, 39 Articles article numbers span chapters).
@@ -748,26 +757,36 @@ export default function TheologyAssistant() {
         parsedCitations = cites
           .filter(c => c && c.tradition && (c.document || c.confession))
           .map(c => {
-            // Normalise location: prefer the model's structured `location`,
-            // but if it's empty/partial, fall back to parsing the human
-            // `reference` string (e.g. "Chapter 1, Section 4", "Q60", "Art VI"),
-            // and finally the inline-citation pattern in `quote`.
-            const rawLoc = (c.location && typeof c.location === "object") ? c.location : {};
-            const norm = normalizeLocation(rawLoc);
-            let loc = norm;
+            // Joint normalisation: doc_id alias → canonical, then run the
+            // location through the doc-aware schema validator. This is what
+            // makes Compare/Research deep-links land on the correct passage
+            // even when the model emits {article: N} for Augsburg or "WCF"
+            // instead of "westminster".
+            const { docId: canonicalDocId, location: structuredLoc } = normalizeCitation({
+              doc_id: c.doc_id,
+              document: c.document,
+              confession: c.confession,
+              location: c.location,
+            });
+            let loc = structuredLoc;
+            // Free-text fallback: if structured location came back empty,
+            // try parsing the human reference / quote.
             if (loc.chapter === undefined && loc.section === undefined) {
-              const refStr = c.reference || "";
-              const fromRef = parseCitationString(refStr);
-              if (fromRef.chapter !== undefined || fromRef.section !== undefined) loc = fromRef;
+              const fromRef = parseCitationString(c.reference || "");
+              if (fromRef.chapter !== undefined || fromRef.section !== undefined) {
+                loc = normalizeLocation(fromRef, canonicalDocId);
+              }
             }
             if (loc.chapter === undefined && loc.section === undefined && c.quote) {
               const fromQuote = parseCitationString(c.quote);
-              if (fromQuote.chapter !== undefined || fromQuote.section !== undefined) loc = fromQuote;
+              if (fromQuote.chapter !== undefined || fromQuote.section !== undefined) {
+                loc = normalizeLocation(fromQuote, canonicalDocId);
+              }
             }
             return {
               tradition: c.tradition,
               confession: c.document || c.confession || "",
-              doc_id: c.doc_id || docIdForConfessionName(c.document || c.confession || "") || null,
+              doc_id: canonicalDocId || null,
               location: loc,
               reference: c.reference || "",
               quote: c.quote || "",
@@ -1110,21 +1129,27 @@ export default function TheologyAssistant() {
                           const missing = !cell || cell.missing;
                           const positionText = cell && cell.position ? cell.position : (missing ? t.compareNoResponseForTradition : "");
                           return <td key={trad} style={{ padding: "12px 14px", verticalAlign: "top", borderRight: "1px solid #ede8dc" }}>{<div><div style={{ fontSize: 12, color: missing ? mid : dark, fontStyle: missing ? "italic" : "normal", lineHeight: 1.6, marginBottom: 3 }}>{positionText}</div>{cell && cell.citation && (() => {
-                            // Prefer the structured doc_id + location returned
-                            // by the JSON Compare prompt (drives deep-linking
-                            // straight to the cited passage). Fall back to
-                            // parsing the human citation string only if the
-                            // model omitted the structured fields.
-                            let docId = cell.doc_id || null;
+                            // Joint normalisation of doc_id + location so the
+                            // deep-link lands on the cited passage even when
+                            // the model emits aliases ("WCF") or doc-shaped
+                            // keys (article/question/canon/anathema) that
+                            // don't match the data file's storage axis.
+                            const { docId: canonicalDocId, location: structuredLoc } = normalizeCitation({
+                              doc_id: cell.doc_id,
+                              location: cell.location,
+                            });
+                            let docId = canonicalDocId;
                             if (!docId) {
                               const confKey = findConfessionFromCitation(cell.citation);
                               if (confKey) docId = docIdForConfessionName(confKey);
                             }
                             if (!docId) return (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>);
-                            let loc = normalizeLocation(cell.location || {});
+                            let loc = structuredLoc;
                             if (loc.chapter === undefined && loc.section === undefined) {
                               const fromText = parseCitationString(cell.citation);
-                              if (fromText.chapter !== undefined || fromText.section !== undefined) loc = fromText;
+                              if (fromText.chapter !== undefined || fromText.section !== undefined) {
+                                loc = normalizeLocation(fromText, docId);
+                              }
                             }
                             return (<button onClick={() => openBrowseAt(docId, loc)} title={"Open in Browse: " + cell.citation} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 10 }}>↗</span></button>);
                           })()}</div>}</td>;

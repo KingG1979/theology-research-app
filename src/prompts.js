@@ -45,14 +45,25 @@ STRICT RULES for the citations array:
 
 3. LOCATION IS REQUIRED. You MUST emit at least one of {chapter, section, question, article, canon} in the "location" object for each citation. The structured "location" drives deep-linking — without it the citation cannot link to the actual passage and is useless to the user. If you genuinely cannot recall a specific chapter / question / article number for a tradition, OMIT that citation entirely rather than emitting one without a location. Do NOT fabricate numbers. Populate BOTH "location" (structured, required) and "reference" (human-readable, required) — the values MUST match.
 
-   Which location sub-fields to populate per document:
-   - westminster / baptist1689 / roman-catechism / orthodox-longer: use {chapter, section}.
-   - heidelberg: use {question} (1–129). Chapter (Lord's Day) is optional.
-   - augsburg / thirtynine-articles: use {article}.
-   - constantinople-1 / constantinople-2 / constantinople-3: use {canon} (the canon / anathema / section number).
-   - apostles-creed / nicene-creed / athanasian-creed / chalcedon: use {section} for the clause number; chapter/location is optional.
+   Use ONLY the location sub-fields and integer ranges listed for each doc_id. Do NOT invent keys or emit numbers outside the listed range. If a number falls outside the range it will be silently dropped and the link will fall back to the document root.
+   - westminster:           { chapter: 1-33, section: 1-32 }
+   - heidelberg:            { question: 1-129 }   (chapter / Lord's Day is optional, 1-52)
+   - augsburg:              { article: 1-28 }     (each article is one passage; do NOT emit chapter/section)
+   - baptist1689:           { chapter: 1-32, section: 1-32 }
+   - thirtynine-articles:   { article: 1-39 }
+   - roman-catechism:       { chapter: 1-42, section: 1-200 }
+   - orthodox-longer:       { chapter: 1-6, section: 1-8 }   (the catechism's "questions" map directly to sections)
+   - apostles-creed:        { section: 1-4 }      (clause number)
+   - nicene-creed:          { section: 1-6 }      (clause number)
+   - athanasian-creed:      { section: 1-41 }     (continuous clause number across both halves)
+   - chalcedon:             { section: 1-4 }      (clause number)
+   - constantinople-1:      { canon: 1-4 }
+   - constantinople-2:      { anathema: 1-14 }    (these are the council's anathemas)
+   - constantinople-3:      { chapter: 1-8, section: 1-200 }
 
-   "doc_id" MUST be one of the exact strings listed in the schema. If the document is not in that list, omit the citation.
+   "doc_id" MUST be EXACTLY one of these canonical strings — do NOT invent variants like "WCF" / "Westminster Confession of Faith" / "westminster_confession":
+     westminster, heidelberg, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
+   If the document is not in that list, omit the citation.
 
 4. For Catholic citations, prefer the Roman Catechism (Catechism of the Council of Trent, 1566). You may cite the 1992 Catechism of the Catholic Church only when explicitly distinguishing modern teaching.
 
@@ -107,15 +118,25 @@ STRICT RULES:
 
 4. Each cell's "citation" (when present) is a short human-readable label (e.g. "Westminster 1.4", "Heidelberg Q60", "Augsburg Art. IV", "Canon 3"). Keep it short.
 
-5. "doc_id" (when present) MUST be EXACTLY one of these strings:
+5. "doc_id" (when present) MUST be EXACTLY one of these canonical strings — do NOT invent variants like "WCF" / "Westminster Confession of Faith" / "westminsterbekenntnis":
    westminster, heidelberg, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
 
-6. Which "location" sub-fields to populate per document (when location is provided):
-   - westminster / baptist1689 / roman-catechism / orthodox-longer: { "chapter": <int>, "section": <int> }
-   - heidelberg: { "question": <int 1-129> }
-   - augsburg / thirtynine-articles: { "article": <int> }
-   - constantinople-1 / constantinople-2 / constantinople-3: { "canon": <int> }
-   - apostles-creed / nicene-creed / athanasian-creed / chalcedon: { "section": <int> } for the clause number; OK to omit if not applicable.
+6. Which "location" sub-fields and integer ranges are valid per document. Numbers outside the range will be dropped and the link will fall back to the document root.
+   - westminster:           { "chapter": 1-33, "section": 1-32 }
+   - heidelberg:            { "question": 1-129 }   (chapter / Lord's Day is optional, 1-52)
+   - augsburg:              { "article": 1-28 }     (do NOT emit chapter or section)
+   - baptist1689:           { "chapter": 1-32, "section": 1-32 }
+   - thirtynine-articles:   { "article": 1-39 }
+   - roman-catechism:       { "chapter": 1-42, "section": 1-200 }
+   - orthodox-longer:       { "chapter": 1-6, "section": 1-8 }
+   - apostles-creed:        { "section": 1-4 }      (clause number)
+   - nicene-creed:          { "section": 1-6 }
+   - athanasian-creed:      { "section": 1-41 }
+   - chalcedon:             { "section": 1-4 }
+   - constantinople-1:      { "canon": 1-4 }
+   - constantinople-2:      { "anathema": 1-14 }
+   - constantinople-3:      { "chapter": 1-8, "section": 1-200 }
+   Do NOT fabricate numbers. If you cannot recall a specific number, omit the location and citation entirely.
 
 7. The tradition keys in "cells" must be exactly: Reformed, Lutheran, Catholic, Baptist, Ecumenical, Orthodox, Anglican (case-sensitive). All seven MUST appear in every row.
 

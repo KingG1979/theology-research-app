@@ -65,6 +65,154 @@ const DE_NAME_TO_DOC_ID = {
 
 const NAME_TO_DOC_ID = { ...EN_NAME_TO_DOC_ID, ...DE_NAME_TO_DOC_ID };
 
+// Free-form doc_id alias map. The model is instructed to emit one of the
+// canonical strings, but in practice it slips into shorthand or German forms.
+// Every key is lowercased; lookup folds the input to lowercase.
+const DOC_ID_ALIASES = {
+  // Westminster
+  "westminster": DOC_IDS.westminster,
+  "wcf": DOC_IDS.westminster,
+  "westminster_confession": DOC_IDS.westminster,
+  "westminster-confession": DOC_IDS.westminster,
+  "westminster confession": DOC_IDS.westminster,
+  "westminster confession of faith": DOC_IDS.westminster,
+  "westminsterbekenntnis": DOC_IDS.westminster,
+  // Heidelberg
+  "heidelberg": DOC_IDS.heidelberg,
+  "hc": DOC_IDS.heidelberg,
+  "heidelberg_catechism": DOC_IDS.heidelberg,
+  "heidelberg-catechism": DOC_IDS.heidelberg,
+  "heidelberg catechism": DOC_IDS.heidelberg,
+  "heidelberger katechismus": DOC_IDS.heidelberg,
+  "heidelberger": DOC_IDS.heidelberg,
+  // Augsburg
+  "augsburg": DOC_IDS.augsburg,
+  "ca": DOC_IDS.augsburg,
+  "augsburg_confession": DOC_IDS.augsburg,
+  "augsburg-confession": DOC_IDS.augsburg,
+  "augsburg confession": DOC_IDS.augsburg,
+  "augsburger bekenntnis": DOC_IDS.augsburg,
+  "confessio augustana": DOC_IDS.augsburg,
+  // 1689 Baptist
+  "baptist1689": DOC_IDS.baptist1689,
+  "1689": DOC_IDS.baptist1689,
+  "1689-baptist": DOC_IDS.baptist1689,
+  "1689_baptist": DOC_IDS.baptist1689,
+  "1689 baptist confession": DOC_IDS.baptist1689,
+  "second london baptist confession": DOC_IDS.baptist1689,
+  "baptist": DOC_IDS.baptist1689,
+  "baptistisches bekenntnis von 1689": DOC_IDS.baptist1689,
+  // 39 Articles
+  "thirtynine-articles": DOC_IDS.thirtynineArticles,
+  "thirtynine_articles": DOC_IDS.thirtynineArticles,
+  "thirty-nine-articles": DOC_IDS.thirtynineArticles,
+  "thirty_nine_articles": DOC_IDS.thirtynineArticles,
+  "39-articles": DOC_IDS.thirtynineArticles,
+  "39_articles": DOC_IDS.thirtynineArticles,
+  "39 articles": DOC_IDS.thirtynineArticles,
+  "thirty-nine articles": DOC_IDS.thirtynineArticles,
+  "39 articles of religion": DOC_IDS.thirtynineArticles,
+  "articles of religion": DOC_IDS.thirtynineArticles,
+  "39 artikel der kirche von england": DOC_IDS.thirtynineArticles,
+  // Roman Catechism
+  "roman-catechism": DOC_IDS.romanCatechism,
+  "roman_catechism": DOC_IDS.romanCatechism,
+  "roman catechism": DOC_IDS.romanCatechism,
+  "trent": DOC_IDS.romanCatechism,
+  "catechism of the council of trent": DOC_IDS.romanCatechism,
+  "römischer katechismus": DOC_IDS.romanCatechism,
+  "roemischer katechismus": DOC_IDS.romanCatechism,
+  // Orthodox Longer
+  "orthodox-longer": DOC_IDS.orthodoxLonger,
+  "orthodox_longer": DOC_IDS.orthodoxLonger,
+  "longer-catechism": DOC_IDS.orthodoxLonger,
+  "longer catechism": DOC_IDS.orthodoxLonger,
+  "longer catechism (orthodox)": DOC_IDS.orthodoxLonger,
+  "orthodox": DOC_IDS.orthodoxLonger,
+  "orthodox catechism": DOC_IDS.orthodoxLonger,
+  "orthodoxer katechismus": DOC_IDS.orthodoxLonger,
+  // Apostles' Creed
+  "apostles-creed": DOC_IDS.apostlesCreed,
+  "apostles_creed": DOC_IDS.apostlesCreed,
+  "apostles creed": DOC_IDS.apostlesCreed,
+  "apostles' creed": DOC_IDS.apostlesCreed,
+  "apostles": DOC_IDS.apostlesCreed,
+  "apostolisches glaubensbekenntnis": DOC_IDS.apostlesCreed,
+  // Nicene Creed
+  "nicene-creed": DOC_IDS.niceneCreed,
+  "nicene_creed": DOC_IDS.niceneCreed,
+  "nicene creed": DOC_IDS.niceneCreed,
+  "nicene": DOC_IDS.niceneCreed,
+  "niceno-constantinopolitan creed": DOC_IDS.niceneCreed,
+  "nicänisches glaubensbekenntnis": DOC_IDS.niceneCreed,
+  "nicaenisches glaubensbekenntnis": DOC_IDS.niceneCreed,
+  // Athanasian
+  "athanasian-creed": DOC_IDS.athanasianCreed,
+  "athanasian_creed": DOC_IDS.athanasianCreed,
+  "athanasian creed": DOC_IDS.athanasianCreed,
+  "athanasian": DOC_IDS.athanasianCreed,
+  "quicunque vult": DOC_IDS.athanasianCreed,
+  "athanasianisches glaubensbekenntnis": DOC_IDS.athanasianCreed,
+  // Chalcedon
+  "chalcedon": DOC_IDS.chalcedon,
+  "definition-of-chalcedon": DOC_IDS.chalcedon,
+  "definition of chalcedon": DOC_IDS.chalcedon,
+  "chalcedonian definition": DOC_IDS.chalcedon,
+  "definition von chalcedon": DOC_IDS.chalcedon,
+  // Constantinople I
+  "constantinople-1": DOC_IDS.constantinople1,
+  "constantinople_1": DOC_IDS.constantinople1,
+  "constantinople 1": DOC_IDS.constantinople1,
+  "constantinople i": DOC_IDS.constantinople1,
+  "first council of constantinople": DOC_IDS.constantinople1,
+  "first council of constantinople — canons": DOC_IDS.constantinople1,
+  "erstes konzil von konstantinopel": DOC_IDS.constantinople1,
+  // Constantinople II
+  "constantinople-2": DOC_IDS.constantinople2,
+  "constantinople_2": DOC_IDS.constantinople2,
+  "constantinople 2": DOC_IDS.constantinople2,
+  "constantinople ii": DOC_IDS.constantinople2,
+  "second council of constantinople": DOC_IDS.constantinople2,
+  "second council of constantinople — anathemas": DOC_IDS.constantinople2,
+  "zweites konzil von konstantinopel": DOC_IDS.constantinople2,
+  // Constantinople III
+  "constantinople-3": DOC_IDS.constantinople3,
+  "constantinople_3": DOC_IDS.constantinople3,
+  "constantinople 3": DOC_IDS.constantinople3,
+  "constantinople iii": DOC_IDS.constantinople3,
+  "third council of constantinople": DOC_IDS.constantinople3,
+  "third council of constantinople — definition of faith": DOC_IDS.constantinople3,
+  "drittes konzil von konstantinopel": DOC_IDS.constantinople3,
+};
+
+// Doc-aware schema: how each document is keyed in the data files, plus the
+// max chapter / section number we'll accept before treating the input as
+// out-of-range. The "primaryAxis" tells the normalizer which incoming key
+// (chapter, question, article, canon) maps to which storage axis.
+//   storage="chapter+section": {chapter, section} are both meaningful
+//   storage="section-only":     1 chapter, only section number matters (clauses)
+//   storage="chapter-as-N":     model emits article# but it's stored as a
+//                                top-level chapter (Augsburg pattern)
+//   storage="section-as-N":     model emits article#/canon#/Q#, looked up by
+//                                section number across chapters (Heidelberg,
+//                                39 Articles, athanasian, constantinople-2)
+const DOC_SCHEMAS = {
+  [DOC_IDS.westminster]:        { storage: "chapter+section", maxChapter: 33, maxSection: 32 },
+  [DOC_IDS.heidelberg]:         { storage: "section-as-N",    maxChapter: 52, maxSection: 129, primaryKey: "question" },
+  [DOC_IDS.augsburg]:           { storage: "chapter-as-N",    maxChapter: 28, maxSection: 1,   primaryKey: "article" },
+  [DOC_IDS.baptist1689]:        { storage: "chapter+section", maxChapter: 32, maxSection: 32 },
+  [DOC_IDS.thirtynineArticles]: { storage: "section-as-N",    maxChapter: 7,  maxSection: 39,  primaryKey: "article" },
+  [DOC_IDS.romanCatechism]:     { storage: "chapter+section", maxChapter: 42, maxSection: 200 },
+  [DOC_IDS.orthodoxLonger]:     { storage: "chapter+section", maxChapter: 6,  maxSection: 8,   primaryKey: "question" },
+  [DOC_IDS.apostlesCreed]:      { storage: "section-only",    maxChapter: 1,  maxSection: 4 },
+  [DOC_IDS.niceneCreed]:        { storage: "section-only",    maxChapter: 1,  maxSection: 6 },
+  [DOC_IDS.athanasianCreed]:    { storage: "section-as-N",    maxChapter: 2,  maxSection: 41 },
+  [DOC_IDS.chalcedon]:          { storage: "section-only",    maxChapter: 1,  maxSection: 4 },
+  [DOC_IDS.constantinople1]:    { storage: "section-as-N",    maxChapter: 1,  maxSection: 4,   primaryKey: "canon" },
+  [DOC_IDS.constantinople2]:    { storage: "section-as-N",    maxChapter: 2,  maxSection: 14,  primaryKey: "anathema" },
+  [DOC_IDS.constantinople3]:    { storage: "chapter+section", maxChapter: 8,  maxSection: 200 },
+};
+
 // Reverse: doc_id → English confession name (the canonical Browse key).
 // Browse state is keyed by the localised confession name at render time, but
 // we always want to resolve to English first and let the language-effect
@@ -73,10 +221,32 @@ export const DOC_ID_TO_EN_NAME = Object.fromEntries(
   Object.entries(EN_NAME_TO_DOC_ID).map(([en, id]) => [id, en])
 );
 
+// Set of canonical doc_ids for fast membership tests.
+const CANONICAL_DOC_IDS = new Set(Object.values(DOC_IDS));
+
+// Map any model-emitted doc_id variant ("WCF", "Westminster Confession of
+// Faith", "westminster_confession", "Heidelberger Katechismus", …) to the
+// canonical doc_id. Returns null if no match.
+export function normalizeDocId(input) {
+  if (!input) return null;
+  const raw = String(input).trim();
+  if (!raw) return null;
+  if (CANONICAL_DOC_IDS.has(raw)) return raw;
+  const lower = raw.toLowerCase();
+  if (DOC_ID_ALIASES[lower]) return DOC_ID_ALIASES[lower];
+  // Strip punctuation / collapse whitespace and retry.
+  const stripped = lower.replace(/[._]+/g, "-").replace(/\s+/g, " ").trim();
+  if (DOC_ID_ALIASES[stripped]) return DOC_ID_ALIASES[stripped];
+  // Last resort: confession-name lookup (e.g. "Westminster Confession of
+  // Faith" via the EN_NAME_TO_DOC_ID map, "Heidelberger Katechismus" via DE).
+  if (NAME_TO_DOC_ID[raw]) return NAME_TO_DOC_ID[raw];
+  return null;
+}
+
 // Given a confession name in either locale, return its doc_id or null.
 export function docIdForConfessionName(name) {
   if (!name) return null;
-  return NAME_TO_DOC_ID[name] || null;
+  return NAME_TO_DOC_ID[name] || normalizeDocId(name) || null;
 }
 
 // Given a confession name, return the opposite-locale name if known, else the
@@ -107,20 +277,137 @@ export function buildAnchorId({ docId, chapter, section }) {
   return "doc-" + docId;
 }
 
-// A location can arrive in several shapes — normalise to {chapter, section}.
-// The Research JSON prompt is instructed to emit chapter/section/question/
-// article/canon fields; map them all to chapter+section using the Browse
-// data's own numbering (sections ARE question/article/canon numbers in the
-// data files — see Heidelberg Q#, Augsburg article#, Constantinople canon#).
-export function normalizeLocation(loc) {
+// First-pass: pull every recognised location key off `loc` (any locale, any
+// shape). Returns numeric-cast values where possible so the doc-aware step
+// can decide what's a chapter vs a clause vs an article.
+function collectLocationKeys(loc) {
   if (!loc || typeof loc !== "object") return {};
-  const chapter = loc.chapter ?? loc.lordsDay ?? loc.part ?? null;
-  const section =
-    loc.section ?? loc.question ?? loc.article ?? loc.canon ?? loc.anathema ?? null;
+  const num = (v) => {
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  return {
+    chapter:   num(loc.chapter   ?? loc.kapitel ?? loc.ch ?? loc.cap),
+    section:   num(loc.section   ?? loc.s ?? loc.sec ?? loc.paragraph ?? loc.par ?? loc.absatz ?? loc.clause),
+    question:  num(loc.question  ?? loc.q ?? loc.frage),
+    article:   num(loc.article   ?? loc.art ?? loc.artikel ?? loc.articulus),
+    canon:     num(loc.canon     ?? loc.kanon),
+    anathema:  num(loc.anathema  ?? loc.anathem),
+    lordsDay:  num(loc.lordsDay  ?? loc.lords_day ?? loc["lord's day"] ?? loc.lord_day),
+    part:      num(loc.part),
+  };
+}
+
+// Doc-aware location normaliser. Given a doc_id and any incoming location
+// shape, returns the {chapter, section} pair that matches how the document
+// is actually keyed in the data files. Out-of-range numbers are dropped
+// (the caller falls back to the doc root). When `docId` is null the legacy
+// best-guess mapping is used so older callers keep working.
+export function normalizeLocation(loc, docId) {
+  const k = collectLocationKeys(loc);
+  if (!docId) {
+    // Legacy fallback: prefer chapter/section, fold the rest into section.
+    const out = {};
+    const chapter = k.chapter ?? k.lordsDay ?? k.part;
+    const section = k.section ?? k.question ?? k.article ?? k.canon ?? k.anathema;
+    if (chapter !== null && chapter !== undefined) out.chapter = chapter;
+    if (section !== null && section !== undefined) out.section = section;
+    return out;
+  }
+  const schema = DOC_SCHEMAS[docId];
+  if (!schema) {
+    const out = {};
+    if (k.chapter != null) out.chapter = k.chapter;
+    if (k.section != null) out.section = k.section;
+    return out;
+  }
+
+  let chapter = null;
+  let section = null;
+
+  switch (schema.storage) {
+    case "chapter+section": {
+      // Westminster, Baptist1689, Roman Catechism, Orthodox Longer,
+      // Constantinople III. {chapter, section} map directly.
+      chapter = k.chapter ?? k.part ?? null;
+      section = k.section ?? k.question ?? k.article ?? k.canon ?? k.anathema ?? null;
+      // If the model emitted only `article` for orthodox-longer, treat it as
+      // the chapter (Orthodox Longer chapters look like articles to readers).
+      if (chapter == null && schema.primaryKey === "question" && k.question != null) {
+        // Orthodox Longer: question numbers reset per chapter (1 or 2 per
+        // chapter); without an explicit chapter we cannot pinpoint, so fall
+        // through with section-only and let the section-lookup resolve it.
+        section = k.question;
+      }
+      break;
+    }
+    case "section-only": {
+      // Apostles' / Nicene / Chalcedon: 1 chapter, sections = clauses.
+      chapter = 1;
+      section = k.section ?? k.clause ?? k.question ?? k.article ?? k.canon ?? null;
+      break;
+    }
+    case "chapter-as-N": {
+      // Augsburg: each "article" is stored as a top-level chapter, with a
+      // single section.number=1 underneath.
+      chapter =
+        k.article ??
+        k.chapter ??
+        k.section ??  // model sometimes mislabels as section
+        null;
+      section = 1;
+      break;
+    }
+    case "section-as-N": {
+      // Heidelberg (Q#), 39 Articles (article#), Athanasian (clause#),
+      // Constantinople I/II (canon# / anathema#). The cross-chapter unique
+      // number lives in `section`. Chapter is optional; the renderer will
+      // resolve it via findChapterIndexBySection.
+      chapter = k.chapter ?? k.lordsDay ?? null;
+      section =
+        k[schema.primaryKey] ??
+        k.section ??
+        k.question ??
+        k.article ??
+        k.canon ??
+        k.anathema ??
+        null;
+      // Augsburg-style fallback: if only "chapter" was given and it's in
+      // range for the section axis, treat it as the section number.
+      if (section == null && chapter != null && schema.primaryKey && chapter <= schema.maxSection) {
+        section = chapter;
+        chapter = null;
+      }
+      break;
+    }
+  }
+
+  // Range validation. Out-of-range silently drops to null so the caller
+  // falls back to the doc root rather than building a 404 URL.
   const out = {};
-  if (chapter !== null && chapter !== undefined && chapter !== "") out.chapter = chapter;
-  if (section !== null && section !== undefined && section !== "") out.section = section;
+  if (chapter != null) {
+    if (chapter >= 1 && chapter <= schema.maxChapter) out.chapter = chapter;
+  }
+  if (section != null) {
+    if (section >= 1 && section <= schema.maxSection) out.section = section;
+  }
   return out;
+}
+
+// Single-call helper that ALSO normalises the doc_id. Returns
+// {docId, location} where `docId` is canonical (or null) and `location`
+// is the storage-shape {chapter?, section?} validated against the doc.
+export function normalizeCitation({ doc_id, docId, document, confession, location } = {}) {
+  const inputId = doc_id ?? docId ?? null;
+  let canonicalId = normalizeDocId(inputId);
+  if (!canonicalId) {
+    // Try resolving from the human document/confession name as a backup.
+    const name = document || confession;
+    if (name) canonicalId = docIdForConfessionName(name);
+  }
+  const loc = normalizeLocation(location || {}, canonicalId);
+  return { docId: canonicalId, location: loc };
 }
 
 // Given a confession data object (with .chapters[].sections[]) and a
