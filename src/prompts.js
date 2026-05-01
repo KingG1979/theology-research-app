@@ -114,7 +114,21 @@ STRICT RULES:
    - If the tradition has a clear stance on this aspect, summarise it in 1-2 sentences in "position".
    - If the tradition does not directly address this aspect (e.g. an ecumenical creed on a post-Reformation distinctive, or a Reformation confession on a question it simply does not raise), say so explicitly in "position" — e.g. "This tradition does not address this question directly" or "The Apostles' Creed does not speak to this distinction." Still emit the cell. Never blank.
 
-3. CITATION + LOCATION + DOC_ID are OPTIONAL per cell — include them only when you can recall a specific passage. They drive deep-linking when present, but their absence MUST NOT cause you to drop the cell or blank the "position". When you cannot recall a specific location, simply omit the "citation", "doc_id", and "location" fields (or set them to null / empty string) and keep the "position" populated. Do NOT fabricate chapter / question / article / canon numbers.
+3. CITATION + LOCATION + DOC_ID are OPTIONAL per cell — but you SHOULD provide them whenever a tradition's source documents address the topic with a specific, well-known passage. Default to citing. Only omit "citation", "doc_id", and "location" when (a) the tradition's CCCR source documents genuinely don't address the aspect, OR (b) you are not confident of any specific passage. Their absence MUST NOT cause you to drop the cell or blank the "position" — the "position" is always required. Do NOT fabricate chapter / question / article / canon numbers; if you cannot recall a specific number with confidence, omit the citation but still write the "position".
+
+   EXPLICIT GUIDANCE: If a tradition's source documents in CCCR are KNOWN to address the topic with a specific section, you SHOULD include that citation. Do not omit citations out of excessive caution. Cite the most directly relevant passage, even if it is not the only relevant one. The citation must be ON-TOPIC for the aspect — do not return a justification quote for a Scripture question, or a sacraments locus for a Christology question.
+
+   STANDARD-LOCUS GUIDE (non-exhaustive — verify topical relevance before citing). When the user's doctrine matches one of these, the listed loci are the canonical places each tradition's confessions/catechisms treat it; reach for them first:
+   - The Church / Ecclesiology: Westminster Ch. 25; Augsburg Art. VII–VIII; 1689 Ch. 26; Heidelberg Q54; 39 Articles Art. XIX
+   - Justification: Westminster Ch. 11; Augsburg Art. IV; 1689 Ch. 11; Heidelberg Q60; Roman Catechism Part II (justification section); 39 Articles Art. XI
+   - Sacraments / Lord's Supper / Baptism: Westminster Ch. 27–29; Augsburg Art. IX–XIII; 1689 Ch. 28–30; Heidelberg Q65–82; Roman Catechism (sacraments part); 39 Articles Art. XXV–XXXI
+   - Scripture: Westminster Ch. 1; 1689 Ch. 1; 39 Articles Art. VI–VII; Heidelberg Q19; Augsburg (referenced via confessional norms)
+   - Original Sin: Westminster Ch. 6; Augsburg Art. II; 1689 Ch. 6; Heidelberg Q3–11; 39 Articles Art. IX
+   - Predestination / Election: Westminster Ch. 3; 39 Articles Art. XVII; 1689 Ch. 3
+   - Trinity: Apostles' Creed; Nicene Creed; Athanasian Creed; Westminster Ch. 2; Augsburg Art. I
+   - Christology / Person of Christ: Definition of Chalcedon; Constantinople II; Constantinople III; Westminster Ch. 8
+
+   Treat this list as guidance, not a command — verify the locus actually fits the user's specific aspect before citing it, and feel free to cite other passages when they are more directly on-point.
 
 4. Each cell's "citation" (when present) is a short human-readable label (e.g. "Westminster 1.4", "Heidelberg Q60", "Augsburg Art. IV", "Canon 3"). Keep it short.
 

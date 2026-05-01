@@ -7,6 +7,7 @@ Maintained by **Stein Street Solutions (SSS)**.
 
 ### Changed
 
+- **Tuned Compare-mode prompt to cite source passages more readily.** Provides standard-locus guidance to the model so well-known doctrinal sections (e.g., Augsburg Art. VII on the Church, Westminster Ch. 11 on Justification) are reliably cited. On-topic and doc_id/location safeguards retained.
 - **Removed floating Feedback button. Replaced with footer link (every page) + "Send Feedback" button on About page.** Resolves issue where button obscured Compare mode's horizontal scroll arrow and dominated mobile viewports. The same feedback modal is now triggered from a subtle "Feedback" text link in the footer (next to `www.ccc-study.org`) and from a normal-sized "Send Feedback" button at the bottom of the About modal. EN and DE locales reuse existing `feedback` / `sendFeedback` i18n keys.
 
 ## [2026-04-29]
