@@ -387,7 +387,22 @@ export function normalizeLocation(loc, docId) {
   // falls back to the doc root rather than building a 404 URL.
   const out = {};
   if (chapter != null) {
-    if (chapter >= 1 && chapter <= schema.maxChapter) out.chapter = chapter;
+    if (chapter >= 1 && chapter <= schema.maxChapter) {
+      out.chapter = chapter;
+    } else if (
+      docId === DOC_IDS.romanCatechism &&
+      chapter > schema.maxChapter &&
+      typeof console !== "undefined"
+    ) {
+      // Catch CCC-paragraph-style numbers (e.g. 2086, 1213) being routed to
+      // the Roman Catechism. The Roman Catechism (1566) only has 42 chapters;
+      // CCC (1992) is not in CCCR. Drop the link to doc root rather than
+      // try to "rescue" the number as a section.
+      console.warn(
+        `[anchors] roman-catechism chapter ${chapter} is out of range (1-${schema.maxChapter}); ` +
+        `likely a CCC paragraph number — falling back to doc root.`
+      );
+    }
   }
   if (section != null) {
     if (section >= 1 && section <= schema.maxSection) out.section = section;

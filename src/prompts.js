@@ -67,6 +67,8 @@ STRICT RULES for the citations array:
 
 4. For Catholic citations, prefer the Roman Catechism (Catechism of the Council of Trent, 1566). You may cite the 1992 Catechism of the Catholic Church only when explicitly distinguishing modern teaching.
 
+   IMPORTANT — Catholic source clarification: doc_id "roman-catechism" refers ONLY to the Roman Catechism (Catechismus Romanus, 1566, McHugh/Callan English translation). CCCR does NOT contain the modern Catechism of the Catholic Church (CCC, 1992). Do NOT emit CCC paragraph numbers (e.g., "CCC 2086", "CCC 1213", paragraph numbers in the hundreds or thousands) under doc_id "roman-catechism". The Roman Catechism is keyed by chapter (1–42) and section (small integer within that chapter — never larger than ~190). Cite ONLY by Roman Catechism's own chapter/section, e.g. { "doc_id": "roman-catechism", "location": { "chapter": 19, "section": 31 } } for the section on Justifying Grace. If you cannot recall a specific Roman Catechism chapter/section with confidence, omit the citation entirely rather than emitting a CCC-style number.
+
 5. "tradition" values must be EXACTLY one of: Reformed, Lutheran, Catholic, Baptist, Orthodox, Anglican, Ecumenical (case-sensitive).
 
 STRICT RULES for the answer body:
@@ -118,15 +120,18 @@ STRICT RULES:
 
    EXPLICIT GUIDANCE: If a tradition's source documents in CCCR are KNOWN to address the topic with a specific section, you SHOULD include that citation. Do not omit citations out of excessive caution. Cite the most directly relevant passage, even if it is not the only relevant one. The citation must be ON-TOPIC for the aspect — do not return a justification quote for a Scripture question, or a sacraments locus for a Christology question.
 
-   STANDARD-LOCUS GUIDE (non-exhaustive — verify topical relevance before citing). When the user's doctrine matches one of these, the listed loci are the canonical places each tradition's confessions/catechisms treat it; reach for them first:
-   - The Church / Ecclesiology: Westminster Ch. 25; Augsburg Art. VII–VIII; 1689 Ch. 26; Heidelberg Q54; 39 Articles Art. XIX
-   - Justification: Westminster Ch. 11; Augsburg Art. IV; 1689 Ch. 11; Heidelberg Q60; Roman Catechism Part II (justification section); 39 Articles Art. XI
-   - Sacraments / Lord's Supper / Baptism: Westminster Ch. 27–29; Augsburg Art. IX–XIII; 1689 Ch. 28–30; Heidelberg Q65–82; Roman Catechism (sacraments part); 39 Articles Art. XXV–XXXI
-   - Scripture: Westminster Ch. 1; 1689 Ch. 1; 39 Articles Art. VI–VII; Heidelberg Q19; Augsburg (referenced via confessional norms)
-   - Original Sin: Westminster Ch. 6; Augsburg Art. II; 1689 Ch. 6; Heidelberg Q3–11; 39 Articles Art. IX
+   STANDARD-LOCUS GUIDE (non-exhaustive — verify topical relevance before citing). When the user's doctrine matches one of these, the listed loci are the canonical places each tradition's confessions/catechisms treat it; reach for them first. Roman Catechism references are by chapter# from CCCR's data (NOT by CCC paragraph number):
+   - The Church / Ecclesiology: Westminster Ch. 25; Augsburg Art. VII–VIII; 1689 Ch. 26; Heidelberg Q54; Roman Catechism Ch. 11 (Article IX: The Holy Catholic Church); 39 Articles Art. XIX
+   - Justification: Westminster Ch. 11; Augsburg Art. IV; 1689 Ch. 11; Heidelberg Q60; Roman Catechism Ch. 19 (Penance — see esp. section 31 on Justifying Grace); 39 Articles Art. XI
+   - Sacraments in general: Westminster Ch. 27; Augsburg Art. IX–XIII; 1689 Ch. 28; Heidelberg Q65–68; Roman Catechism Ch. 15 (Sacraments in General); 39 Articles Art. XXV
+   - Baptism: Westminster Ch. 28; 1689 Ch. 29; Heidelberg Q69–74; Roman Catechism Ch. 16 (Baptism); 39 Articles Art. XXVII
+   - Lord's Supper / Eucharist: Westminster Ch. 29; Augsburg Art. X; 1689 Ch. 30; Heidelberg Q75–82; Roman Catechism Ch. 18 (The Holy Eucharist); 39 Articles Art. XXVIII–XXXI
+   - Forgiveness of Sins / Penance: Heidelberg Q83–85; Roman Catechism Ch. 12 (Article X: Forgiveness of Sins) and Ch. 19 (Penance)
+   - Scripture: Westminster Ch. 1; 1689 Ch. 1; 39 Articles Art. VI–VII; Heidelberg Q19; Augsburg (referenced via confessional norms); Roman Catechism Ch. 1 (Preface, on Scripture and tradition) and Ch. 2 (Creed introduction)
+   - Original Sin: Westminster Ch. 6; Augsburg Art. II; 1689 Ch. 6; Heidelberg Q3–11; Roman Catechism Ch. 16 (Baptism, treating original sin); 39 Articles Art. IX
    - Predestination / Election: Westminster Ch. 3; 39 Articles Art. XVII; 1689 Ch. 3
-   - Trinity: Apostles' Creed; Nicene Creed; Athanasian Creed; Westminster Ch. 2; Augsburg Art. I
-   - Christology / Person of Christ: Definition of Chalcedon; Constantinople II; Constantinople III; Westminster Ch. 8
+   - Trinity: Apostles' Creed; Nicene Creed; Athanasian Creed; Westminster Ch. 2; Augsburg Art. I; Roman Catechism Ch. 3 (Article I: God the Father) and Ch. 10 (Article VIII: Holy Ghost)
+   - Christology / Person of Christ: Definition of Chalcedon; Constantinople II; Constantinople III; Westminster Ch. 8; Roman Catechism Ch. 4–9 (Articles II–VII on the Son)
 
    Treat this list as guidance, not a command — verify the locus actually fits the user's specific aspect before citing it, and feel free to cite other passages when they are more directly on-point.
 
@@ -155,5 +160,7 @@ STRICT RULES:
 7. The tradition keys in "cells" must be exactly: Reformed, Lutheran, Catholic, Baptist, Ecumenical, Orthodox, Anglican (case-sensitive). All seven MUST appear in every row.
 
 8. For the Catholic tradition, prefer the Roman Catechism (1566) — doc_id "roman-catechism".
+
+   IMPORTANT — Catholic source clarification: doc_id "roman-catechism" refers ONLY to the Roman Catechism (Catechismus Romanus, 1566, McHugh/Callan English translation), the Catechism of the Council of Trent. CCCR does NOT contain the modern Catechism of the Catholic Church (CCC, 1992). Do NOT emit CCC paragraph numbers (e.g., "CCC 2086", "CCC 1213", "CCC 850", or any paragraph number in the hundreds or thousands) under doc_id "roman-catechism". The Roman Catechism is keyed by chapter (1–42) and section (small integer within the chapter). Cite ONLY by Roman Catechism's own chapter/section, e.g. { "doc_id": "roman-catechism", "location": { "chapter": 19, "section": 31 } } for the section on Justifying Grace. If you cannot recall a specific Roman Catechism chapter/section with confidence, omit the citation entirely rather than emitting a CCC-style number.
 
 Output ONLY the JSON object. No surrounding text. No markdown fences.`;

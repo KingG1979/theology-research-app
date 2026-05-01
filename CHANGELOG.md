@@ -5,6 +5,10 @@ Maintained by **Stein Street Solutions (SSS)**.
 
 ## [2026-05-01]
 
+### Fixed
+
+- **Catholic citations in Compare mode now correctly reference the Roman Catechism (1566) rather than CCC paragraph numbers.** The model was conflating CCCR's Roman Catechism (Catechismus Romanus, 1566, McHugh/Callan, public domain) with the modern Catechism of the Catholic Church (CCC, 1992, copyrighted and not in CCCR), and emitting CCC-style paragraph numbers (e.g., 2086, 1213, 850) under doc_id "roman-catechism". The link builder then routed these into chapter/section slots and produced nonsense URLs. Fix: (1) added explicit prompt clarification to both `COMPARISON_PROMPT` and `RESEARCH_JSON_PROMPT` distinguishing the Roman Catechism (in CCCR, 42 chapters, sections within each chapter) from the modern CCC (NOT in CCCR), with a worked example pinning the Roman Catechism's "Justifying Grace" passage to chapter 19 (Penance), section 31; (2) updated the standard-locus guide with verified Roman Catechism references derived from the actual data file — e.g., Church → Ch. 11 (Article IX), Justification → Ch. 19 (Penance), Eucharist → Ch. 18, Baptism → Ch. 16, Sacraments-in-general → Ch. 15, Trinity → Ch. 3 + Ch. 10, Christology → Ch. 4–9; (3) `normalizeLocation` in `src/utils/anchors.js` now logs a `console.warn` when an out-of-range chapter is supplied for `roman-catechism` so CCC-paragraph-style numbers are visible during testing rather than silently dropped (range validation already drops them; the warning makes it observable).
+
 ### Changed
 
 - **Tuned Compare-mode prompt to cite source passages more readily.** Provides standard-locus guidance to the model so well-known doctrinal sections (e.g., Augsburg Art. VII on the Church, Westminster Ch. 11 on Justification) are reliably cited. On-topic and doc_id/location safeguards retained.
