@@ -3,6 +3,12 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-05-01]
+
+### Changed
+
+- **Removed floating Feedback button. Replaced with footer link (every page) + "Send Feedback" button on About page.** Resolves issue where button obscured Compare mode's horizontal scroll arrow and dominated mobile viewports. The same feedback modal is now triggered from a subtle "Feedback" text link in the footer (next to `www.ccc-study.org`) and from a normal-sized "Send Feedback" button at the bottom of the About modal. EN and DE locales reuse existing `feedback` / `sendFeedback` i18n keys.
+
 ## [2026-04-29]
 
 ### Fixed

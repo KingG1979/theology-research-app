@@ -1439,10 +1439,10 @@ export default function TheologyAssistant() {
                 {t.documentsList}
               </div>
             </div>
-            <div style={{ borderTop: "1px solid " + border, paddingTop: 16, marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-              <div style={{ fontSize: 11, color: mid }}>
-                {t.questionsOrFeedback}{" "}
-                <button onClick={() => { setShowAbout(false); setShowFeedback(true); }} style={{ background: "none", border: "none", color: gold, cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, textDecoration: "underline", padding: 0 }}>{t.sendSuggestion}</button>
+            <div style={{ borderTop: "1px solid " + border, paddingTop: 16, marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, color: mid }}>{t.questionsOrFeedback}</span>
+                <button onClick={() => { setShowAbout(false); setShowFeedback(true); setFeedbackDone(false); }} style={{ padding: "6px 16px", background: gold, color: dark, border: "none", borderRadius: 8, fontSize: 12, fontWeight: "bold", cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.sendFeedback}</button>
               </div>
               <div style={{ fontSize: 10, color: "#baa080" }}>{t.copyright}</div>
             </div>
@@ -1450,17 +1450,7 @@ export default function TheologyAssistant() {
         </div>
       )}
 
-      {/* Suggestion / Feedback box */}
-      <button
-        onClick={() => { setShowFeedback(true); setFeedbackDone(false); }}
-        title="Send feedback or a suggestion"
-        style={{ position: "fixed", bottom: 24, right: 24, zIndex: 900, background: dark, color: gold, border: "1px solid " + gold, borderRadius: 24, padding: "8px 16px", fontSize: 12, fontFamily: "Georgia, serif", cursor: "pointer", boxShadow: "0 2px 10px rgba(0,0,0,0.25)", display: "flex", alignItems: "center", gap: 6, transition: "opacity 0.2s", opacity: 0.85 }}
-        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-        onMouseLeave={e => e.currentTarget.style.opacity = "0.85"}
-      >
-        <span style={{ fontSize: 14 }}>✉</span> {t.feedback}
-      </button>
-
+      {/* Suggestion / Feedback modal */}
       {showFeedback && (
         <div onClick={() => setShowFeedback(false)} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "flex-end", justifyContent: "flex-end", background: "rgba(44,36,22,0.35)", padding: 24 }}>
           <div onClick={e => e.stopPropagation()} style={{ width: 340, background: "#fff", border: "1px solid " + border, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.2)", padding: "24px 24px 20px", fontFamily: "Georgia, serif" }}>
@@ -1506,6 +1496,10 @@ export default function TheologyAssistant() {
       {/* Footer */}
       <div style={{ padding: "6px 24px", background: dark, textAlign: "center", flexShrink: 0, borderTop: "1px solid " + border, display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
         <a href="https://www.ccc-study.org" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#a09070", fontFamily: "Georgia, serif", letterSpacing: 1, textDecoration: "none", opacity: 0.7 }}>www.ccc-study.org</a>
+        <button
+          onClick={() => { setShowFeedback(true); setFeedbackDone(false); }}
+          style={{ background: "transparent", border: "none", padding: 0, fontSize: 10, color: "#a09070", fontFamily: "Georgia, serif", letterSpacing: 1, textDecoration: "none", opacity: 0.7, cursor: "pointer" }}
+        >{t.feedback}</button>
         <a
           href={lang === "de" ? "/de/all-documents" : "/all-documents"}
           onClick={(e) => {
