@@ -3,6 +3,12 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-05-02]
+
+### Fixed
+
+- **Anonymous users (not logged in) can again use Research and Compare modes.** Reproduction (anonymous, headless): Research returned valid results; Compare consistently failed with "Unable to complete the comparison" because the structured-JSON response for 7 traditions × multiple aspects was being truncated by the 1800-token cap, leaving an unparseable JSON body. Root cause was therefore not auth-related (auth was already optional everywhere outside of the Notebook) — it was an output-budget regression introduced when Compare moved to structured JSON. Fix: (1) raise Compare's `max_tokens` from 1800 to 3500 so the full grid fits comfortably within budget; (2) add a best-effort `repairTruncatedJson` recovery in `src/utils/parsers.js` and Research's JSON parser so a truncated response still surfaces the partial answer instead of a hard "Could not parse"; (3) wrap all `localStorage`/`sessionStorage` reads and writes in try/catch so Safari iOS private mode (where storage can throw on access) cannot break first paint, the welcome screen, or the anonymous query-quota counter. Notebook continues to require login as before — only `notes` writes go through Supabase, and that path is still gated on `session`.
+
 ## [2026-05-01]
 
 ### Fixed

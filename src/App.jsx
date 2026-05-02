@@ -4,7 +4,7 @@ import { CONFESSIONS_DE } from "./data/confessions_de";
 import { CONFESSIONS_DE_EXTRA } from "./data/confessions_de_extra";
 import { SYSTEM_PROMPT, RESEARCH_JSON_PROMPT, COMPARISON_PROMPT } from "./prompts";
 import { callAPI, extractText } from "./api";
-import { parseComparison } from "./utils/parsers";
+import { parseComparison, repairTruncatedJsonExt } from "./utils/parsers";
 import {
   buildAnchorId,
   buildBrowseRoute,
@@ -323,7 +323,7 @@ export default function TheologyAssistant() {
 
   // Welcome screen - show on first visit
   const [showWelcome, setShowWelcome] = useState(() => {
-    return !localStorage.getItem("cacr-welcomed");
+    try { return !localStorage.getItem("cacr-welcomed"); } catch { return true; }
   });
 
   // Auth overlay — shown on demand (e.g. when user clicks Sign In or tries to save without session)
@@ -373,7 +373,7 @@ export default function TheologyAssistant() {
   }
 
   function enterApp() {
-    localStorage.setItem("cacr-welcomed", "true");
+    try { localStorage.setItem("cacr-welcomed", "true"); } catch {}
     setShowWelcome(false);
   }
 
@@ -386,29 +386,37 @@ export default function TheologyAssistant() {
 
   // VIP access via ?vip=blessed URL parameter
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("vip") === "blessed") {
-      sessionStorage.setItem("cacr-vip", "true");
-    }
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("vip") === "blessed") {
+        sessionStorage.setItem("cacr-vip", "true");
+      }
+    } catch {}
   }, []);
 
-  const isVip = sessionStorage.getItem("cacr-vip") === "true";
+  const isVip = (() => { try { return sessionStorage.getItem("cacr-vip") === "true"; } catch { return false; } })();
 
-  // AI query rate limiting (7 per day, client-side)
+  // AI query rate limiting (7 per day, client-side, keyed on browser localStorage —
+  // works for anonymous and signed-in users alike). Wrapped in try/catch so that
+  // Safari private mode (where storage can throw) never breaks the app.
   function getAIUsage() {
-    const stored = localStorage.getItem("cacr-ai-usage");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      const today = new Date().toDateString();
-      if (parsed.date === today) return parsed.count;
-    }
+    try {
+      const stored = localStorage.getItem("cacr-ai-usage");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const today = new Date().toDateString();
+        if (parsed && parsed.date === today && typeof parsed.count === "number") return parsed.count;
+      }
+    } catch {}
     return 0;
   }
 
   function incrementAIUsage() {
-    const today = new Date().toDateString();
     const current = getAIUsage();
-    localStorage.setItem("cacr-ai-usage", JSON.stringify({ date: today, count: current + 1 }));
+    try {
+      const today = new Date().toDateString();
+      localStorage.setItem("cacr-ai-usage", JSON.stringify({ date: today, count: current + 1 }));
+    } catch {}
     setAiUsageCount(current + 1);
   }
 
@@ -750,7 +758,14 @@ export default function TheologyAssistant() {
       try {
         // Strip stray markdown code fences if the model added them despite instructions
         const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "");
-        const parsed = JSON.parse(cleaned);
+        let parsed;
+        try { parsed = JSON.parse(cleaned); }
+        catch {
+          // Recover from token-limit truncation: close dangling structures and re-parse.
+          const repaired = repairTruncatedJsonExt(cleaned);
+          if (repaired) parsed = JSON.parse(repaired);
+          else throw new Error("Unparseable JSON");
+        }
         summary = (parsed.summary || "").trim();
         answer = (parsed.answer || "").trim();
         const cites = Array.isArray(parsed.citations) ? parsed.citations : [];
@@ -828,7 +843,11 @@ export default function TheologyAssistant() {
       const comparisonPrompt = lang === "de"
         ? COMPARISON_PROMPT + " Please respond in German (Deutsch). All string values in the JSON (topic, summary, aspect, position, citation) MUST be in German. Field names and the tradition keys stay in English."
         : COMPARISON_PROMPT;
-      const data = await callAPI({ max_tokens: 1800, system: comparisonPrompt, mode: "compare_json", messages: [{ role: "user", content: compareInput }] });
+      // 3500 token budget: structured-JSON Compare with 7 traditions × multiple
+      // aspects (position + citation + doc_id + location per cell) routinely
+      // exceeded the previous 1800-token cap, producing truncated JSON that
+      // failed to parse and surfaced as "Unable to complete the comparison".
+      const data = await callAPI({ max_tokens: 3500, system: comparisonPrompt, mode: "compare_json", messages: [{ role: "user", content: compareInput }] });
       const text = extractText(data);
       const parsed = parseComparison(text);
       if (!parsed.topic || parsed.rows.length === 0) throw new Error(t.couldNotParse);

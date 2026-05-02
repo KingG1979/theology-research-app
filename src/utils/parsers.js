@@ -32,7 +32,14 @@ export function parseComparison(text) {
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    return parseComparisonLegacy(text);
+    // The model occasionally hits its token limit and returns truncated JSON.
+    // Try to repair it by closing dangling structures, so users still see the
+    // partial comparison rather than a hard failure.
+    const repaired = repairTruncatedJson(cleaned);
+    if (repaired) {
+      try { parsed = JSON.parse(repaired); } catch {}
+    }
+    if (!parsed) return parseComparisonLegacy(text);
   }
   if (!parsed || typeof parsed !== "object") return result;
   result.topic = typeof parsed.topic === "string" ? parsed.topic.trim() : "";
@@ -68,6 +75,80 @@ export function parseComparison(text) {
     if (row.aspect || ALL_TRADITIONS.some(t => row[t] && (row[t].position || row[t].citation))) result.rows.push(row);
   }
   return result;
+}
+
+// Exposed wrapper so callers outside this module (Research mode) can reuse
+// the same truncation-recovery logic.
+export function repairTruncatedJsonExt(text) { return repairTruncatedJson(text); }
+
+// Best-effort recovery for JSON that was cut off mid-stream by the model's
+// token limit. We trim trailing junk, then close any open strings, arrays,
+// and objects in the order they were opened. Returns the repaired string,
+// or null if the input doesn't look recoverable.
+function repairTruncatedJson(text) {
+  if (!text || text[0] !== "{") return null;
+  let i = 0;
+  const stack = [];
+  let inString = false;
+  let escape = false;
+  let lastValidEnd = -1;
+  for (; i < text.length; i++) {
+    const ch = text[i];
+    if (escape) { escape = false; continue; }
+    if (ch === "\\") { escape = true; continue; }
+    if (inString) {
+      if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') { inString = true; continue; }
+    if (ch === "{" || ch === "[") stack.push(ch);
+    else if (ch === "}") { if (stack[stack.length - 1] === "{") stack.pop(); lastValidEnd = i; }
+    else if (ch === "]") { if (stack[stack.length - 1] === "[") stack.pop(); lastValidEnd = i; }
+    else if (ch === "," || ch === ":" || /\s/.test(ch)) { /* ignore */ }
+    else if (stack.length === 0) break;
+  }
+  // Truncate to the last comma-safe boundary inside the innermost open container,
+  // then close all open structures.
+  let truncated = text;
+  if (inString) {
+    // Drop the unterminated string entirely back to the prior comma or open bracket.
+    const lastComma = truncated.lastIndexOf(",", text.length);
+    const lastOpen = Math.max(truncated.lastIndexOf("{"), truncated.lastIndexOf("["));
+    const cut = Math.max(lastComma, lastOpen);
+    if (cut < 0) return null;
+    truncated = truncated.slice(0, cut);
+  } else {
+    // Trim trailing partial token (e.g., dangling key/value)
+    const lastBoundary = Math.max(truncated.lastIndexOf(","), truncated.lastIndexOf("{"), truncated.lastIndexOf("["), truncated.lastIndexOf("}"), truncated.lastIndexOf("]"));
+    if (lastBoundary > 0 && lastBoundary < truncated.length - 1) {
+      // Only trim if last char is not already a closing brace/bracket
+      const tail = truncated.slice(lastBoundary + 1).trim();
+      if (tail && !/^[}\]]/.test(tail)) truncated = truncated.slice(0, lastBoundary);
+    }
+  }
+  // Recompute open-stack on the truncated text
+  const stack2 = [];
+  let inStr = false, esc = false;
+  for (let j = 0; j < truncated.length; j++) {
+    const ch = truncated[j];
+    if (esc) { esc = false; continue; }
+    if (ch === "\\") { esc = true; continue; }
+    if (inStr) { if (ch === '"') inStr = false; continue; }
+    if (ch === '"') { inStr = true; continue; }
+    if (ch === "{" || ch === "[") stack2.push(ch);
+    else if (ch === "}") { if (stack2[stack2.length - 1] === "{") stack2.pop(); }
+    else if (ch === "]") { if (stack2[stack2.length - 1] === "[") stack2.pop(); }
+  }
+  // Strip dangling colon/comma at the end before closing
+  truncated = truncated.replace(/[,:\s]+$/, "");
+  // If we ended on a key like "foo": with no value, drop the key.
+  truncated = truncated.replace(/,?\s*"[^"]*"\s*:\s*$/, "");
+  let closed = truncated;
+  while (stack2.length) {
+    const open = stack2.pop();
+    closed += open === "{" ? "}" : "]";
+  }
+  return closed;
 }
 
 // Legacy plain-text Compare parser — kept as a fallback when the model
