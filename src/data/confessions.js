@@ -1,4 +1,4 @@
-export const ALL_TRADITIONS = ["Reformed", "Lutheran", "Catholic", "Baptist", "Ecumenical", "Orthodox", "Anglican"];
+export const ALL_TRADITIONS = ["Anglican", "Baptist", "Catholic", "Ecumenical", "Lutheran", "Orthodox", "Reformed"];
 
 export const COLORS = {
   Reformed:   { bg: "#e8f0e8", border: "#5a8a5a", text: "#2a5a2a", header: "#5a8a5a" },

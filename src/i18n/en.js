@@ -5,7 +5,7 @@ const en = {
 
   // Welcome screen
   welcomeTitle: "Creeds, Confessions and Catechism Research",
-  welcomeIntro: "Explore the historic creeds, confessions, and catechisms of the Christian church. Compare what Reformed, Lutheran, Baptist, Anglican, Orthodox, and Catholic traditions teach on key doctrines — with AI-powered research and commentary.",
+  welcomeIntro: "Explore the historic creeds, confessions, and catechisms of the Christian church. Compare what Anglican, Baptist, Catholic, Lutheran, Orthodox, and Reformed traditions teach on key doctrines — with AI-powered research and commentary.",
   welcomeBrowseLabel: "Browse",
   welcomeBrowseDesc: "Read the full texts of the historic creeds, confessions, and catechisms — including the Nicene Creed, Westminster Confession, Heidelberg Catechism, Augsburg Confession, 1689 Baptist Confession, 39 Articles, and more.",
   welcomeCompareLabel: "Compare",
@@ -132,7 +132,7 @@ const en = {
 
   // About modal
   aboutThisProject: "About This Project",
-  aboutDescription: "<strong>Creeds, Confessions and Catechism Research (CCCR)</strong> is a free scholarly tool for exploring the historic confessions of the Christian church — Reformed, Lutheran, Catholic, Baptist, Anglican, Orthodox, and the Ecumenical Creeds.",
+  aboutDescription: "<strong>Creeds, Confessions and Catechism Research (CCCR)</strong> is a free scholarly tool for exploring the historic confessions of the Christian church — Anglican, Baptist, Catholic, Lutheran, Orthodox, Reformed, and the Ecumenical Creeds.",
   aboutAINote: "All confessional texts are drawn from public domain sources. AI commentary and comparisons are powered by large language models grounded in these primary texts — always verify with the source documents.",
   documentsIncluded: "Documents Included",
   documentsList: "Nicene Creed (381) · Apostles' Creed · Athanasian Creed · Chalcedon (451) · Westminster Confession (1647) · Heidelberg Catechism (1563) · Augsburg Confession (1530) · 1689 Baptist Confession · Longer Catechism (Orthodox, 1839) · 39 Articles (1571) · Roman Catechism (1566)",

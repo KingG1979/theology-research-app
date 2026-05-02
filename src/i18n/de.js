@@ -5,7 +5,7 @@ const de = {
 
   // Welcome screen
   welcomeTitle: "Bekenntnisse, Konfessionen und Katechismus-Forschung",
-  welcomeIntro: "Entdecken Sie die historischen Glaubensbekenntnisse, Konfessionen und Katechismen der christlichen Kirche. Vergleichen Sie, was reformierte, lutherische, baptistische, anglikanische, orthodoxe und katholische Traditionen zu zentralen Lehren sagen — mit KI-gestützter Forschung und Kommentar.",
+  welcomeIntro: "Entdecken Sie die historischen Glaubensbekenntnisse, Konfessionen und Katechismen der christlichen Kirche. Vergleichen Sie, was anglikanische, baptistische, katholische, lutherische, orthodoxe und reformierte Traditionen zu zentralen Lehren sagen — mit KI-gestützter Forschung und Kommentar.",
   welcomeBrowseLabel: "Durchsuchen",
   welcomeBrowseDesc: "Lesen Sie die vollständigen Texte der historischen Bekenntnisse und Katechismen — darunter das Nizänische Glaubensbekenntnis, das Westminsterbekenntnis, den Heidelberger Katechismus, das Augsburger Bekenntnis, das Baptistische Bekenntnis von 1689, die 39 Artikel und mehr.",
   welcomeCompareLabel: "Vergleichen",
@@ -132,7 +132,7 @@ const de = {
 
   // About modal
   aboutThisProject: "Über dieses Projekt",
-  aboutDescription: "<strong>Bekenntnisse, Konfessionen und Katechismus-Forschung (CCCR)</strong> ist ein kostenloses wissenschaftliches Werkzeug zur Erforschung der historischen Bekenntnisse der christlichen Kirche — reformiert, lutherisch, katholisch, baptistisch, anglikanisch, orthodox und die ökumenischen Glaubensbekenntnisse.",
+  aboutDescription: "<strong>Bekenntnisse, Konfessionen und Katechismus-Forschung (CCCR)</strong> ist ein kostenloses wissenschaftliches Werkzeug zur Erforschung der historischen Bekenntnisse der christlichen Kirche — anglikanisch, baptistisch, katholisch, lutherisch, orthodox, reformiert und die ökumenischen Glaubensbekenntnisse.",
   aboutAINote: "Alle Bekenntnistexte stammen aus gemeinfreien Quellen. KI-Kommentare und Vergleiche werden von großen Sprachmodellen generiert, die auf diesen Primärtexten basieren — bitte überprüfen Sie stets die Quelldokumente.",
   documentsIncluded: "Enthaltene Dokumente",
   documentsList: "Nizänisches Glaubensbekenntnis (381) · Apostolisches Glaubensbekenntnis · Athanasisches Glaubensbekenntnis · Chalcedon (451) · Westminsterbekenntnis (1647) · Heidelberger Katechismus (1563) · Augsburger Bekenntnis (1530) · Baptistisches Bekenntnis von 1689 · Längerer Katechismus (Orthodox, 1839) · 39 Artikel (1571) · Römischer Katechismus (1566)",
