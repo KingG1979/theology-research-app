@@ -43,6 +43,9 @@ The app includes full German localization:
 
 - Westminster Confession of Faith (1647) — Reformed
 - Heidelberg Catechism (1563) — Reformed
+- Belgic Confession (1561) — Reformed
+- Canons of Dort (1619) — Reformed
+- Second Helvetic Confession (1566) — Reformed
 - Augsburg Confession (1530) — Lutheran
 - 1689 Baptist Confession — Baptist
 - Roman Catechism / Catechism of the Council of Trent (1566) — Catholic

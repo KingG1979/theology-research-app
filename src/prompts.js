@@ -17,7 +17,7 @@ You MUST respond with a single valid JSON object — no prose before or after, n
     {
       "tradition": "Reformed | Lutheran | Catholic | Baptist | Orthodox | Anglican | Ecumenical",
       "document": "e.g. Westminster Confession of Faith",
-      "doc_id": "one of: westminster, heidelberg, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3",
+      "doc_id": "one of: westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3",
       "location": {
         "chapter": "integer — chapter number if the document has chapters (Westminster, 1689 Baptist, Roman Catechism, Orthodox Longer) — OPTIONAL",
         "section": "integer — section number within the chapter — OPTIONAL",
@@ -62,7 +62,7 @@ STRICT RULES for the citations array:
    - constantinople-3:      { chapter: 1-8, section: 1-200 }
 
    "doc_id" MUST be EXACTLY one of these canonical strings — do NOT invent variants like "WCF" / "Westminster Confession of Faith" / "westminster_confession":
-     westminster, heidelberg, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
+     westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
    If the document is not in that list, omit the citation.
 
 4. For Catholic citations, prefer the Roman Catechism (Catechism of the Council of Trent, 1566). You may cite the 1992 Catechism of the Catholic Church only when explicitly distinguishing modern teaching.
@@ -121,16 +121,19 @@ STRICT RULES:
    EXPLICIT GUIDANCE: If a tradition's source documents in CCCR are KNOWN to address the topic with a specific section, you SHOULD include that citation. Do not omit citations out of excessive caution. Cite the most directly relevant passage, even if it is not the only relevant one. The citation must be ON-TOPIC for the aspect — do not return a justification quote for a Scripture question, or a sacraments locus for a Christology question.
 
    STANDARD-LOCUS GUIDE (non-exhaustive — verify topical relevance before citing). When the user's doctrine matches one of these, the listed loci are the canonical places each tradition's confessions/catechisms treat it; reach for them first. Roman Catechism references are by chapter# from CCCR's data (NOT by CCC paragraph number):
-   - The Church / Ecclesiology: Westminster Ch. 25; Augsburg Art. VII–VIII; 1689 Ch. 26; Heidelberg Q54; Roman Catechism Ch. 11 (Article IX: The Holy Catholic Church); 39 Articles Art. XIX
+   - The Church / Ecclesiology: Westminster Ch. 25; Augsburg Art. VII–VIII; 1689 Ch. 26; Heidelberg Q54; Belgic Art. 27-32; Helvetic2 Ch. 17; Roman Catechism Ch. 11 (Article IX: The Holy Catholic Church); 39 Articles Art. XIX
    - Justification: Westminster Ch. 11; Augsburg Art. IV; 1689 Ch. 11; Heidelberg Q60; Roman Catechism Ch. 19 (Penance — see esp. section 31 on Justifying Grace); 39 Articles Art. XI
-   - Sacraments in general: Westminster Ch. 27; Augsburg Art. IX–XIII; 1689 Ch. 28; Heidelberg Q65–68; Roman Catechism Ch. 15 (Sacraments in General); 39 Articles Art. XXV
+   - Sacraments in general: Westminster Ch. 27; Augsburg Art. IX–XIII; 1689 Ch. 28; Heidelberg Q65–68; Belgic Art. 33-35; Helvetic2 Ch. 19-21; Roman Catechism Ch. 15 (Sacraments in General); 39 Articles Art. XXV
    - Baptism: Westminster Ch. 28; 1689 Ch. 29; Heidelberg Q69–74; Roman Catechism Ch. 16 (Baptism); 39 Articles Art. XXVII
    - Lord's Supper / Eucharist: Westminster Ch. 29; Augsburg Art. X; 1689 Ch. 30; Heidelberg Q75–82; Roman Catechism Ch. 18 (The Holy Eucharist); 39 Articles Art. XXVIII–XXXI
    - Forgiveness of Sins / Penance: Heidelberg Q83–85; Roman Catechism Ch. 12 (Article X: Forgiveness of Sins) and Ch. 19 (Penance)
-   - Scripture: Westminster Ch. 1; 1689 Ch. 1; 39 Articles Art. VI–VII; Heidelberg Q19; Augsburg (referenced via confessional norms); Roman Catechism Ch. 1 (Preface, on Scripture and tradition) and Ch. 2 (Creed introduction)
+   - Scripture: Westminster Ch. 1; 1689 Ch. 1; Belgic Art. 2-7; Helvetic2 Ch. 1-2; 39 Articles Art. VI–VII; Heidelberg Q19; Augsburg (referenced via confessional norms); Roman Catechism Ch. 1 (Preface, on Scripture and tradition) and Ch. 2 (Creed introduction)
    - Original Sin: Westminster Ch. 6; Augsburg Art. II; 1689 Ch. 6; Heidelberg Q3–11; Roman Catechism Ch. 16 (Baptism, treating original sin); 39 Articles Art. IX
-   - Predestination / Election: Westminster Ch. 3; 39 Articles Art. XVII; 1689 Ch. 3
-   - Trinity: Apostles' Creed; Nicene Creed; Athanasian Creed; Westminster Ch. 2; Augsburg Art. I; Roman Catechism Ch. 3 (Article I: God the Father) and Ch. 10 (Article VIII: Holy Ghost)
+   - Predestination / Election: Westminster Ch. 3; Dort I (ch1); Helvetic2 Ch. 10; 39 Articles Art. XVII; 1689 Ch. 3
+   - Atonement / Limited Atonement: Dort II (ch2); Westminster Ch. 8
+   - Total Depravity: Dort III/IV (ch3); Westminster Ch. 9; Augsburg Art. II
+   - Perseverance of the Saints: Dort V (ch5); Westminster Ch. 17; 1689 Ch. 17
+   - Trinity: Apostles' Creed; Nicene Creed; Athanasian Creed; Westminster Ch. 2; Augsburg Art. I; Belgic Art. 8-9; Helvetic2 Ch. 3; Roman Catechism Ch. 3 (Article I: God the Father) and Ch. 10 (Article VIII: Holy Ghost)
    - Christology / Person of Christ: Definition of Chalcedon; Constantinople II; Constantinople III; Westminster Ch. 8; Roman Catechism Ch. 4–9 (Articles II–VII on the Son)
 
    Treat this list as guidance, not a command — verify the locus actually fits the user's specific aspect before citing it, and feel free to cite other passages when they are more directly on-point.
@@ -138,11 +141,14 @@ STRICT RULES:
 4. Each cell's "citation" (when present) is a short human-readable label (e.g. "Westminster 1.4", "Heidelberg Q60", "Augsburg Art. IV", "Canon 3"). Keep it short.
 
 5. "doc_id" (when present) MUST be EXACTLY one of these canonical strings — do NOT invent variants like "WCF" / "Westminster Confession of Faith" / "westminsterbekenntnis":
-   westminster, heidelberg, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
+   westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
 
 6. Which "location" sub-fields and integer ranges are valid per document. Numbers outside the range will be dropped and the link will fall back to the document root.
    - westminster:           { "chapter": 1-33, "section": 1-32 }
    - heidelberg:            { "question": 1-129 }   (chapter / Lord's Day is optional, 1-52)
+   - belgic:                { "article": 1-37 }     (do NOT emit chapter or section)
+   - dort:                  { "chapter": 1-5, "section": 1-18 }   (head 3/4 = chapter 3; head 5 = chapter 5)
+   - helvetic2:             { "chapter": 1-30 }     (do NOT emit section)
    - augsburg:              { "article": 1-28 }     (do NOT emit chapter or section)
    - baptist1689:           { "chapter": 1-32, "section": 1-32 }
    - thirtynine-articles:   { "article": 1-39 }

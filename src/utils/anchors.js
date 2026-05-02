@@ -25,6 +25,9 @@ export const DOC_IDS = {
   constantinople1: "constantinople-1",
   constantinople2: "constantinople-2",
   constantinople3: "constantinople-3",
+  belgic: "belgic",
+  dort: "dort",
+  helvetic2: "helvetic2",
 };
 
 // English confession-name → doc_id.
@@ -43,6 +46,9 @@ const EN_NAME_TO_DOC_ID = {
   "First Council of Constantinople — Canons": DOC_IDS.constantinople1,
   "Second Council of Constantinople — Anathemas": DOC_IDS.constantinople2,
   "Third Council of Constantinople — Definition of Faith": DOC_IDS.constantinople3,
+  "Belgic Confession": DOC_IDS.belgic,
+  "Canons of Dort": DOC_IDS.dort,
+  "Second Helvetic Confession": DOC_IDS.helvetic2,
 };
 
 // German confession-name → doc_id (same anchors across locales).
@@ -61,6 +67,9 @@ const DE_NAME_TO_DOC_ID = {
   "Erstes Konzil von Konstantinopel — Kanones": DOC_IDS.constantinople1,
   "Zweites Konzil von Konstantinopel — Anathemata": DOC_IDS.constantinople2,
   "Drittes Konzil von Konstantinopel — Glaubensdefinition": DOC_IDS.constantinople3,
+  "Belgisches Bekenntnis": DOC_IDS.belgic,
+  "Dordrechter Canones": DOC_IDS.dort,
+  "Zweites Helvetisches Bekenntnis": DOC_IDS.helvetic2,
 };
 
 const NAME_TO_DOC_ID = { ...EN_NAME_TO_DOC_ID, ...DE_NAME_TO_DOC_ID };
@@ -183,6 +192,25 @@ const DOC_ID_ALIASES = {
   "third council of constantinople": DOC_IDS.constantinople3,
   "third council of constantinople — definition of faith": DOC_IDS.constantinople3,
   "drittes konzil von konstantinopel": DOC_IDS.constantinople3,
+  // Belgic Confession
+  "belgic": DOC_IDS.belgic,
+  "bc": DOC_IDS.belgic,
+  "belgic confession": DOC_IDS.belgic,
+  "belgic confession of faith": DOC_IDS.belgic,
+  "belgisches bekenntnis": DOC_IDS.belgic,
+  // Canons of Dort
+  "dort": DOC_IDS.dort,
+  "dordt": DOC_IDS.dort,
+  "canons of dort": DOC_IDS.dort,
+  "canons of dordt": DOC_IDS.dort,
+  "dordrechter canones": DOC_IDS.dort,
+  // Second Helvetic Confession
+  "helvetic2": DOC_IDS.helvetic2,
+  "helvetic 2": DOC_IDS.helvetic2,
+  "second helvetic": DOC_IDS.helvetic2,
+  "second helvetic confession": DOC_IDS.helvetic2,
+  "confessio helvetica posterior": DOC_IDS.helvetic2,
+  "zweites helvetisches bekenntnis": DOC_IDS.helvetic2,
 };
 
 // Doc-aware schema: how each document is keyed in the data files, plus the
@@ -211,6 +239,9 @@ const DOC_SCHEMAS = {
   [DOC_IDS.constantinople1]:    { storage: "section-as-N",    maxChapter: 1,  maxSection: 4,   primaryKey: "canon" },
   [DOC_IDS.constantinople2]:    { storage: "section-as-N",    maxChapter: 2,  maxSection: 14,  primaryKey: "anathema" },
   [DOC_IDS.constantinople3]:    { storage: "chapter+section", maxChapter: 8,  maxSection: 200 },
+  [DOC_IDS.belgic]:             { storage: "chapter-as-N",    maxChapter: 37, maxSection: 1,   primaryKey: "article" },
+  [DOC_IDS.dort]:               { storage: "chapter+section", maxChapter: 5,  maxSection: 18 },
+  [DOC_IDS.helvetic2]:          { storage: "chapter+section", maxChapter: 30, maxSection: 1 },
 };
 
 // Reverse: doc_id → English confession name (the canonical Browse key).

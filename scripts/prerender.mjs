@@ -44,6 +44,9 @@ const EN_TO_DE_KEY = {
   "Longer Catechism (Orthodox)": "Orthodoxer Katechismus",
   "39 Articles": "39 Artikel der Kirche von England",
   "Roman Catechism": "Römischer Katechismus",
+  "Belgic Confession": "Belgisches Bekenntnis",
+  "Canons of Dort": "Dordrechter Canones",
+  "Second Helvetic Confession": "Zweites Helvetisches Bekenntnis",
 };
 
 // English doc-name → docId (built by inverting DOC_ID_TO_EN_NAME).
