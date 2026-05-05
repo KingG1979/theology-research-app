@@ -28,7 +28,15 @@ export const DOC_IDS = {
   belgic: "belgic",
   dort: "dort",
   helvetic2: "helvetic2",
+  cccModern: "ccc-modern",
 };
+
+// Doc_ids that resolve to OUTBOUND links (vatican.va etc.) rather than the
+// in-app Browse view. The link renderer routes these through their own
+// resolver instead of buildBrowsePath.
+export const EXTERNAL_DOC_IDS = new Set([
+  "ccc-modern",
+]);
 
 // English confession-name → doc_id.
 const EN_NAME_TO_DOC_ID = {
@@ -49,6 +57,8 @@ const EN_NAME_TO_DOC_ID = {
   "Belgic Confession": DOC_IDS.belgic,
   "Canons of Dort": DOC_IDS.dort,
   "Second Helvetic Confession": DOC_IDS.helvetic2,
+  "Catechism of the Catholic Church": DOC_IDS.cccModern,
+  "Catechism of the Catholic Church (1992)": DOC_IDS.cccModern,
 };
 
 // German confession-name → doc_id (same anchors across locales).
@@ -70,6 +80,8 @@ const DE_NAME_TO_DOC_ID = {
   "Belgisches Bekenntnis": DOC_IDS.belgic,
   "Dordrechter Canones": DOC_IDS.dort,
   "Zweites Helvetisches Bekenntnis": DOC_IDS.helvetic2,
+  "Katechismus der Katholischen Kirche": DOC_IDS.cccModern,
+  "Katechismus der Katholischen Kirche (1992)": DOC_IDS.cccModern,
 };
 
 const NAME_TO_DOC_ID = { ...EN_NAME_TO_DOC_ID, ...DE_NAME_TO_DOC_ID };
@@ -211,6 +223,20 @@ const DOC_ID_ALIASES = {
   "second helvetic confession": DOC_IDS.helvetic2,
   "confessio helvetica posterior": DOC_IDS.helvetic2,
   "zweites helvetisches bekenntnis": DOC_IDS.helvetic2,
+  // Modern Catechism of the Catholic Church (1992) — outbound link only.
+  "ccc-modern": DOC_IDS.cccModern,
+  "ccc_modern": DOC_IDS.cccModern,
+  "ccc modern": DOC_IDS.cccModern,
+  "ccc": DOC_IDS.cccModern,
+  "cathechism of the catholic church": DOC_IDS.cccModern,
+  "catechism of the catholic church": DOC_IDS.cccModern,
+  "catechism of the catholic church (1992)": DOC_IDS.cccModern,
+  "1992 catechism": DOC_IDS.cccModern,
+  "1992 catechism of the catholic church": DOC_IDS.cccModern,
+  "modern catechism": DOC_IDS.cccModern,
+  "katechismus der katholischen kirche": DOC_IDS.cccModern,
+  "katechismus der katholischen kirche (1992)": DOC_IDS.cccModern,
+  "kkk": DOC_IDS.cccModern,
 };
 
 // Doc-aware schema: how each document is keyed in the data files, plus the
@@ -242,6 +268,10 @@ const DOC_SCHEMAS = {
   [DOC_IDS.belgic]:             { storage: "chapter-as-N",    maxChapter: 37, maxSection: 1,   primaryKey: "article" },
   [DOC_IDS.dort]:               { storage: "chapter+section", maxChapter: 5,  maxSection: 18 },
   [DOC_IDS.helvetic2]:          { storage: "chapter+section", maxChapter: 30, maxSection: 1 },
+  // CCC (1992) is an outbound link (not embedded in CCCR). Keyed by
+  // paragraph 1-2865. The renderer routes external doc_ids through
+  // getCCCUrl() instead of buildBrowsePath/findChapterIndex.
+  [DOC_IDS.cccModern]:          { storage: "external", external: true, paragraphMin: 1, paragraphMax: 2865, primaryKey: "paragraph" },
 };
 
 // Reverse: doc_id → English confession name (the canonical Browse key).
@@ -320,7 +350,8 @@ function collectLocationKeys(loc) {
   };
   return {
     chapter:   num(loc.chapter   ?? loc.kapitel ?? loc.ch ?? loc.cap),
-    section:   num(loc.section   ?? loc.s ?? loc.sec ?? loc.paragraph ?? loc.par ?? loc.absatz ?? loc.clause),
+    section:   num(loc.section   ?? loc.s ?? loc.sec ?? loc.par ?? loc.absatz ?? loc.clause),
+    paragraph: num(loc.paragraph ?? loc.paragraf ?? loc.no ?? loc.nr ?? loc.n),
     question:  num(loc.question  ?? loc.q ?? loc.frage),
     article:   num(loc.article   ?? loc.art ?? loc.artikel ?? loc.articulus),
     canon:     num(loc.canon     ?? loc.kanon),
@@ -356,6 +387,16 @@ export function normalizeLocation(loc, docId) {
 
   let chapter = null;
   let section = null;
+
+  // External docs (CCC 1992): keyed by paragraph; no chapter/section.
+  if (schema.storage === "external") {
+    const out = {};
+    const p = k.paragraph ?? k.section ?? k.chapter ?? null;
+    if (p != null && p >= (schema.paragraphMin ?? 1) && p <= (schema.paragraphMax ?? 99999)) {
+      out.paragraph = p;
+    }
+    return out;
+  }
 
   switch (schema.storage) {
     case "chapter+section": {

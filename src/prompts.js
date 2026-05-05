@@ -17,13 +17,14 @@ You MUST respond with a single valid JSON object — no prose before or after, n
     {
       "tradition": "Reformed | Lutheran | Catholic | Baptist | Orthodox | Anglican | Ecumenical",
       "document": "e.g. Westminster Confession of Faith",
-      "doc_id": "one of: westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3",
+      "doc_id": "one of: westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3",
       "location": {
         "chapter": "integer — chapter number if the document has chapters (Westminster, 1689 Baptist, Roman Catechism, Orthodox Longer) — OPTIONAL",
         "section": "integer — section number within the chapter — OPTIONAL",
         "question": "integer — question number (Heidelberg Q#, Orthodox Longer question#) — OPTIONAL",
         "article": "integer — article number (Augsburg Article#, 39 Articles Article#) — OPTIONAL",
-        "canon": "integer — canon/anathema number for conciliar documents (Constantinople I–III) — OPTIONAL"
+        "canon": "integer — canon/anathema number for conciliar documents (Constantinople I–III) — OPTIONAL",
+        "paragraph": "integer 1-2865 — CCC paragraph number, ONLY for doc_id 'ccc-modern' — OPTIONAL"
       },
       "reference": "e.g. Chapter 1, Section 4 — human-readable label that MATCHES location; keep short",
       "quote": "a short verbatim or close-paraphrase snippet that is ON-TOPIC for the user's question",
@@ -52,6 +53,7 @@ STRICT RULES for the citations array:
    - baptist1689:           { chapter: 1-32, section: 1-32 }
    - thirtynine-articles:   { article: 1-39 }
    - roman-catechism:       { chapter: 1-42, section: 1-200 }
+   - ccc-modern:            { paragraph: 1-2865 }   (modern Catechism of the Catholic Church, 1992; OUTBOUND link to vatican.va — text is NOT embedded in CCCR)
    - orthodox-longer:       { chapter: 1-6, section: 1-8 }   (the catechism's "questions" map directly to sections)
    - apostles-creed:        { section: 1-4 }      (clause number)
    - nicene-creed:          { section: 1-6 }      (clause number)
@@ -62,12 +64,20 @@ STRICT RULES for the citations array:
    - constantinople-3:      { chapter: 1-8, section: 1-200 }
 
    "doc_id" MUST be EXACTLY one of these canonical strings — do NOT invent variants like "WCF" / "Westminster Confession of Faith" / "westminster_confession":
-     westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
+     westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
    If the document is not in that list, omit the citation.
 
-4. For Catholic citations, prefer the Roman Catechism (Catechism of the Council of Trent, 1566). You may cite the 1992 Catechism of the Catholic Church only when explicitly distinguishing modern teaching.
+4. CATHOLIC SOURCES — two valid options. Pick whichever is most directly on-topic for the user's question:
+   (a) doc_id "roman-catechism" — the Roman Catechism (Catechismus Romanus, 1566, McHugh/Callan English translation), the Catechism of the Council of Trent. EMBEDDED in CCCR. Keyed by { chapter: 1-42, section: 1-200 }. Best for historical / Tridentine doctrine and disputes with the magisterial Reformers.
+   (b) doc_id "ccc-modern" — the modern Catechism of the Catholic Church (1992). NOT EMBEDDED in CCCR — citing this doc_id results in an OUTBOUND LINK to vatican.va (English or German) where the user can read the paragraph. Keyed by { paragraph: 1-2865 }. Best for contemporary Catholic teaching, especially on topics where CCC develops or sharpens the 1566 catechism.
 
-   IMPORTANT — Catholic source clarification: doc_id "roman-catechism" refers ONLY to the Roman Catechism (Catechismus Romanus, 1566, McHugh/Callan English translation). CCCR does NOT contain the modern Catechism of the Catholic Church (CCC, 1992). Do NOT emit CCC paragraph numbers (e.g., "CCC 2086", "CCC 1213", paragraph numbers in the hundreds or thousands) under doc_id "roman-catechism". The Roman Catechism is keyed by chapter (1–42) and section (small integer within that chapter — never larger than ~190). Cite ONLY by Roman Catechism's own chapter/section, e.g. { "doc_id": "roman-catechism", "location": { "chapter": 19, "section": 31 } } for the section on Justifying Grace. If you cannot recall a specific Roman Catechism chapter/section with confidence, omit the citation entirely rather than emitting a CCC-style number.
+   Use ccc-modern when modern Catholic teaching is most directly on-point. Common loci: Trinity → CCC 232-267; Christology → CCC 422-682; Eucharist → CCC 1322-1419; Baptism → CCC 1213-1284; Justification → CCC 1987-2029; the Church → CCC 748-810; Sacraments in general → CCC 1113-1134; Ten Commandments → CCC 2052-2557; Prayer → CCC 2558-2865.
+
+   Do NOT confuse the two doc_ids. ccc-modern uses { "paragraph": <int 1-2865> } (a single paragraph number). roman-catechism uses { "chapter": <int 1-42>, "section": <int> } (Tridentine chapter+section). Different schemas, different documents. Do NOT emit CCC paragraph numbers under doc_id "roman-catechism" or vice versa.
+
+   You MAY emit BOTH a roman-catechism citation AND a ccc-modern citation in the same answer if both are directly relevant — they are different sources of Catholic teaching.
+
+   For ccc-modern, the "quote" field is OPTIONAL (the user will follow the outbound link to vatican.va to read the actual text). Still provide a brief on-topic paraphrase or summary in "quote" when you can — but do NOT fabricate verbatim CCC text if you are not confident.
 
 5. "tradition" values must be EXACTLY one of: Reformed, Lutheran, Catholic, Baptist, Orthodox, Anglican, Ecumenical (case-sensitive).
 
@@ -141,7 +151,7 @@ STRICT RULES:
 4. Each cell's "citation" (when present) is a short human-readable label (e.g. "Westminster 1.4", "Heidelberg Q60", "Augsburg Art. IV", "Canon 3"). Keep it short.
 
 5. "doc_id" (when present) MUST be EXACTLY one of these canonical strings — do NOT invent variants like "WCF" / "Westminster Confession of Faith" / "westminsterbekenntnis":
-   westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
+   westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
 
 6. Which "location" sub-fields and integer ranges are valid per document. Numbers outside the range will be dropped and the link will fall back to the document root.
    - westminster:           { "chapter": 1-33, "section": 1-32 }
@@ -153,6 +163,7 @@ STRICT RULES:
    - baptist1689:           { "chapter": 1-32, "section": 1-32 }
    - thirtynine-articles:   { "article": 1-39 }
    - roman-catechism:       { "chapter": 1-42, "section": 1-200 }
+   - ccc-modern:            { "paragraph": 1-2865 }   (modern CCC, 1992; OUTBOUND link to vatican.va — text NOT embedded)
    - orthodox-longer:       { "chapter": 1-6, "section": 1-8 }
    - apostles-creed:        { "section": 1-4 }      (clause number)
    - nicene-creed:          { "section": 1-6 }
@@ -165,8 +176,14 @@ STRICT RULES:
 
 7. The tradition keys in "cells" must be exactly: Reformed, Lutheran, Catholic, Baptist, Ecumenical, Orthodox, Anglican (case-sensitive). All seven MUST appear in every row.
 
-8. For the Catholic tradition, prefer the Roman Catechism (1566) — doc_id "roman-catechism".
+8. CATHOLIC SOURCES — two valid options for the Catholic cell. Pick whichever is most directly on-topic for the row's aspect:
+   (a) doc_id "roman-catechism" — the Roman Catechism (1566). EMBEDDED in CCCR. Keyed by { "chapter": 1-42, "section": 1-200 }. Best for historical/Tridentine doctrine.
+   (b) doc_id "ccc-modern" — the modern Catechism of the Catholic Church (1992). NOT EMBEDDED — citing this produces an OUTBOUND LINK to vatican.va (the user leaves CCCR to view the text). Keyed by { "paragraph": 1-2865 }. Best for contemporary Catholic teaching.
 
-   IMPORTANT — Catholic source clarification: doc_id "roman-catechism" refers ONLY to the Roman Catechism (Catechismus Romanus, 1566, McHugh/Callan English translation), the Catechism of the Council of Trent. CCCR does NOT contain the modern Catechism of the Catholic Church (CCC, 1992). Do NOT emit CCC paragraph numbers (e.g., "CCC 2086", "CCC 1213", "CCC 850", or any paragraph number in the hundreds or thousands) under doc_id "roman-catechism". The Roman Catechism is keyed by chapter (1–42) and section (small integer within the chapter). Cite ONLY by Roman Catechism's own chapter/section, e.g. { "doc_id": "roman-catechism", "location": { "chapter": 19, "section": 31 } } for the section on Justifying Grace. If you cannot recall a specific Roman Catechism chapter/section with confidence, omit the citation entirely rather than emitting a CCC-style number.
+   Common ccc-modern loci: Trinity → CCC 232-267; Christology → CCC 422-682; Eucharist → CCC 1322-1419; Baptism → CCC 1213-1284; Justification → CCC 1987-2029; the Church → CCC 748-810; Sacraments in general → CCC 1113-1134; Ten Commandments → CCC 2052-2557; Prayer → CCC 2558-2865.
+
+   Do NOT confuse the schemas. ccc-modern uses { "paragraph": N } only. roman-catechism uses { "chapter": N, "section": N } only. CCC paragraph numbers (e.g., 850, 1213, 2086) under doc_id "roman-catechism" will be silently dropped — pick the right doc_id.
+
+   For "citation" with ccc-modern, write something like "CCC 2086" or "CCC 1322-1419". For roman-catechism, write something like "Roman Catechism Ch. 19, §31".
 
 Output ONLY the JSON object. No surrounding text. No markdown fences.`;

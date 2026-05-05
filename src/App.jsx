@@ -21,7 +21,9 @@ import {
   parseCitationString,
   scrollToAnchorAndHighlight,
   DOC_ID_TO_EN_NAME,
+  EXTERNAL_DOC_IDS,
 } from "./utils/anchors";
+import { getCCCUrl, isCCCModernDocId } from "./utils/ccc";
 import { supabase } from "./supabase";
 import { useI18n } from "./i18n/index.jsx";
 
@@ -784,15 +786,27 @@ export default function TheologyAssistant() {
               location: c.location,
             });
             let loc = structuredLoc;
-            // Free-text fallback: if structured location came back empty,
-            // try parsing the human reference / quote.
-            if (loc.chapter === undefined && loc.section === undefined) {
+            const isExt = canonicalDocId && EXTERNAL_DOC_IDS.has(canonicalDocId);
+            // For external docs (CCC-modern → vatican.va), try to extract a
+            // paragraph number from "CCC 2086" / "CCC 1322-1419" style text
+            // when the model didn't emit a structured paragraph.
+            if (isExt && loc.paragraph === undefined) {
+              const text = (c.reference || "") + " " + (c.quote || "");
+              const m = text.match(/(?:CCC|paragraph|paragraf|nr\.?|no\.?)\s*[:#§]?\s*(\d{1,4})/i);
+              if (m) {
+                const p = parseInt(m[1], 10);
+                if (p >= 1 && p <= 2865) loc = { paragraph: p };
+              }
+            }
+            // Free-text fallback for in-app docs: if structured location came
+            // back empty, try parsing the human reference / quote.
+            if (!isExt && loc.chapter === undefined && loc.section === undefined) {
               const fromRef = parseCitationString(c.reference || "");
               if (fromRef.chapter !== undefined || fromRef.section !== undefined) {
                 loc = normalizeLocation(fromRef, canonicalDocId);
               }
             }
-            if (loc.chapter === undefined && loc.section === undefined && c.quote) {
+            if (!isExt && loc.chapter === undefined && loc.section === undefined && c.quote) {
               const fromQuote = parseCitationString(c.quote);
               if (fromQuote.chapter !== undefined || fromQuote.section !== undefined) {
                 loc = normalizeLocation(fromQuote, canonicalDocId);
@@ -1062,7 +1076,34 @@ export default function TheologyAssistant() {
             {!citationsLoading && citations.filter(c => activeTraditions.has(c.tradition)).map((cite, i) => {
               const c = COLORS[cite.tradition] || COLORS.Ecumenical;
               const docId = cite.doc_id || docIdForConfessionName(cite.confession);
+              const isExternal = docId && EXTERNAL_DOC_IDS.has(docId);
               const linkable = !!docId;
+              // External (CCC 1992): render as <a target="_blank"> to vatican.va.
+              if (isExternal && isCCCModernDocId(docId)) {
+                const paragraph = cite.location && (cite.location.paragraph ?? cite.location.section ?? cite.location.chapter);
+                const href = getCCCUrl(paragraph, lang);
+                const confessionLabel = cite.confession || (lang === "de" ? "Katechismus der Katholischen Kirche (1992)" : "Catechism of the Catholic Church (1992)");
+                return (
+                  <a
+                    key={i}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cccr-citation-card"
+                    title={t.cccExternalTooltip || "Modern Catechism of the Catholic Church (1992) — opens at vatican.va"}
+                    style={{ display: "block", margin: "10px 12px", padding: "12px 14px", background: "#fff", borderRadius: 8, borderLeft: "4px solid " + c.border, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textDecoration: "none", color: "inherit", transition: "transform 0.12s ease, box-shadow 0.12s ease" }}
+                  >
+                    <div style={{ display: "inline-block", fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", padding: "2px 8px", borderRadius: 10, marginBottom: 6, background: c.bg, color: c.text }}>{cite.tradition}</div>
+                    <div style={{ fontSize: 13, fontWeight: "bold", color: dark, marginBottom: 2 }}>{confessionLabel}</div>
+                    {cite.reference && <div style={{ fontSize: 12, color: mid, marginBottom: 6, fontStyle: "italic" }}>{cite.reference}</div>}
+                    {cite.quote && <div style={{ fontSize: 12, color: "#4a3a1a", lineHeight: 1.6, borderLeft: "2px solid " + border, paddingLeft: 8, marginBottom: 6, fontStyle: "italic" }}>{cite.quote}</div>}
+                    {cite.relevance && <div style={{ fontSize: 11, color: mid, marginBottom: 6 }}>{cite.relevance}</div>}
+                    <div style={{ fontSize: 11, fontWeight: "bold", color: c.header, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                      {t.cccExternal || "View on vatican.va"} <span style={{ fontSize: 12 }}>↗</span>
+                    </div>
+                  </a>
+                );
+              }
               const openTarget = () => openBrowseAt(docId, cite.location || {});
               return (
                 <button
@@ -1163,6 +1204,13 @@ export default function TheologyAssistant() {
                               if (confKey) docId = docIdForConfessionName(confKey);
                             }
                             if (!docId) return (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>);
+                            // External (CCC 1992): render as outbound link to vatican.va.
+                            if (EXTERNAL_DOC_IDS.has(docId) && isCCCModernDocId(docId)) {
+                              const paragraph = structuredLoc.paragraph
+                                ?? (cell.location && (cell.location.paragraph ?? cell.location.section ?? cell.location.chapter));
+                              const href = getCCCUrl(paragraph, lang);
+                              return (<a href={href} target="_blank" rel="noopener noreferrer" title={(t.cccExternalTooltip || "Modern Catechism of the Catholic Church (1992) — opens at vatican.va") + ": " + cell.citation} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 9, opacity: 0.85 }}>vatican.va ↗</span></a>);
+                            }
                             let loc = structuredLoc;
                             if (loc.chapter === undefined && loc.section === undefined) {
                               const fromText = parseCitationString(cell.citation);
@@ -1452,6 +1500,11 @@ export default function TheologyAssistant() {
             <p style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 16 }}>
               {t.aboutAINote}
             </p>
+            {t.aboutCCCNote && (
+              <p style={{ fontSize: 13, color: "#5a4a2a", lineHeight: 1.8, marginBottom: 16 }}>
+                {t.aboutCCCNote}
+              </p>
+            )}
             <div style={{ borderTop: "1px solid " + border, paddingTop: 16, marginTop: 8 }}>
               <div style={{ fontSize: 11, color: mid, marginBottom: 6, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase" }}>{t.documentsIncluded}</div>
               <div style={{ fontSize: 12, color: "#5a4a2a", lineHeight: 1.9 }}>

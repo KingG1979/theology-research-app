@@ -52,7 +52,7 @@ The app includes full German localization:
 - Longer Catechism (1839) — Orthodox
 - 39 Articles (1571) — Anglican
 
-Note: For the Catholic tradition, the Roman Catechism is the primary embedded source. The AI may also reference the modern Catechism of the Catholic Church (1992) from its general knowledge where teaching has developed, but always distinguishes between the two. The CCC is copyrighted by the Holy See / USCCB and is not embedded in the app.
+Note: For the Catholic tradition, the Roman Catechism (1566, public domain) is embedded in full. The modern Catechism of the Catholic Church (CCC, 1992) is not embedded due to copyright (Libreria Editrice Vaticana / USCCB / Deutsche Bischofskonferenz), but Compare and Research can cite specific CCC paragraphs and link directly to the corresponding text on vatican.va in English or German. CCC citations render as outbound links (↗) and open in a new tab.
 
 ## Tech Stack
 
