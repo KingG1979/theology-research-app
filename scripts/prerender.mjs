@@ -54,6 +54,27 @@ const EN_NAME_TO_DOC_ID = Object.fromEntries(
   Object.entries(DOC_ID_TO_EN_NAME).map(([id, en]) => [en, id])
 );
 
+// External (linked-out, not embedded) docs that get a stub page per locale.
+// Mirrors EXTERNAL_BROWSE_DOCS in src/App.jsx but kept inline here so the
+// prerender script doesn't have to import JSX.
+const EXTERNAL_DOCS = [
+  {
+    docId: "jddj",
+    tradition: "Ecumenical",
+    year: 1999,
+    name_en: "Joint Declaration on the Doctrine of Justification",
+    name_de: "Gemeinsame Erklärung zur Rechtfertigungslehre",
+    description_en:
+      "A 1999 ecumenical agreement on the doctrine of justification, signed by the Lutheran World Federation and the Catholic Church. Affirmed since by the World Methodist Council (2006), the World Communion of Reformed Churches (2017), and the Anglican Communion (2017). The full text is hosted by the Vatican; CCCR links out to it rather than embedding it.",
+    description_de:
+      "Eine ökumenische Erklärung zur Rechtfertigungslehre von 1999, unterzeichnet vom Lutherischen Weltbund und der katholischen Kirche. Anerkannt seither durch den Methodistischen Weltrat (2006), die Weltgemeinschaft Reformierter Kirchen (2017) und die Anglikanische Gemeinschaft (2017). Der vollständige Text ist beim Vatikan veröffentlicht; CCCR verlinkt darauf, anstatt ihn einzubetten.",
+    url_en:
+      "https://www.christianunity.va/content/unitacristiani/en/dialoghi/sezione-occidentale/luterani/dialogo/documenti-di-dialogo/1999-dichiarazione-congiunta-sulla-dottrina-della-giustificazion/en.html",
+    url_de:
+      "https://www.christianunity.va/content/unitacristiani/en/dialoghi/sezione-occidentale/luterani/dialogo/documenti-di-dialogo/1999-dichiarazione-congiunta-sulla-dottrina-della-giustificazion/en/de.html",
+  },
+];
+
 // --- Helpers ---------------------------------------------------------------
 function escapeHtml(s) {
   return String(s ?? "")
@@ -559,6 +580,74 @@ async function main() {
         await emitHtml(join(DIST, secPath, "index.html"), head2, body2, augmentedShell);
         sitemapEntries.push({ loc: secUrl, priority: 0.5, alternates: secAlts });
       }
+    }
+  }
+
+  // -------- External (linked-out, not embedded) documents --------
+  // For each external doc (currently JDDJ only), emit a stub page per locale
+  // with title, description, and outbound links. These are crawlable URLs on
+  // ccc-study.org that hand off to the official Vatican-hosted text.
+  for (const ext of EXTERNAL_DOCS) {
+    for (const lng of ["en", "de"]) {
+      const isDe = lng === "de";
+      const path = isDe ? `/de/browse/${ext.docId}` : `/browse/${ext.docId}`;
+      const url = SITE + path;
+      const altEn = SITE + `/browse/${ext.docId}`;
+      const altDe = SITE + `/de/browse/${ext.docId}`;
+      const name = isDe ? ext.name_de : ext.name_en;
+      const description = isDe ? ext.description_de : ext.description_en;
+      const officialUrl = isDe ? ext.url_de : ext.url_en;
+      const labelOfficial = isDe ? "Offizieller Text auf vatican.va" : "Official text on vatican.va";
+      const labelOther = isDe ? "Text auf Englisch" : "Text in German";
+      const otherUrl = isDe ? ext.url_en : ext.url_de;
+
+      const head = renderHead({
+        title: `${name} (${ext.year}) — ${ext.tradition} | CCC Study`,
+        description: shorten(`${name} (${ext.year}). ${description}`, 300),
+        canonical: url,
+        alternates: [
+          { hreflang: "en", href: altEn },
+          { hreflang: "de", href: altDe },
+          { hreflang: "x-default", href: altEn },
+        ],
+        jsonld: {
+          "@context": "https://schema.org",
+          "@type": "Book",
+          name,
+          inLanguage: lng,
+          url,
+          datePublished: String(ext.year),
+          about: ext.tradition,
+          identifier: ext.docId,
+          sameAs: officialUrl,
+          isPartOf: { "@type": "WebSite", name: "CCC Study", url: SITE },
+        },
+      });
+      const body = renderPrerenderBody({
+        title: `${name} — ${ext.year}`,
+        breadcrumb: [
+          { label: isDe ? "Startseite" : "Home", href: isDe ? "/de/" : "/" },
+          {
+            label: isDe ? "Alle Dokumente" : "All Documents",
+            href: isDe ? "/de/all-documents" : "/all-documents",
+          },
+          { label: name, href: path },
+        ],
+        paragraphs: [description],
+        navLinks: [
+          { label: `${labelOfficial} ↗`, href: officialUrl },
+          { label: `${labelOther} ↗`, href: otherUrl },
+        ],
+      });
+      await emitHtml(join(DIST, path.slice(1), "index.html"), head, body, augmentedShell);
+      sitemapEntries.push({
+        loc: url,
+        priority: 0.8,
+        alternates: [
+          { hreflang: "en", href: altEn },
+          { hreflang: "de", href: altDe },
+        ],
+      });
     }
   }
 

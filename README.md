@@ -52,7 +52,11 @@ The app includes full German localization:
 - Longer Catechism (1839) — Orthodox
 - 39 Articles (1571) — Anglican
 
-Note: For the Catholic tradition, the Roman Catechism (1566, public domain) is embedded in full. The modern Catechism of the Catholic Church (CCC, 1992) is not embedded due to copyright (Libreria Editrice Vaticana / USCCB / Deutsche Bischofskonferenz), but Compare and Research can cite specific CCC paragraphs and link directly to the corresponding text on vatican.va in English or German. CCC citations render as outbound links (↗) and open in a new tab.
+### Ecumenical Reference Documents (linked, not embedded)
+
+- Joint Declaration on the Doctrine of Justification (1999) — Ecumenical (Lutheran / Catholic / Methodist / Reformed / Anglican)
+
+Note: For the Catholic tradition, the Roman Catechism (1566, public domain) is embedded in full. The modern Catechism of the Catholic Church (CCC, 1992) is not embedded due to copyright (Libreria Editrice Vaticana / USCCB / Deutsche Bischofskonferenz), but Compare and Research can cite specific CCC paragraphs and link directly to the corresponding text on vatican.va in English or German. The same outbound-link approach applies to the Joint Declaration on the Doctrine of Justification (JDDJ, 1999) under the Ecumenical tradition — particularly relevant for justification queries, since the historic creeds do not address justification. External citations render as outbound links (↗) and open in a new tab.
 
 ## Tech Stack
 

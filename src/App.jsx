@@ -24,6 +24,7 @@ import {
   EXTERNAL_DOC_IDS,
 } from "./utils/anchors";
 import { getCCCUrl, isCCCModernDocId } from "./utils/ccc";
+import { getJDDJUrl, isJDDJDocId } from "./utils/jddj";
 import { supabase } from "./supabase";
 import { useI18n } from "./i18n/index.jsx";
 
@@ -64,6 +65,36 @@ function buildLocalizedConfessions(lang) {
     }
   }
   return result;
+}
+
+// Documents that are linked but NOT embedded (copyright / hosted externally).
+// They appear in the Browse sidebar under their tradition with a "↗" marker
+// and, when selected, render a stub pane with a description and outbound
+// links to the official text. The Research/Compare citation renderers route
+// these doc_ids through their resolver (getCCCUrl, getJDDJUrl) directly.
+const EXTERNAL_BROWSE_DOCS = {
+  jddj: {
+    docId: "jddj",
+    tradition: "Ecumenical",
+    year: 1999,
+    name_en: "Joint Declaration on the Doctrine of Justification",
+    name_de: "Gemeinsame Erklärung zur Rechtfertigungslehre",
+    description_en:
+      "A 1999 ecumenical agreement on the doctrine of justification, signed by the Lutheran World Federation and the Catholic Church. Affirmed since by the World Methodist Council (2006), the World Communion of Reformed Churches (2017), and the Anglican Communion (2017). The text is hosted by the Pontifical Council for Promoting Christian Unity at vatican.va; the full document is not embedded in CCCR. The central paragraphs on the common confession of justification are ¶14-39.",
+    description_de:
+      "Eine ökumenische Erklärung zur Rechtfertigungslehre von 1999, unterzeichnet vom Lutherischen Weltbund und der katholischen Kirche. Anerkannt seither durch den Methodistischen Weltrat (2006), die Weltgemeinschaft Reformierter Kirchen (2017) und die Anglikanische Gemeinschaft (2017). Der Text ist beim Päpstlichen Rat zur Förderung der Einheit der Christen auf vatican.va veröffentlicht; das vollständige Dokument ist in CCCR nicht eingebettet. Die zentralen Absätze zum gemeinsamen Bekenntnis zur Rechtfertigung sind ¶14-39.",
+  },
+};
+
+function getExternalBrowseEntries(lang) {
+  return Object.values(EXTERNAL_BROWSE_DOCS).map((doc) => ({
+    docId: doc.docId,
+    tradition: doc.tradition,
+    name: lang === "de" ? doc.name_de : doc.name_en,
+    description: lang === "de" ? doc.description_de : doc.description_en,
+    year: doc.year,
+    external: true,
+  }));
 }
 
 const pulseKeyframes = `
@@ -308,9 +339,16 @@ export default function TheologyAssistant() {
   const localizedConfessions = useMemo(() => buildLocalizedConfessions(lang), [lang]);
   const confessionNames = useMemo(() => Object.keys(localizedConfessions), [localizedConfessions]);
 
+  // External (linked-out, not embedded) browse entries — currently JDDJ.
+  // These appear in the sidebar under their tradition with an outbound marker;
+  // selecting one renders a stub pane in the main browse area.
+  const externalBrowseEntries = useMemo(() => getExternalBrowseEntries(lang), [lang]);
+
   // Documents grouped by tradition for the Browse sidebar and /all-documents.
   // Traditions are alphabetical (matching the SHOW: filter chips), and docs
   // within each tradition are sorted alphabetically by their displayed name.
+  // External entries are mixed in at this stage so they sort alphabetically
+  // alongside the embedded documents within each tradition group.
   const confessionsByTradition = useMemo(() => {
     const groups = {};
     for (const name of confessionNames) {
@@ -318,11 +356,29 @@ export default function TheologyAssistant() {
       if (!groups[trad]) groups[trad] = [];
       groups[trad].push(name);
     }
+    for (const ext of externalBrowseEntries) {
+      if (!groups[ext.tradition]) groups[ext.tradition] = [];
+      // Sentinel key — distinguishes external entries from embedded confession
+      // names without a separate sidebar list. The main pane and click handler
+      // detect the "external:" prefix to render the stub instead of chapters.
+      groups[ext.tradition].push("external:" + ext.docId);
+    }
+    const externalLookup = Object.fromEntries(
+      externalBrowseEntries.map((e) => ["external:" + e.docId, e.name])
+    );
+    const labelOf = (key) => externalLookup[key] || key;
     for (const trad of Object.keys(groups)) {
-      groups[trad].sort((a, b) => a.localeCompare(b));
+      groups[trad].sort((a, b) => labelOf(a).localeCompare(labelOf(b)));
     }
     return ALL_TRADITIONS.filter(trad => groups[trad]).map(trad => ({ tradition: trad, names: groups[trad] }));
-  }, [confessionNames, localizedConfessions]);
+  }, [confessionNames, localizedConfessions, externalBrowseEntries]);
+
+  // Lookup table for rendering: sentinel key → external entry meta.
+  const externalEntryByKey = useMemo(() => {
+    const map = {};
+    for (const e of externalBrowseEntries) map["external:" + e.docId] = e;
+    return map;
+  }, [externalBrowseEntries]);
 
   // Auth state
   const [session, setSession] = useState(null);
@@ -474,6 +530,8 @@ export default function TheologyAssistant() {
   // Remap selectedConfession when language changes
   useEffect(() => {
     if (!selectedConfession) return;
+    // External-doc sentinels (e.g. "external:jddj") are language-agnostic.
+    if (selectedConfession.startsWith("external:")) return;
     if (lang === "de") {
       const deKey = EN_TO_DE_KEY[selectedConfession];
       if (deKey && localizedConfessions[deKey]) {
@@ -551,6 +609,18 @@ export default function TheologyAssistant() {
     // "WCF" or "Westminster Confession of Faith". Without this the entire
     // deep-link silently drops to Browse root.
     const docId = normalizeDocId(rawDocId) || rawDocId;
+    // External docs (JDDJ, etc.): route to the in-app stub page rather than
+    // attempting an embedded chapter lookup. ccc-modern is intentionally NOT
+    // included here — CCC has no Browse stub; citation cards link directly
+    // out to vatican.va.
+    if (EXTERNAL_DOC_IDS.has(docId) && EXTERNAL_BROWSE_DOCS[docId]) {
+      setMode("browse");
+      setSelectedConfession("external:" + docId);
+      setSelectedChapter(null);
+      const path = lang === "de" ? "/de/browse/" + docId : "/browse/" + docId;
+      try { history.replaceState(null, "", path); } catch {}
+      return;
+    }
     const confName = confessionNameForDocId(docId, localizedConfessions);
     if (!confName || !localizedConfessions[confName]) {
       // Unknown document — just switch to Browse mode.
@@ -807,15 +877,16 @@ export default function TheologyAssistant() {
             });
             let loc = structuredLoc;
             const isExt = canonicalDocId && EXTERNAL_DOC_IDS.has(canonicalDocId);
-            // For external docs (CCC-modern → vatican.va), try to extract a
-            // paragraph number from "CCC 2086" / "CCC 1322-1419" style text
-            // when the model didn't emit a structured paragraph.
+            // For external docs (CCC-modern, JDDJ → vatican.va), try to
+            // extract a paragraph number from "CCC 2086" / "CCC 1322-1419"
+            // style text when the model didn't emit a structured paragraph.
             if (isExt && loc.paragraph === undefined) {
               const text = (c.reference || "") + " " + (c.quote || "");
-              const m = text.match(/(?:CCC|paragraph|paragraf|nr\.?|no\.?)\s*[:#§]?\s*(\d{1,4})/i);
+              const m = text.match(/(?:CCC|JDDJ|paragraph|paragraf|nr\.?|no\.?|¶|§)\s*[:#]?\s*(\d{1,4})/i);
               if (m) {
                 const p = parseInt(m[1], 10);
-                if (p >= 1 && p <= 2865) loc = { paragraph: p };
+                const max = canonicalDocId === "jddj" ? 44 : 2865;
+                if (p >= 1 && p <= max) loc = { paragraph: p };
               }
             }
             // Free-text fallback for in-app docs: if structured location came
@@ -942,7 +1013,12 @@ export default function TheologyAssistant() {
     );
   }
 
-  const currentConfession = selectedConfession ? localizedConfessions[selectedConfession] : null;
+  const currentExternalEntry = selectedConfession && externalEntryByKey[selectedConfession]
+    ? externalEntryByKey[selectedConfession]
+    : null;
+  const currentConfession = selectedConfession && !currentExternalEntry
+    ? localizedConfessions[selectedConfession]
+    : null;
   const currentChapter = selectedChapter !== null && currentConfession ? currentConfession.chapters[selectedChapter] : null;
 
   return (
@@ -1091,11 +1167,17 @@ export default function TheologyAssistant() {
               const docId = cite.doc_id || docIdForConfessionName(cite.confession);
               const isExternal = docId && EXTERNAL_DOC_IDS.has(docId);
               const linkable = !!docId;
-              // External (CCC 1992): render as <a target="_blank"> to vatican.va.
-              if (isExternal && isCCCModernDocId(docId)) {
+              // External (CCC 1992 / JDDJ 1999): render as outbound link.
+              if (isExternal && (isCCCModernDocId(docId) || isJDDJDocId(docId))) {
                 const paragraph = cite.location && (cite.location.paragraph ?? cite.location.section ?? cite.location.chapter);
-                const href = getCCCUrl(paragraph, lang);
-                const confessionLabel = cite.confession || (lang === "de" ? "Katechismus der Katholischen Kirche (1992)" : "Catechism of the Catholic Church (1992)");
+                const href = isJDDJDocId(docId) ? getJDDJUrl(paragraph, lang) : getCCCUrl(paragraph, lang);
+                const fallbackLabel = isJDDJDocId(docId)
+                  ? (lang === "de" ? "Gemeinsame Erklärung zur Rechtfertigungslehre (1999)" : "Joint Declaration on the Doctrine of Justification (1999)")
+                  : (lang === "de" ? "Katechismus der Katholischen Kirche (1992)" : "Catechism of the Catholic Church (1992)");
+                const confessionLabel = cite.confession || fallbackLabel;
+                const tooltip = isJDDJDocId(docId)
+                  ? (t.jddjExternalTooltip || "Joint Declaration on the Doctrine of Justification (1999) — opens at vatican.va")
+                  : (t.cccExternalTooltip || "Modern Catechism of the Catholic Church (1992) — opens at vatican.va");
                 return (
                   <a
                     key={i}
@@ -1103,7 +1185,7 @@ export default function TheologyAssistant() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="cccr-citation-card"
-                    title={t.cccExternalTooltip || "Modern Catechism of the Catholic Church (1992) — opens at vatican.va"}
+                    title={tooltip}
                     style={{ display: "block", margin: "10px 12px", padding: "12px 14px", background: "#fff", borderRadius: 8, borderLeft: "4px solid " + c.border, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", textDecoration: "none", color: "inherit", transition: "transform 0.12s ease, box-shadow 0.12s ease" }}
                   >
                     <div style={{ display: "inline-block", fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", padding: "2px 8px", borderRadius: 10, marginBottom: 6, background: c.bg, color: c.text }}>{cite.tradition}</div>
@@ -1217,12 +1299,15 @@ export default function TheologyAssistant() {
                               if (confKey) docId = docIdForConfessionName(confKey);
                             }
                             if (!docId) return (<div style={{ fontSize: 11, fontWeight: "bold", color: c.header }}>{cell.citation}</div>);
-                            // External (CCC 1992): render as outbound link to vatican.va.
-                            if (EXTERNAL_DOC_IDS.has(docId) && isCCCModernDocId(docId)) {
+                            // External (CCC 1992 / JDDJ 1999): render as outbound link to vatican.va.
+                            if (EXTERNAL_DOC_IDS.has(docId) && (isCCCModernDocId(docId) || isJDDJDocId(docId))) {
                               const paragraph = structuredLoc.paragraph
                                 ?? (cell.location && (cell.location.paragraph ?? cell.location.section ?? cell.location.chapter));
-                              const href = getCCCUrl(paragraph, lang);
-                              return (<a href={href} target="_blank" rel="noopener noreferrer" title={(t.cccExternalTooltip || "Modern Catechism of the Catholic Church (1992) — opens at vatican.va") + ": " + cell.citation} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 9, opacity: 0.85 }}>vatican.va ↗</span></a>);
+                              const href = isJDDJDocId(docId) ? getJDDJUrl(paragraph, lang) : getCCCUrl(paragraph, lang);
+                              const tooltip = isJDDJDocId(docId)
+                                ? (t.jddjExternalTooltip || "Joint Declaration on the Doctrine of Justification (1999) — opens at vatican.va")
+                                : (t.cccExternalTooltip || "Modern Catechism of the Catholic Church (1992) — opens at vatican.va");
+                              return (<a href={href} target="_blank" rel="noopener noreferrer" title={tooltip + ": " + cell.citation} style={{ fontSize: 11, fontWeight: "bold", color: c.header, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "Georgia, serif", textDecoration: "underline", textUnderlineOffset: 2, textAlign: "left", display: "flex", alignItems: "center", gap: 3 }}>{cell.citation} <span style={{ fontSize: 9, opacity: 0.85 }}>vatican.va ↗</span></a>);
                             }
                             let loc = structuredLoc;
                             if (loc.chapter === undefined && loc.section === undefined) {
@@ -1273,6 +1358,19 @@ export default function TheologyAssistant() {
                     <span style={{ fontSize: 10, color: mid, marginLeft: 6 }}>{collapsed ? "+" : "−"}</span>
                   </button>
                   {!collapsed && names.map(name => {
+                    const ext = externalEntryByKey[name];
+                    if (ext) {
+                      const active = selectedConfession === name;
+                      return (
+                        <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); const path = lang === "de" ? "/de/browse/" + ext.docId : "/browse/" + ext.docId; try { history.replaceState(null, "", path); } catch {} }} style={{ padding: "9px 14px 9px 22px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "4px solid " + c.border : "4px solid transparent" }}>
+                          <div style={{ fontSize: 12, fontWeight: active ? "bold" : "normal", color: active ? c.text : dark, lineHeight: 1.4, display: "flex", alignItems: "baseline", gap: 4 }}>
+                            <span>{ext.name}</span>
+                            <span style={{ fontSize: 10, color: mid }} title={t.externalDocTooltip || "Linked, not embedded"}>↗</span>
+                          </div>
+                          <div style={{ fontSize: 10, color: mid, marginTop: 2 }}>{ext.year}</div>
+                        </div>
+                      );
+                    }
                     const conf = localizedConfessions[name];
                     const active = selectedConfession === name;
                     return (
@@ -1318,11 +1416,41 @@ export default function TheologyAssistant() {
                 <p style={{ fontSize: 13, lineHeight: 1.7 }}>{t.browseInstructions}</p>
               </div>
             )}
-            {selectedConfession && !selectedChapter === true && selectedChapter !== 0 && (
+            {selectedConfession && !currentExternalEntry && !selectedChapter === true && selectedChapter !== 0 && (
               <div style={{ textAlign: "center", padding: "60px 20px", color: mid }}>
                 <p style={{ fontSize: 15, color: "#5a4a2a" }}>{t.selectChapter}</p>
               </div>
             )}
+            {currentExternalEntry && (() => {
+              const ext = currentExternalEntry;
+              const tradColor = COLORS[ext.tradition] || COLORS.Ecumenical;
+              const enUrl = ext.docId === "jddj" ? getJDDJUrl(undefined, "en") : null;
+              const deUrl = ext.docId === "jddj" ? getJDDJUrl(undefined, "de") : null;
+              return (
+                <div id={"doc-" + ext.docId} style={{ maxWidth: 720 }}>
+                  <div style={{ fontSize: 11, color: mid, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{ext.tradition} · {ext.year}</div>
+                  <h2 style={{ margin: "0 0 14px", fontSize: 22, color: dark }}>{ext.name}</h2>
+                  <div style={{ padding: "10px 14px", background: "#fdf3cd", border: "1px solid #e8c84a", borderRadius: 6, fontSize: 12, color: "#7a5a00", marginBottom: 18, lineHeight: 1.6 }}>
+                    {t.externalDocBanner || "This document is not embedded in CCCR. The full text is hosted by the Vatican; use the links below to read it in English or German."}
+                  </div>
+                  <p style={{ fontSize: 14, lineHeight: 1.8, color: dark, marginBottom: 22 }}>{ext.description}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {enUrl && (
+                      <a href={enUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "#fff", border: "1px solid " + tradColor.border, borderLeft: "4px solid " + tradColor.border, borderRadius: 6, color: dark, textDecoration: "none", fontSize: 13 }}>
+                        <span style={{ fontWeight: "bold", color: tradColor.header }}>{t.readEnglish || "Read in English"}</span>
+                        <span style={{ color: mid, fontSize: 11 }}>vatican.va ↗</span>
+                      </a>
+                    )}
+                    {deUrl && (
+                      <a href={deUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "#fff", border: "1px solid " + tradColor.border, borderLeft: "4px solid " + tradColor.border, borderRadius: 6, color: dark, textDecoration: "none", fontSize: 13 }}>
+                        <span style={{ fontWeight: "bold", color: tradColor.header }}>{t.readGerman || "Auf Deutsch lesen"}</span>
+                        <span style={{ color: mid, fontSize: 11 }}>vatican.va ↗</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
             {currentChapter && (() => {
               const browseDocId = docIdForConfessionName(selectedConfession);
               const chapterAnchor = buildAnchorId({ docId: browseDocId, chapter: currentChapter.number });
@@ -1487,6 +1615,21 @@ export default function TheologyAssistant() {
               <div key={tradition} style={{ marginBottom: 36 }}>
                 <h2 style={{ margin: "0 0 14px", fontSize: 13, color: tradColor.header, letterSpacing: 1.4, textTransform: "uppercase", fontWeight: "bold", borderBottom: "2px solid " + tradColor.border, paddingBottom: 6 }}>{tradition}</h2>
                 {names.map(name => {
+                  const ext = externalEntryByKey[name];
+                  if (ext) {
+                    return (
+                      <section key={name} style={{ marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid " + border }}>
+                        <h3 style={{ margin: "0 0 4px", fontSize: 16, color: dark }}>
+                          <a
+                            href={buildBrowsePath({ docId: ext.docId, lang })}
+                            onClick={(e) => { e.preventDefault(); openBrowseAt(ext.docId, {}); }}
+                            style={{ color: tradColor.header, textDecoration: "none" }}
+                          >{ext.name} <span style={{ fontSize: 11, color: mid }}>↗</span></a>
+                        </h3>
+                        <div style={{ fontSize: 11, color: mid, marginBottom: 10 }}>{ext.year} · {t.linkedNotEmbedded || "Linked, not embedded"}</div>
+                      </section>
+                    );
+                  }
                   const conf = localizedConfessions[name];
                   const enName = DE_TO_EN_KEY[name] || name;
                   const docId = docIdForConfessionName(enName);

@@ -29,6 +29,7 @@ export const DOC_IDS = {
   dort: "dort",
   helvetic2: "helvetic2",
   cccModern: "ccc-modern",
+  jddj: "jddj",
 };
 
 // Doc_ids that resolve to OUTBOUND links (vatican.va etc.) rather than the
@@ -36,6 +37,7 @@ export const DOC_IDS = {
 // resolver instead of buildBrowsePath.
 export const EXTERNAL_DOC_IDS = new Set([
   "ccc-modern",
+  "jddj",
 ]);
 
 // English confession-name → doc_id.
@@ -59,6 +61,8 @@ const EN_NAME_TO_DOC_ID = {
   "Second Helvetic Confession": DOC_IDS.helvetic2,
   "Catechism of the Catholic Church": DOC_IDS.cccModern,
   "Catechism of the Catholic Church (1992)": DOC_IDS.cccModern,
+  "Joint Declaration on the Doctrine of Justification": DOC_IDS.jddj,
+  "Joint Declaration on the Doctrine of Justification (1999)": DOC_IDS.jddj,
 };
 
 // German confession-name → doc_id (same anchors across locales).
@@ -82,6 +86,8 @@ const DE_NAME_TO_DOC_ID = {
   "Zweites Helvetisches Bekenntnis": DOC_IDS.helvetic2,
   "Katechismus der Katholischen Kirche": DOC_IDS.cccModern,
   "Katechismus der Katholischen Kirche (1992)": DOC_IDS.cccModern,
+  "Gemeinsame Erklärung zur Rechtfertigungslehre": DOC_IDS.jddj,
+  "Gemeinsame Erklärung zur Rechtfertigungslehre (1999)": DOC_IDS.jddj,
 };
 
 const NAME_TO_DOC_ID = { ...EN_NAME_TO_DOC_ID, ...DE_NAME_TO_DOC_ID };
@@ -237,6 +243,19 @@ const DOC_ID_ALIASES = {
   "katechismus der katholischen kirche": DOC_IDS.cccModern,
   "katechismus der katholischen kirche (1992)": DOC_IDS.cccModern,
   "kkk": DOC_IDS.cccModern,
+  // Joint Declaration on the Doctrine of Justification (1999) — outbound link only.
+  "jddj": DOC_IDS.jddj,
+  "joint declaration": DOC_IDS.jddj,
+  "joint declaration on justification": DOC_IDS.jddj,
+  "joint declaration on the doctrine of justification": DOC_IDS.jddj,
+  "joint declaration on the doctrine of justification (1999)": DOC_IDS.jddj,
+  "joint-declaration": DOC_IDS.jddj,
+  "1999 joint declaration": DOC_IDS.jddj,
+  "gemeinsame erklärung": DOC_IDS.jddj,
+  "gemeinsame erklaerung": DOC_IDS.jddj,
+  "gemeinsame erklärung zur rechtfertigungslehre": DOC_IDS.jddj,
+  "gemeinsame erklaerung zur rechtfertigungslehre": DOC_IDS.jddj,
+  "ger": DOC_IDS.jddj,
 };
 
 // Doc-aware schema: how each document is keyed in the data files, plus the
@@ -272,6 +291,11 @@ const DOC_SCHEMAS = {
   // paragraph 1-2865. The renderer routes external doc_ids through
   // getCCCUrl() instead of buildBrowsePath/findChapterIndex.
   [DOC_IDS.cccModern]:          { storage: "external", external: true, paragraphMin: 1, paragraphMax: 2865, primaryKey: "paragraph" },
+  // JDDJ (1999) is also an outbound link to vatican.va (christianunity.va).
+  // Main declaration runs paragraphs 1-44; we only expose those for v1
+  // (Annex and Official Common Statement are out of scope for paragraph
+  // citation but the resolver will still link to the document page).
+  [DOC_IDS.jddj]:               { storage: "external", external: true, paragraphMin: 1, paragraphMax: 44, primaryKey: "paragraph" },
 };
 
 // Reverse: doc_id → English confession name (the canonical Browse key).

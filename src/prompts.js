@@ -17,14 +17,14 @@ You MUST respond with a single valid JSON object — no prose before or after, n
     {
       "tradition": "Reformed | Lutheran | Catholic | Baptist | Orthodox | Anglican | Ecumenical",
       "document": "e.g. Westminster Confession of Faith",
-      "doc_id": "one of: westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3",
+      "doc_id": "one of: westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, jddj, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3",
       "location": {
         "chapter": "integer — chapter number if the document has chapters (Westminster, 1689 Baptist, Roman Catechism, Orthodox Longer) — OPTIONAL",
         "section": "integer — section number within the chapter — OPTIONAL",
         "question": "integer — question number (Heidelberg Q#, Orthodox Longer question#) — OPTIONAL",
         "article": "integer — article number (Augsburg Article#, 39 Articles Article#) — OPTIONAL",
         "canon": "integer — canon/anathema number for conciliar documents (Constantinople I–III) — OPTIONAL",
-        "paragraph": "integer 1-2865 — CCC paragraph number, ONLY for doc_id 'ccc-modern' — OPTIONAL"
+        "paragraph": "integer — CCC paragraph 1-2865 (doc_id 'ccc-modern') OR JDDJ paragraph 1-44 (doc_id 'jddj') — OPTIONAL"
       },
       "reference": "e.g. Chapter 1, Section 4 — human-readable label that MATCHES location; keep short",
       "quote": "a short verbatim or close-paraphrase snippet that is ON-TOPIC for the user's question",
@@ -54,6 +54,7 @@ STRICT RULES for the citations array:
    - thirtynine-articles:   { article: 1-39 }
    - roman-catechism:       { chapter: 1-42, section: 1-200 }
    - ccc-modern:            { paragraph: 1-2865 }   (modern Catechism of the Catholic Church, 1992; OUTBOUND link to vatican.va — text is NOT embedded in CCCR)
+   - jddj:                  { paragraph: 1-44 }     (Joint Declaration on the Doctrine of Justification, 1999; OUTBOUND link to vatican.va — text is NOT embedded in CCCR; tradition: Ecumenical)
    - orthodox-longer:       { chapter: 1-6, section: 1-8 }   (the catechism's "questions" map directly to sections)
    - apostles-creed:        { section: 1-4 }      (clause number)
    - nicene-creed:          { section: 1-6 }      (clause number)
@@ -64,7 +65,7 @@ STRICT RULES for the citations array:
    - constantinople-3:      { chapter: 1-8, section: 1-200 }
 
    "doc_id" MUST be EXACTLY one of these canonical strings — do NOT invent variants like "WCF" / "Westminster Confession of Faith" / "westminster_confession":
-     westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
+     westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, jddj, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
    If the document is not in that list, omit the citation.
 
 4. CATHOLIC SOURCES — two valid options. Pick whichever is most directly on-topic for the user's question:
@@ -78,6 +79,14 @@ STRICT RULES for the citations array:
    You MAY emit BOTH a roman-catechism citation AND a ccc-modern citation in the same answer if both are directly relevant — they are different sources of Catholic teaching.
 
    For ccc-modern, the "quote" field is OPTIONAL (the user will follow the outbound link to vatican.va to read the actual text). Still provide a brief on-topic paraphrase or summary in "quote" when you can — but do NOT fabricate verbatim CCC text if you are not confident.
+
+4b. ECUMENICAL CONSENSUS — JDDJ (Joint Declaration on the Doctrine of Justification, 1999). doc_id "jddj". NOT EMBEDDED in CCCR — citing this doc_id results in an OUTBOUND LINK to the official Vatican-hosted text (vatican.va / christianunity.va) in English or German. Keyed by { paragraph: 1-44 }. Tag as tradition "Ecumenical" and doc_id "jddj".
+
+   The JDDJ is a 1999 ecumenical agreement signed by the Lutheran World Federation and the Catholic Church, and later affirmed by the World Methodist Council (2006), the World Communion of Reformed Churches (2017), and the Anglican Communion (2017). It represents a contemporary cross-tradition consensus on justification, salvation by grace, and the relationship of faith and works.
+
+   Cite JDDJ when discussing modern ecumenical consensus on justification, the doctrine of grace, faith and works, or how the historic Reformation-era condemnations on justification do or do not apply today. The central paragraphs on the common confession of justification are roughly ¶14-39 (especially ¶15: "By grace alone, in faith in Christ's saving work and not because of any merit on our part…").
+
+   Like ccc-modern, the "quote" field for jddj is OPTIONAL. Provide a short on-topic paraphrase when confident; do NOT fabricate verbatim JDDJ text.
 
 5. "tradition" values must be EXACTLY one of: Reformed, Lutheran, Catholic, Baptist, Orthodox, Anglican, Ecumenical (case-sensitive).
 
@@ -132,7 +141,7 @@ STRICT RULES:
 
    STANDARD-LOCUS GUIDE (non-exhaustive — verify topical relevance before citing). When the user's doctrine matches one of these, the listed loci are the canonical places each tradition's confessions/catechisms treat it; reach for them first. Roman Catechism references are by chapter# from CCCR's data (NOT by CCC paragraph number):
    - The Church / Ecclesiology: Westminster Ch. 25; Augsburg Art. VII–VIII; 1689 Ch. 26; Heidelberg Q54; Belgic Art. 27-32; Helvetic2 Ch. 17; Roman Catechism Ch. 11 (Article IX: The Holy Catholic Church); 39 Articles Art. XIX
-   - Justification: Westminster Ch. 11; Augsburg Art. IV; 1689 Ch. 11; Heidelberg Q60; Roman Catechism Ch. 19 (Penance — see esp. section 31 on Justifying Grace); 39 Articles Art. XI
+   - Justification: Westminster Ch. 11; Augsburg Art. IV; 1689 Ch. 11; Heidelberg Q60; Roman Catechism Ch. 19 (Penance — see esp. section 31 on Justifying Grace); 39 Articles Art. XI; Belgic Art. 22-23; Helvetic2 Ch. 15. For the Catholic cell, CCC 1987-2029 (doc_id "ccc-modern") is often more on-point than the Roman Catechism for modern teaching. For the Ecumenical cell, JDDJ ¶14-39 (doc_id "jddj", tradition "Ecumenical") gives the 1999 cross-tradition consensus — use it instead of a creed when the row aspect concerns justification, since the historic creeds do not address justification.
    - Sacraments in general: Westminster Ch. 27; Augsburg Art. IX–XIII; 1689 Ch. 28; Heidelberg Q65–68; Belgic Art. 33-35; Helvetic2 Ch. 19-21; Roman Catechism Ch. 15 (Sacraments in General); 39 Articles Art. XXV
    - Baptism: Westminster Ch. 28; 1689 Ch. 29; Heidelberg Q69–74; Roman Catechism Ch. 16 (Baptism); 39 Articles Art. XXVII
    - Lord's Supper / Eucharist: Westminster Ch. 29; Augsburg Art. X; 1689 Ch. 30; Heidelberg Q75–82; Roman Catechism Ch. 18 (The Holy Eucharist); 39 Articles Art. XXVIII–XXXI
@@ -151,7 +160,7 @@ STRICT RULES:
 4. Each cell's "citation" (when present) is a short human-readable label (e.g. "Westminster 1.4", "Heidelberg Q60", "Augsburg Art. IV", "Canon 3"). Keep it short.
 
 5. "doc_id" (when present) MUST be EXACTLY one of these canonical strings — do NOT invent variants like "WCF" / "Westminster Confession of Faith" / "westminsterbekenntnis":
-   westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
+   westminster, heidelberg, belgic, dort, helvetic2, augsburg, baptist1689, thirtynine-articles, roman-catechism, ccc-modern, jddj, orthodox-longer, apostles-creed, nicene-creed, athanasian-creed, chalcedon, constantinople-1, constantinople-2, constantinople-3
 
 6. Which "location" sub-fields and integer ranges are valid per document. Numbers outside the range will be dropped and the link will fall back to the document root.
    - westminster:           { "chapter": 1-33, "section": 1-32 }
@@ -164,6 +173,7 @@ STRICT RULES:
    - thirtynine-articles:   { "article": 1-39 }
    - roman-catechism:       { "chapter": 1-42, "section": 1-200 }
    - ccc-modern:            { "paragraph": 1-2865 }   (modern CCC, 1992; OUTBOUND link to vatican.va — text NOT embedded)
+   - jddj:                  { "paragraph": 1-44 }     (Joint Declaration on the Doctrine of Justification, 1999; OUTBOUND link to vatican.va; tradition: Ecumenical)
    - orthodox-longer:       { "chapter": 1-6, "section": 1-8 }
    - apostles-creed:        { "section": 1-4 }      (clause number)
    - nicene-creed:          { "section": 1-6 }
@@ -185,5 +195,13 @@ STRICT RULES:
    Do NOT confuse the schemas. ccc-modern uses { "paragraph": N } only. roman-catechism uses { "chapter": N, "section": N } only. CCC paragraph numbers (e.g., 850, 1213, 2086) under doc_id "roman-catechism" will be silently dropped — pick the right doc_id.
 
    For "citation" with ccc-modern, write something like "CCC 2086" or "CCC 1322-1419". For roman-catechism, write something like "Roman Catechism Ch. 19, §31".
+
+9. ECUMENICAL CELL — JDDJ option. doc_id "jddj" (Joint Declaration on the Doctrine of Justification, 1999). NOT EMBEDDED — citing this produces an OUTBOUND LINK to vatican.va. Keyed by { "paragraph": 1-44 }. Tradition key "Ecumenical".
+
+   For aspects where the historic creeds (Apostles', Nicene, Athanasian, Chalcedon, Constantinople I-III) are silent — most importantly justification, but also salvation by grace, faith and works, the relationship between forgiveness and renewal, and the modern reception of Reformation-era condemnations — prefer JDDJ over a creed for the Ecumenical cell. For Trinity / Christology / canonical aspects, the creeds remain the right Ecumenical sources.
+
+   Common JDDJ loci: common confession ¶14-15; reformed condemnations ¶13, ¶41-42; faith and works ¶25-27; assurance ¶34-36; good works ¶37-39.
+
+   For "citation" with jddj, write something like "JDDJ ¶15" or "JDDJ ¶14-18". Include a short on-topic paraphrase in "position"; do NOT fabricate verbatim JDDJ text.
 
 Output ONLY the JSON object. No surrounding text. No markdown fences.`;
