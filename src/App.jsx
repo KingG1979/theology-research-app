@@ -115,7 +115,7 @@ const pulseKeyframes = `
 .compare-scroll::-webkit-scrollbar-thumb:hover { background: #8a7a5a; }
 @media (max-width: 768px) {
   .browse-layout { flex-direction: column !important; }
-  .browse-sidebar { width: 100% !important; max-height: 160px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; }
+  .browse-sidebar { width: 100% !important; max-height: 220px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; }
   .browse-chapters { width: 100% !important; max-height: 140px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; }
   .research-layout { flex-direction: column !important; }
   .research-chat { border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; flex: 1 1 auto !important; min-height: 50vh !important; }
@@ -308,6 +308,22 @@ export default function TheologyAssistant() {
   const localizedConfessions = useMemo(() => buildLocalizedConfessions(lang), [lang]);
   const confessionNames = useMemo(() => Object.keys(localizedConfessions), [localizedConfessions]);
 
+  // Documents grouped by tradition for the Browse sidebar and /all-documents.
+  // Traditions are alphabetical (matching the SHOW: filter chips), and docs
+  // within each tradition are sorted alphabetically by their displayed name.
+  const confessionsByTradition = useMemo(() => {
+    const groups = {};
+    for (const name of confessionNames) {
+      const trad = localizedConfessions[name].tradition;
+      if (!groups[trad]) groups[trad] = [];
+      groups[trad].push(name);
+    }
+    for (const trad of Object.keys(groups)) {
+      groups[trad].sort((a, b) => a.localeCompare(b));
+    }
+    return ALL_TRADITIONS.filter(trad => groups[trad]).map(trad => ({ tradition: trad, names: groups[trad] }));
+  }, [confessionNames, localizedConfessions]);
+
   // Auth state
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -450,6 +466,10 @@ export default function TheologyAssistant() {
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [commentary, setCommentary] = useState({});
   const [commentaryLoading, setCommentaryLoading] = useState(false);
+  // Which tradition groups are collapsed in the Browse sidebar. Empty by
+  // default — every section starts expanded. The section containing the
+  // active doc is force-expanded regardless of this state.
+  const [collapsedTraditions, setCollapsedTraditions] = useState(() => new Set());
 
   // Remap selectedConfession when language changes
   useEffect(() => {
@@ -933,28 +953,21 @@ export default function TheologyAssistant() {
         <div className="header-title" style={{ flex: 1 }}>
           <div style={{ fontSize: 16, fontWeight: "bold", color: cream }}>{t.appTitle}</div>
           <div style={{ fontSize: 10, color: gold, letterSpacing: 1, textTransform: "uppercase", display: "flex", flexWrap: "wrap", gap: "0 2px", alignItems: "center" }}>
-            {[
-              { label: lang === "de" ? "Ökumenische Bekenntnisse" : "Ecumenical Creeds", enKey: "Nicene Creed" },
-              { label: "Westminster", enKey: "Westminster Confession of Faith" },
-              { label: "Heidelberg", enKey: "Heidelberg Catechism" },
-              { label: "Augsburg", enKey: "Augsburg Confession" },
-              { label: lang === "de" ? "1689 Baptistisch" : "1689 Baptist", enKey: "1689 Baptist Confession" },
-              { label: lang === "de" ? "Orthodox" : "Orthodox", enKey: "Longer Catechism (Orthodox)" },
-              { label: lang === "de" ? "39 Artikel" : "39 Articles", enKey: "39 Articles" },
-            ].map(({ label, enKey }, i, arr) => {
-              const confKey = lang === "de" ? (EN_TO_DE_KEY[enKey] || enKey) : enKey;
+            {confessionsByTradition.map(({ tradition, names }, i, arr) => {
+              const firstName = names[0];
               return (
-              <span key={enKey} style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
-                <button
-                  onClick={() => { setMode("browse"); setSelectedConfession(confKey); setSelectedChapter(null); }}
-                  title={"Browse " + confKey}
-                  style={{ background: "none", border: "none", color: gold, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: 1, textTransform: "uppercase", padding: "0 2px", opacity: 0.85, transition: "opacity 0.15s" }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                  onMouseLeave={e => e.currentTarget.style.opacity = "0.85"}
-                >{label}</button>
-                {i < arr.length - 1 && <span style={{ color: "#a09070", fontSize: 10 }}>·</span>}
-              </span>
-            ); })}
+                <span key={tradition} style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+                  <button
+                    onClick={() => { setMode("browse"); setSelectedConfession(firstName); setSelectedChapter(null); }}
+                    title={"Browse " + tradition}
+                    style={{ background: "none", border: "none", color: gold, fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: 1, textTransform: "uppercase", padding: "0 2px", opacity: 0.85, transition: "opacity 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                    onMouseLeave={e => e.currentTarget.style.opacity = "0.85"}
+                  >{tradition}</button>
+                  {i < arr.length - 1 && <span style={{ color: "#a09070", fontSize: 10 }}>·</span>}
+                </span>
+              );
+            })}
           </div>
         </div>
         <div className="header-tabs" style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
@@ -1235,23 +1248,46 @@ export default function TheologyAssistant() {
       {mode === "browse" && (
         <div className="browse-layout" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
-          {/* Confession list */}
-          <div className="browse-sidebar" style={{ width: 200, borderRight: "2px solid " + border, overflowY: "auto", background: light, flexShrink: 0 }}>
+          {/* Confession list — grouped by tradition (Pattern B: sectioned vertical
+              sidebar with collapsible tradition headings). Section containing the
+              active doc is always shown expanded. */}
+          <div className="browse-sidebar" style={{ width: 220, borderRight: "2px solid " + border, overflowY: "auto", background: light, flexShrink: 0 }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid " + border, background: "#ede8dc", fontSize: 11, fontWeight: "bold", color: mid, letterSpacing: 1, textTransform: "uppercase" }}>{t.confessions}</div>
-            {confessionNames.map(name => {
-              const conf = localizedConfessions[name];
-              const c = COLORS[conf.tradition];
-              const active = selectedConfession === name;
+            {confessionsByTradition.map(({ tradition, names }) => {
+              const c = COLORS[tradition];
+              const containsActive = selectedConfession && names.includes(selectedConfession);
+              const collapsed = collapsedTraditions.has(tradition) && !containsActive;
               return (
-                <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); }} style={{ padding: "10px 14px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "3px solid " + c.border : "3px solid transparent" }}>
-                  <div style={{ fontSize: 12, fontWeight: "bold", color: active ? c.text : dark, lineHeight: 1.4 }}>{name}</div>
-                  <div style={{ fontSize: 10, color: mid, marginTop: 2 }}>{conf.tradition} - {conf.year}</div>
-                  {(name === "Roman Catechism" || name === "Römischer Katechismus") && (
-                    <div style={{ fontSize: 10, color: "#7a5a00", marginTop: 6, padding: "5px 8px", background: "#fdf3cd", border: "1px solid #e8c84a", borderRadius: 5, lineHeight: 1.5, display: "flex", gap: 5, alignItems: "flex-start" }}>
-                      <span style={{ flexShrink: 0, fontSize: 11 }}>ⓘ</span>
-                      <span>{t.romanCatechismNote}</span>
-                    </div>
-                  )}
+                <div key={tradition}>
+                  <button
+                    onClick={() => setCollapsedTraditions(prev => {
+                      const next = new Set(prev);
+                      if (next.has(tradition)) next.delete(tradition);
+                      else next.add(tradition);
+                      return next;
+                    })}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "9px 14px", background: "transparent", border: "none", borderBottom: "1px solid " + border, borderLeft: "4px solid " + c.border, cursor: "pointer", fontFamily: "Georgia, serif", textAlign: "left" }}
+                    title={collapsed ? "Expand " + tradition : "Collapse " + tradition}
+                  >
+                    <span style={{ fontSize: 10, fontWeight: "bold", color: c.header, letterSpacing: 1.2, textTransform: "uppercase" }}>{tradition}</span>
+                    <span style={{ fontSize: 10, color: mid, marginLeft: 6 }}>{collapsed ? "+" : "−"}</span>
+                  </button>
+                  {!collapsed && names.map(name => {
+                    const conf = localizedConfessions[name];
+                    const active = selectedConfession === name;
+                    return (
+                      <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); }} style={{ padding: "9px 14px 9px 22px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "4px solid " + c.border : "4px solid transparent" }}>
+                        <div style={{ fontSize: 12, fontWeight: active ? "bold" : "normal", color: active ? c.text : dark, lineHeight: 1.4 }}>{name}</div>
+                        <div style={{ fontSize: 10, color: mid, marginTop: 2 }}>{conf.year}</div>
+                        {(name === "Roman Catechism" || name === "Römischer Katechismus") && (
+                          <div style={{ fontSize: 10, color: "#7a5a00", marginTop: 6, padding: "5px 8px", background: "#fdf3cd", border: "1px solid #e8c84a", borderRadius: 5, lineHeight: 1.5, display: "flex", gap: 5, alignItems: "flex-start" }}>
+                            <span style={{ flexShrink: 0, fontSize: 11 }}>ⓘ</span>
+                            <span>{t.romanCatechismNote}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -1445,36 +1481,43 @@ export default function TheologyAssistant() {
         <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
           <h1 style={{ margin: "0 0 8px", fontSize: 22, color: dark }}>{t.allDocumentsTitle}</h1>
           <p style={{ margin: "0 0 24px", fontSize: 14, color: "#5a4a2a", lineHeight: 1.7, maxWidth: 720 }}>{t.allDocumentsIntro}</p>
-          {confessionNames.map(name => {
-            const conf = localizedConfessions[name];
-            const enName = DE_TO_EN_KEY[name] || name;
-            const docId = docIdForConfessionName(enName);
-            if (!docId) return null;
-            const c = COLORS[conf.tradition] || COLORS.Ecumenical;
+          {confessionsByTradition.map(({ tradition, names }) => {
+            const tradColor = COLORS[tradition] || COLORS.Ecumenical;
             return (
-              <section key={name} style={{ marginBottom: 28, paddingBottom: 18, borderBottom: "1px solid " + border }}>
-                <h2 style={{ margin: "0 0 4px", fontSize: 17, color: dark }}>
-                  <a
-                    href={buildBrowsePath({ docId, lang })}
-                    onClick={(e) => { e.preventDefault(); openBrowseAt(docId, {}); }}
-                    style={{ color: c.header, textDecoration: "none" }}
-                  >{name}</a>
-                </h2>
-                <div style={{ fontSize: 11, color: mid, marginBottom: 10 }}>{conf.tradition} · {conf.year}</div>
-                <ul style={{ margin: 0, paddingLeft: 20, columns: 2, columnGap: 24, fontSize: 13, lineHeight: 1.8 }}>
-                  {conf.chapters.map((ch) => (
-                    <li key={ch.number} style={{ breakInside: "avoid", marginBottom: 4 }}>
-                      <a
-                        href={buildBrowsePath({ docId, chapter: ch.number, lang })}
-                        onClick={(e) => { e.preventDefault(); openBrowseAt(docId, { chapter: ch.number }); }}
-                        style={{ color: dark, textDecoration: "none" }}
-                      >
-                        <span style={{ color: mid }}>{t.chapter} {ch.number}.</span> {ch.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <div key={tradition} style={{ marginBottom: 36 }}>
+                <h2 style={{ margin: "0 0 14px", fontSize: 13, color: tradColor.header, letterSpacing: 1.4, textTransform: "uppercase", fontWeight: "bold", borderBottom: "2px solid " + tradColor.border, paddingBottom: 6 }}>{tradition}</h2>
+                {names.map(name => {
+                  const conf = localizedConfessions[name];
+                  const enName = DE_TO_EN_KEY[name] || name;
+                  const docId = docIdForConfessionName(enName);
+                  if (!docId) return null;
+                  return (
+                    <section key={name} style={{ marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid " + border }}>
+                      <h3 style={{ margin: "0 0 4px", fontSize: 16, color: dark }}>
+                        <a
+                          href={buildBrowsePath({ docId, lang })}
+                          onClick={(e) => { e.preventDefault(); openBrowseAt(docId, {}); }}
+                          style={{ color: tradColor.header, textDecoration: "none" }}
+                        >{name}</a>
+                      </h3>
+                      <div style={{ fontSize: 11, color: mid, marginBottom: 10 }}>{conf.year}</div>
+                      <ul style={{ margin: 0, paddingLeft: 20, columns: 2, columnGap: 24, fontSize: 13, lineHeight: 1.8 }}>
+                        {conf.chapters.map((ch) => (
+                          <li key={ch.number} style={{ breakInside: "avoid", marginBottom: 4 }}>
+                            <a
+                              href={buildBrowsePath({ docId, chapter: ch.number, lang })}
+                              onClick={(e) => { e.preventDefault(); openBrowseAt(docId, { chapter: ch.number }); }}
+                              style={{ color: dark, textDecoration: "none" }}
+                            >
+                              <span style={{ color: mid }}>{t.chapter} {ch.number}.</span> {ch.title}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  );
+                })}
+              </div>
             );
           })}
         </div>
