@@ -42,8 +42,8 @@ const en = {
   loading: "Loading",
   about: "About",
   unlimited: "Unlimited",
-  aiQueriesRemaining: (remaining) => `${remaining} of 7 AI queries · Resets midnight`,
-  aiLimitReached: "You've reached your daily limit of 7 AI queries. Your limit resets tomorrow.",
+  aiQueriesRemaining: (remaining) => `${remaining} of 5 AI queries · Resets midnight`,
+  aiLimitReached: "You've reached your daily limit of 5 AI queries. Your limit resets tomorrow.",
 
   // Tradition filter
   show: "Show:",

@@ -42,8 +42,8 @@ const de = {
   loading: "Laden",
   about: "Info",
   unlimited: "Unbegrenzt",
-  aiQueriesRemaining: (remaining) => `${remaining} von 7 KI-Anfragen · Zurücksetzung um Mitternacht`,
-  aiLimitReached: "Sie haben Ihr tägliches Limit von 7 KI-Anfragen erreicht. Ihr Limit wird morgen zurückgesetzt.",
+  aiQueriesRemaining: (remaining) => `${remaining} von 5 KI-Anfragen · Zurücksetzung um Mitternacht`,
+  aiLimitReached: "Sie haben Ihr tägliches Limit von 5 KI-Anfragen erreicht. Ihr Limit wird morgen zurückgesetzt.",
 
   // Tradition filter
   show: "Anzeigen:",

@@ -470,7 +470,7 @@ export default function TheologyAssistant() {
 
   const isVip = (() => { try { return sessionStorage.getItem("cacr-vip") === "true"; } catch { return false; } })();
 
-  // AI query rate limiting (7 per day, client-side, keyed on browser localStorage —
+  // AI query rate limiting (5 per day, client-side, keyed on browser localStorage —
   // works for anonymous and signed-in users alike). Wrapped in try/catch so that
   // Safari private mode (where storage can throw) never breaks the app.
   function getAIUsage() {
@@ -496,7 +496,7 @@ export default function TheologyAssistant() {
 
   function canUseAI() {
     if (isVip) return true;
-    return getAIUsage() < 7;
+    return getAIUsage() < 5;
   }
 
   const [aiUsageCount, setAiUsageCount] = useState(() => getAIUsage());
@@ -1057,7 +1057,7 @@ export default function TheologyAssistant() {
               {label}
             </button>
           ))}
-          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }} title="Query count resets at midnight local time">{isVip ? t.unlimited : t.aiQueriesRemaining(Math.max(0, 7 - aiUsageCount))}</span>
+          <span style={{ fontSize: 11, color: "#a09070", marginLeft: 8, whiteSpace: "nowrap" }} title="Query count resets at midnight local time">{isVip ? t.unlimited : t.aiQueriesRemaining(Math.max(0, 5 - aiUsageCount))}</span>
           {/* Language toggle */}
           <div style={{ display: "flex", gap: 2, marginLeft: 4 }}>
             <button onClick={() => setLang("en")} style={{ padding: "2px 6px", background: lang === "en" ? gold : "transparent", color: lang === "en" ? dark : "#a09070", border: "1px solid " + (lang === "en" ? gold : "#a09070"), borderRadius: "6px 0 0 6px", fontSize: 10, cursor: "pointer", fontFamily: "Georgia, serif", fontWeight: lang === "en" ? "bold" : "normal" }}>EN</button>
