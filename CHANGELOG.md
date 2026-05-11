@@ -3,6 +3,13 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-05-11]
+
+### Fixed
+
+- Fixed Vercel SPA fallback rewrite (was using unsupported regex lookahead, causing 404s on non-prerendered routes like /research, /compare, /about; flagged by Google Search Console).
+- Removed trailing slash from `/de/` sitemap entry to avoid 308 redirect (canonical is `/de`).
+
 ## [2026-05-06]
 
 ### Changed

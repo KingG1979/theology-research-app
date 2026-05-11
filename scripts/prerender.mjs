@@ -302,7 +302,7 @@ async function main() {
   // -------- Homepage (overwrite dist/index.html) --------
   {
     const url = SITE + "/";
-    const altDe = SITE + "/de/";
+    const altDe = SITE + "/de";
     const head = renderHead({
       title: "Creeds, Confessions and Catechism Research",
       description:
@@ -348,9 +348,9 @@ async function main() {
     });
   }
 
-  // -------- /de/ index (German homepage) --------
+  // -------- /de index (German homepage) --------
   {
-    const url = SITE + "/de/";
+    const url = SITE + "/de";
     const altEn = SITE + "/";
     const head = renderHead({
       title: "Glaubensbekenntnisse, Bekenntnisse und Katechismen — Forschung",
@@ -366,7 +366,7 @@ async function main() {
     });
     const body = renderPrerenderBody({
       title: "Glaubensbekenntnisse, Bekenntnisse und Katechismen",
-      breadcrumb: [{ label: "Startseite", href: "/de/" }],
+      breadcrumb: [{ label: "Startseite", href: "/de" }],
       paragraphs: [
         "Eine Forschungsbibliothek historischer christlicher Glaubensbekenntnisse, Bekenntnisse und Katechismen — reformiert, lutherisch, katholisch, baptistisch, anglikanisch, orthodox und die ökumenischen Bekenntnisse.",
       ],
@@ -413,7 +413,7 @@ async function main() {
     const body = renderPrerenderBody({
       title: isDe ? "Alle Dokumente — Verzeichnis" : "All Documents — Index",
       breadcrumb: [
-        { label: isDe ? "Startseite" : "Home", href: isDe ? "/de/" : "/" },
+        { label: isDe ? "Startseite" : "Home", href: isDe ? "/de" : "/" },
         { label: isDe ? "Alle Dokumente" : "All Documents", href: path },
       ],
       paragraphs: [
@@ -472,7 +472,7 @@ async function main() {
       const body = renderPrerenderBody({
         title: `${name} — ${conf.year}`,
         breadcrumb: [
-          { label: lang === "de" ? "Startseite" : "Home", href: lang === "de" ? "/de/" : "/" },
+          { label: lang === "de" ? "Startseite" : "Home", href: lang === "de" ? "/de" : "/" },
           {
             label: lang === "de" ? "Alle Dokumente" : "All Documents",
             href: lang === "de" ? "/de/all-documents" : "/all-documents",
@@ -524,7 +524,7 @@ async function main() {
       const body = renderPrerenderBody({
         title: `${name} — ${chapterLabel(chUrl)} ${ch.number}: ${ch.title}`,
         breadcrumb: [
-          { label: lang === "de" ? "Startseite" : "Home", href: lang === "de" ? "/de/" : "/" },
+          { label: lang === "de" ? "Startseite" : "Home", href: lang === "de" ? "/de" : "/" },
           { label: name, href: docPath },
           { label: `${chapterLabel(chUrl)} ${ch.number}`, href: chPath },
         ],
@@ -569,7 +569,7 @@ async function main() {
         const body2 = renderPrerenderBody({
           title: `${name} ${ch.number}.${s.number}`,
           breadcrumb: [
-            { label: lang === "de" ? "Startseite" : "Home", href: lang === "de" ? "/de/" : "/" },
+            { label: lang === "de" ? "Startseite" : "Home", href: lang === "de" ? "/de" : "/" },
             { label: name, href: docPath },
             { label: `${chapterLabel(chUrl)} ${ch.number}: ${ch.title}`, href: chPath },
             { label: `${sectionLabel(chUrl)} ${s.number}`, href: secPath },
@@ -626,7 +626,7 @@ async function main() {
       const body = renderPrerenderBody({
         title: `${name} — ${ext.year}`,
         breadcrumb: [
-          { label: isDe ? "Startseite" : "Home", href: isDe ? "/de/" : "/" },
+          { label: isDe ? "Startseite" : "Home", href: isDe ? "/de" : "/" },
           {
             label: isDe ? "Alle Dokumente" : "All Documents",
             href: isDe ? "/de/all-documents" : "/all-documents",
