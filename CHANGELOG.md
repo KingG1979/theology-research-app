@@ -10,6 +10,7 @@ Maintained by **Stein Street Solutions (SSS)**.
 - Second-pass fix for Vercel SPA fallback rewrite: the previous `/:path*` source still 404'd non-prerendered routes (`/research`, `/compare`, `/about` returned Vercel `NOT_FOUND` post-deploy). Switched to the classic SPA regex form `/(.*)`, which matches all paths and falls back to `/index.html` after Vercel's filesystem and `/api/*` checks.
 - Fixed Vercel SPA fallback rewrite (was using unsupported regex lookahead, causing 404s on non-prerendered routes like /research, /compare, /about; flagged by Google Search Console).
 - Removed trailing slash from `/de/` sitemap entry to avoid 308 redirect (canonical is `/de`).
+- Removed `cleanUrls: true` from vercel.json — it was intercepting requests for non-prerendered paths and returning 404 before the SPA rewrite could match. All prerendered pages live at `dir/index.html` so Vercel's automatic directory-index handling keeps them working without cleanUrls.
 
 ## [2026-05-06]
 
