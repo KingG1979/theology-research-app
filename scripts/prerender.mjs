@@ -445,6 +445,28 @@ async function main() {
     const enName = DOC_ID_TO_EN_NAME[docId];
     const deName = EN_TO_DE_KEY[enName];
 
+    // Build coordinate sets for each language so cross-language hreflang
+    // alternates are only emitted when the target coordinate actually exists
+    // and will be prerendered to disk. Heidelberg Catechism EN/DE use
+    // different chapter→question groupings starting at Q56, so blindly
+    // mirroring (chapter, section) across languages produced 142 ghost URLs.
+    const enConfData = CONFESSIONS[enName];
+    const deConfData = deName ? CONFESSIONS_DE_ALL[deName] : null;
+    const collectCoords = (c) => {
+      const chapters = new Set();
+      const sections = new Set();
+      if (!c) return { chapters, sections };
+      for (const ch of c.chapters || []) {
+        chapters.add(String(ch.number));
+        for (const s of ch.sections || []) {
+          sections.add(`${ch.number}/${s.number}`);
+        }
+      }
+      return { chapters, sections };
+    };
+    const enCoords = collectCoords(enConfData);
+    const deCoords = collectCoords(deConfData);
+
     const docPath = buildPath({ docId, lang });
     const docUrl = SITE + docPath;
     const altEn = SITE + buildPath({ docId, lang: "en" });
@@ -500,10 +522,14 @@ async function main() {
     for (const ch of conf.chapters) {
       const chPath = buildPath({ docId, chapter: ch.number, lang });
       const chUrl = SITE + chPath;
-      const chAltEn = SITE + buildPath({ docId, chapter: ch.number, lang: "en" });
-      const chAltDe = altDe ? SITE + buildPath({ docId, chapter: ch.number, lang: "de" }) : null;
-      const chAlts = [{ hreflang: "en", href: chAltEn }];
-      if (chAltDe) chAlts.push({ hreflang: "de", href: chAltDe });
+      const chKey = String(ch.number);
+      const chAlts = [];
+      if (enCoords.chapters.has(chKey)) {
+        chAlts.push({ hreflang: "en", href: SITE + buildPath({ docId, chapter: ch.number, lang: "en" }) });
+      }
+      if (altDe && deCoords.chapters.has(chKey)) {
+        chAlts.push({ hreflang: "de", href: SITE + buildPath({ docId, chapter: ch.number, lang: "de" }) });
+      }
 
       const chTitle = `${name} — ${chapterLabel(chUrl)} ${ch.number}: ${ch.title} | CCC Study`;
       const firstSecText = ch.sections?.[0]?.text || "";
@@ -541,10 +567,14 @@ async function main() {
       for (const s of ch.sections || []) {
         const secPath = buildPath({ docId, chapter: ch.number, section: s.number, lang });
         const secUrl = SITE + secPath;
-        const secAltEn = SITE + buildPath({ docId, chapter: ch.number, section: s.number, lang: "en" });
-        const secAltDe = altDe ? SITE + buildPath({ docId, chapter: ch.number, section: s.number, lang: "de" }) : null;
-        const secAlts = [{ hreflang: "en", href: secAltEn }];
-        if (secAltDe) secAlts.push({ hreflang: "de", href: secAltDe });
+        const secKey = `${ch.number}/${s.number}`;
+        const secAlts = [];
+        if (enCoords.sections.has(secKey)) {
+          secAlts.push({ hreflang: "en", href: SITE + buildPath({ docId, chapter: ch.number, section: s.number, lang: "en" }) });
+        }
+        if (altDe && deCoords.sections.has(secKey)) {
+          secAlts.push({ hreflang: "de", href: SITE + buildPath({ docId, chapter: ch.number, section: s.number, lang: "de" }) });
+        }
 
         const secTitle = `${name} ${ch.number}.${s.number}: ${shorten(ch.title, 60)} | CCC Study`;
         const secDesc = shorten(`${name}, ${chapterLabel(secUrl)} ${ch.number} ${sectionLabel(secUrl)} ${s.number}. ${s.text}`, 300);
