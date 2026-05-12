@@ -5,6 +5,10 @@ Maintained by **Stein Street Solutions (SSS)**.
 
 ## [2026-05-12]
 
+### Added
+
+- Enabled Vercel Web Analytics and Speed Insights — free Hobby-tier traffic and Core Web Vitals tracking across all sources, not just Google Search.
+
 ### Fixed
 
 - Sitemap no longer declares hreflang alternate URLs that aren't actually prerendered. Heidelberg Catechism EN/DE data uses different chapter→question groupings starting at Q56 (DE shifts +1), so 142 English URLs were declared but never generated. These 200'd via SPA fallback with homepage content, which Google flagged as "Not found (404)". Now gated on existence in target-language data.

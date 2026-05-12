@@ -27,6 +27,8 @@ import { getCCCUrl, isCCCModernDocId } from "./utils/ccc";
 import { getJDDJUrl, isJDDJDocId } from "./utils/jddj";
 import { supabase } from "./supabase";
 import { useI18n } from "./i18n/index.jsx";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Merge all German confessions into one object
 const CONFESSIONS_DE_ALL = { ...CONFESSIONS_DE, ...CONFESSIONS_DE_EXTRA };
@@ -1769,6 +1771,8 @@ export default function TheologyAssistant() {
           style={{ fontSize: 10, color: "#a09070", fontFamily: "Georgia, serif", letterSpacing: 1, textDecoration: "none", opacity: 0.7 }}
         >{t.allDocuments}</a>
       </div>
+      <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
