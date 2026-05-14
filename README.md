@@ -58,11 +58,23 @@ The app includes full German localization:
 
 Note: For the Catholic tradition, the Roman Catechism (1566, public domain) is embedded in full. The modern Catechism of the Catholic Church (CCC, 1992) is not embedded due to copyright (Libreria Editrice Vaticana / USCCB / Deutsche Bischofskonferenz), but Compare and Research can cite specific CCC paragraphs and link directly to the corresponding text on vatican.va in English or German. The same outbound-link approach applies to the Joint Declaration on the Doctrine of Justification (JDDJ, 1999) under the Ecumenical tradition — particularly relevant for justification queries, since the historic creeds do not address justification. External citations render as outbound links (↗) and open in a new tab.
 
+## Church Fathers RAG (experimental)
+
+An experimental retrieval-augmented search/research tab over patristic source texts. **Not part of the core released feature set** — it ships disabled and only activates when the relevant environment variables are present.
+
+- **Frontend:** `src/components/FathersTab.jsx` — Browse-by-doctrine and AI-research sub-modes. If `SUPABASE_URL` / `SUPABASE_ANON_KEY` are not configured the tab renders a setup-instructions placeholder instead of a search UI.
+- **API:** `api/search.js` (vector search via Supabase `search_fathers` RPC) and the `mode === "fathers"` branch of `api/chat.js` (RAG over the same corpus).
+- **Indexing pipeline:** `scripts/collect-texts.py` (corpus collection), `scripts/generate-embeddings.js` (OpenAI `text-embedding-3-small` → Supabase `church_fathers_chunks`), and `supabase/migration.sql` (schema + pgvector RPC).
+
+Treat this surface as experimental: schema, retrieval prompts, and the corpus itself may change without notice.
+
 ## Tech Stack
 
 - **Frontend:** React + Vite
 - **AI Backend:** OpenAI API (via Vercel serverless function at api/chat.js)
-- **Authentication:** Supabase Auth (email/password + Google Sign-In)
+- **Authentication:** Supabase Auth (email/password + Google Sign-In) — optional; the app is usable without sign-in
+- **Feedback Email:** Nodemailer via Zoho SMTP (api/feedback.js)
+- **Analytics:** Vercel Web Analytics + Speed Insights (`@vercel/analytics`, `@vercel/speed-insights`) — traffic and Core Web Vitals
 - **Hosting:** Vercel
 - **Domain:** ccc-study.org (registered via Vercel)
 
@@ -79,7 +91,24 @@ Note: For the Catholic tradition, the Roman Catechism (1566, public domain) is e
 
 ## Environment Variables (Vercel)
 
-- `OPENAI_API_KEY` — OpenAI API key for the chat backend
+Set these on the Vercel project (Settings → Environment Variables). Only `OPENAI_API_KEY` is required to run the core Research/Compare features.
+
+**Required**
+
+- `OPENAI_API_KEY` — OpenAI API key for the chat backend (`api/chat.js`) and for the embeddings script (`scripts/generate-embeddings.js`)
+
+**Optional — Feedback email (Zoho SMTP, used by `api/feedback.js`)**
+
+- `ZOHO_EMAIL` — Zoho mailbox address used as SMTP user (e.g. `support@ccc-study.org`)
+- `ZOHO_PASSWORD` — Zoho app password for that mailbox
+
+**Optional — Church Fathers RAG / search (experimental; see "Church Fathers RAG" section above)**
+
+- `SUPABASE_URL` — Supabase project URL (server-side, used by `api/search.js`, `api/chat.js` fathers mode, and `scripts/generate-embeddings.js`)
+- `SUPABASE_ANON_KEY` — Supabase anonymous key (server-side, used by `api/search.js` and `api/chat.js` fathers mode)
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (used **only** by `scripts/generate-embeddings.js` for bulk inserts; never expose to the browser)
+
+Note: the Supabase URL and anon key used by the **frontend** Supabase Auth client (`src/supabase.js`) are currently hardcoded — there are no `VITE_SUPABASE_*` build-time variables. If you fork this repo and point it at a different Supabase project, edit `src/supabase.js` directly.
 
 ## Local Development
 
