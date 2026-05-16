@@ -44,6 +44,7 @@ const de = {
   unlimited: "Unbegrenzt",
   aiQueriesRemaining: (remaining) => `${remaining} von 5 KI-Anfragen · Zurücksetzung um Mitternacht`,
   aiLimitReached: "Sie haben Ihr tägliches Limit von 5 KI-Anfragen erreicht. Ihr Limit wird morgen zurückgesetzt.",
+  aiLimitReachedInline: "Sie haben Ihr tägliches KI-Anfragelimit erreicht (5/Tag). Zurücksetzung um Mitternacht. Für unbegrenzten Zugriff bitte anmelden oder upgraden.",
 
   // Tradition filter
   show: "Anzeigen:",

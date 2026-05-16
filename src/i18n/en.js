@@ -44,6 +44,7 @@ const en = {
   unlimited: "Unlimited",
   aiQueriesRemaining: (remaining) => `${remaining} of 5 AI queries · Resets midnight`,
   aiLimitReached: "You've reached your daily limit of 5 AI queries. Your limit resets tomorrow.",
+  aiLimitReachedInline: "You've reached your daily AI query limit (5/day). Resets at midnight. For unlimited access, please sign in or upgrade.",
 
   // Tradition filter
   show: "Show:",

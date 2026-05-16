@@ -3,6 +3,14 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-05-16]
+
+### Fixed
+
+- Daily AI query limit no longer fails silently — users now see an inline assistant message explaining the cap when reached, with reset time.
+- Mobile Enter key now reliably submits queries (textarea Enter-to-send was unreliable on iOS soft keyboards; switched to form submission with `enterKeyHint='send'`).
+- AI limit banner now appears inside the chat pane so it's visible on mobile layouts where the previous position was scrolled off-screen.
+
 ## [2026-05-12]
 
 ### Added

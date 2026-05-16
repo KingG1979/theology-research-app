@@ -795,6 +795,7 @@ export default function TheologyAssistant() {
     if (commentary[key]) return;
     if (!canUseAI()) {
       setAiLimitMessage(t.aiLimitReached);
+      setCommentary(prev => ({ ...prev, [key]: { error: true, message: t.aiLimitReachedInline } }));
       return;
     }
     setCommentaryLoading(key);
@@ -817,6 +818,12 @@ export default function TheologyAssistant() {
     if (!input.trim()) return;
     if (!canUseAI()) {
       setAiLimitMessage(t.aiLimitReached);
+      setMessages([
+        { role: "user", content: input },
+        { role: "assistant", content: t.aiLimitReachedInline, isError: true },
+      ]);
+      setCitations([]);
+      setInput("");
       return;
     }
     const question = input;
@@ -943,6 +950,8 @@ export default function TheologyAssistant() {
     if (!compareInput.trim()) return;
     if (!canUseAI()) {
       setAiLimitMessage(t.aiLimitReached);
+      setComparisonData(null);
+      setCompareError(t.aiLimitReachedInline);
       return;
     }
     setCompareLoading(true); setComparisonData(null); setCompareError(null);
@@ -1149,13 +1158,19 @@ export default function TheologyAssistant() {
               ))}
               {loading && <div style={{ background: "#fff", border: "1px solid " + border, borderRadius: "2px 12px 12px 12px", padding: "12px 16px", animation: "pulse 2s ease-in-out infinite" }}><div style={{ fontSize: 10, fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", color: mid, marginBottom: 5 }}>{t.researchAssistant}</div><LoadingDots text={t.researching} color={mid} /></div>}
             </div>
-            <div style={{ padding: "12px 20px 16px", borderTop: "1px solid " + border, display: "flex", gap: 10, background: cream }}>
-              <textarea style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, resize: "none", outline: "none" }} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askQuestion(); } }} placeholder={t.askPlaceholder} rows={3} />
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <button onClick={askQuestion} disabled={loading} style={{ flex: 1, padding: "0 18px", background: loading ? border : gold, color: loading ? mid : dark, border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>{loading ? "..." : t.ask}</button>
-                {messages.length > 0 && <button onClick={resetResearch} style={{ padding: "6px 10px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.newSearch}</button>}
+            {aiLimitMessage && (
+              <div style={{ padding: "10px 20px", background: "#fdf6e3", borderTop: "1px solid #e8d9a0", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                <span style={{ fontSize: 13, color: "#7a6a3a", lineHeight: 1.5 }}>{aiLimitMessage}</span>
+                <button onClick={() => setAiLimitMessage("")} style={{ background: "transparent", border: "none", color: "#a09070", fontSize: 16, cursor: "pointer", padding: "0 4px", fontFamily: "Georgia, serif" }}>×</button>
               </div>
-            </div>
+            )}
+            <form onSubmit={(e) => { e.preventDefault(); askQuestion(); }} style={{ padding: "12px 20px 16px", borderTop: "1px solid " + border, display: "flex", gap: 10, background: cream }}>
+              <textarea style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia, serif", border: "1px solid " + border, borderRadius: 8, background: "#fff", color: dark, resize: "none", outline: "none" }} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if ((e.key === "Enter" || e.code === "Enter" || e.keyCode === 13) && !e.shiftKey) { e.preventDefault(); askQuestion(); } }} enterKeyHint="send" placeholder={t.askPlaceholder} rows={3} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <button type="submit" disabled={loading} style={{ flex: 1, padding: "0 18px", background: loading ? border : gold, color: loading ? mid : dark, border: "none", borderRadius: 8, fontSize: 14, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer", fontFamily: "Georgia, serif" }}>{loading ? "..." : t.ask}</button>
+                {messages.length > 0 && <button type="button" onClick={resetResearch} style={{ padding: "6px 10px", background: "#fff", color: mid, border: "1px solid " + border, borderRadius: 8, fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.newSearch}</button>}
+              </div>
+            </form>
           </div>
           <div className="research-sources" style={{ flex: 2, overflowY: "auto", background: light, display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid " + border, background: "#ede8dc" }}>
