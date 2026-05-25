@@ -3,6 +3,12 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-05-25]
+
+### Added
+
+- Expanded the Longer Catechism (Orthodox) from a 12-Q&A placeholder to the full Catechism of St. Philaret of Moscow (1839), 611 Q&As across Introduction, Part I (Faith / the Creed / Sacraments), Part II (Hope / Lord's Prayer / Beatitudes), Part III (Love / Ten Commandments), and Conclusion. Source: public-domain English translation from pravoslavieto.com. German stub in `confessions_de_extra.js` left unchanged (only English expanded for now).
+
 ## [2026-05-16]
 
 ### Fixed

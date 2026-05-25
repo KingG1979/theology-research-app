@@ -276,7 +276,7 @@ const DOC_SCHEMAS = {
   [DOC_IDS.baptist1689]:        { storage: "chapter+section", maxChapter: 32, maxSection: 32 },
   [DOC_IDS.thirtynineArticles]: { storage: "section-as-N",    maxChapter: 7,  maxSection: 39,  primaryKey: "article" },
   [DOC_IDS.romanCatechism]:     { storage: "chapter+section", maxChapter: 42, maxSection: 200 },
-  [DOC_IDS.orthodoxLonger]:     { storage: "chapter+section", maxChapter: 6,  maxSection: 8,   primaryKey: "question" },
+  [DOC_IDS.orthodoxLonger]:     { storage: "chapter+section", maxChapter: 30, maxSection: 611, primaryKey: "question" },
   [DOC_IDS.apostlesCreed]:      { storage: "section-only",    maxChapter: 1,  maxSection: 4 },
   [DOC_IDS.niceneCreed]:        { storage: "section-only",    maxChapter: 1,  maxSection: 6 },
   [DOC_IDS.athanasianCreed]:    { storage: "section-as-N",    maxChapter: 2,  maxSection: 41 },
