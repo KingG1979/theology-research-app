@@ -4,6 +4,16 @@
 // Your API key is safe here - users never see this code running.
 // ============================================================
 
+// AI provider config
+// Set USE_PERPLEXITY=true in Vercel env vars to route completions through
+// Perplexity Sonar (OpenAI-compatible API). Embeddings always use OpenAI
+// since Perplexity doesn't offer an embeddings endpoint.
+const USE_PERPLEXITY = process.env.USE_PERPLEXITY === "true";
+const PERPLEXITY_BASE_URL = "https://api.perplexity.ai";
+const PERPLEXITY_MODEL = process.env.PERPLEXITY_MODEL || "sonar-pro";
+const OPENAI_BASE_URL = "https://api.openai.com/v1";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -23,7 +33,8 @@ export default async function handler(req, res) {
 
       if (userQuery) {
         try {
-          // Generate embedding for the user's question
+          // Generate embedding for the user's question — always uses OpenAI;
+          // Perplexity does not offer an embeddings endpoint.
           const embResp = await fetch("https://api.openai.com/v1/embeddings", {
             method: "POST",
             headers: {
@@ -73,33 +84,38 @@ export default async function handler(req, res) {
       }
     }
 
-    // Forward to OpenAI
-    const openAIMessages = systemPrompt
+    // Build the messages array with optional system prompt prefix
+    const completionMessages = systemPrompt
       ? [{ role: "system", content: systemPrompt }, ...messages]
       : messages;
 
-    const openAIBody = {
-      model: "gpt-4o",
+    // Choose provider based on USE_PERPLEXITY env flag
+    const apiKey = USE_PERPLEXITY
+      ? process.env.PERPLEXITY_API_KEY
+      : process.env.OPENAI_API_KEY;
+    const baseURL = USE_PERPLEXITY ? PERPLEXITY_BASE_URL : OPENAI_BASE_URL;
+    const model = USE_PERPLEXITY ? PERPLEXITY_MODEL : OPENAI_MODEL;
+
+    const completionBody = {
+      model,
       max_tokens: max_tokens || 1000,
-      messages: openAIMessages,
+      messages: completionMessages,
     };
 
-    // Research mode uses a single structured-JSON call (one generation that
-    // produces both the narrative answer and the citations array). Compare
-    // mode also returns structured JSON so each per-tradition cell can carry
-    // a {doc_id, location} pair for deep-linking. JSON mode is supported on
-    // gpt-4o, gpt-4o-mini, and gpt-4-turbo.
+    // Research / Compare modes request structured JSON output.
+    // json_object response_format is supported on OpenAI gpt-4o and
+    // Perplexity sonar-pro. Omit for other modes.
     if (mode === "research_json" || mode === "compare_json") {
-      openAIBody.response_format = { type: "json_object" };
+      completionBody.response_format = { type: "json_object" };
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(`${baseURL}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Authorization": `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(openAIBody),
+      body: JSON.stringify(completionBody),
     });
     const data = await response.json();
 

@@ -1,7 +1,7 @@
 // Vercel serverless function — receives feedback and emails it.
 // Requires ZOHO_EMAIL and ZOHO_PASSWORD in Vercel environment variables.
 
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.zoho.eu',
@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
