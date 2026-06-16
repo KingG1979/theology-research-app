@@ -148,8 +148,8 @@ const pulseKeyframes = `
 .compare-scroll::-webkit-scrollbar-thumb:hover { background: #8a7a5a; }
 @media (max-width: 768px) {
   .browse-layout { flex-direction: column !important; }
-  .browse-sidebar { width: 100% !important; max-height: 220px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; }
-  .browse-chapters { width: 100% !important; max-height: 140px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; }
+  .browse-sidebar { width: 100% !important; max-height: 220px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; -webkit-overflow-scrolling: touch !important; }
+  .browse-chapters { width: 100% !important; max-height: 140px !important; border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; -webkit-overflow-scrolling: touch !important; }
   .research-layout { flex-direction: column !important; }
   .research-chat { border-right: none !important; border-bottom: 2px solid #d4c4a0 !important; flex: 1 1 auto !important; min-height: 50vh !important; }
   .research-sources { flex: 1 1 auto !important; min-height: 30vh !important; }
@@ -1379,7 +1379,7 @@ export default function TheologyAssistant() {
                     if (ext) {
                       const active = selectedConfession === name;
                       return (
-                        <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); const path = lang === "de" ? "/de/browse/" + ext.docId : "/browse/" + ext.docId; try { history.replaceState(null, "", path); } catch {} }} style={{ padding: "9px 14px 9px 22px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "4px solid " + c.border : "4px solid transparent" }}>
+                        <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); const path = lang === "de" ? "/de/browse/" + ext.docId : "/browse/" + ext.docId; try { history.replaceState(null, "", path); } catch {} }} style={{ padding: "9px 14px 9px 22px", borderBottom: "1px solid " + border, cursor: "pointer", touchAction: "manipulation", background: active ? c.bg : "transparent", borderLeft: active ? "4px solid " + c.border : "4px solid transparent" }}>
                           <div style={{ fontSize: 12, fontWeight: active ? "bold" : "normal", color: active ? c.text : dark, lineHeight: 1.4, display: "flex", alignItems: "baseline", gap: 4 }}>
                             <span>{ext.name}</span>
                             <span style={{ fontSize: 10, color: mid }} title={t.externalDocTooltip || "Linked, not embedded"}>↗</span>
@@ -1391,7 +1391,7 @@ export default function TheologyAssistant() {
                     const conf = localizedConfessions[name];
                     const active = selectedConfession === name;
                     return (
-                      <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); }} style={{ padding: "9px 14px 9px 22px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "4px solid " + c.border : "4px solid transparent" }}>
+                      <div key={name} onClick={() => { setSelectedConfession(name); setSelectedChapter(null); }} style={{ padding: "9px 14px 9px 22px", borderBottom: "1px solid " + border, cursor: "pointer", touchAction: "manipulation", background: active ? c.bg : "transparent", borderLeft: active ? "4px solid " + c.border : "4px solid transparent" }}>
                         <div style={{ fontSize: 12, fontWeight: active ? "bold" : "normal", color: active ? c.text : dark, lineHeight: 1.4 }}>{name}</div>
                         <div style={{ fontSize: 10, color: mid, marginTop: 2 }}>{conf.year}</div>
                         {(name === "Roman Catechism" || name === "Römischer Katechismus") && (
@@ -1416,7 +1416,7 @@ export default function TheologyAssistant() {
                 const active = selectedChapter === idx;
                 const c = COLORS[currentConfession.tradition];
                 return (
-                  <div key={idx} onClick={() => setSelectedChapter(idx)} style={{ padding: "10px 14px", borderBottom: "1px solid " + border, cursor: "pointer", background: active ? c.bg : "transparent", borderLeft: active ? "3px solid " + c.border : "3px solid transparent" }}>
+                  <div key={idx} onClick={() => setSelectedChapter(idx)} style={{ padding: "10px 14px", borderBottom: "1px solid " + border, cursor: "pointer", touchAction: "manipulation", background: active ? c.bg : "transparent", borderLeft: active ? "3px solid " + c.border : "3px solid transparent" }}>
                     <div style={{ fontSize: 11, color: mid, marginBottom: 2 }}>{t.chapter} {ch.number}</div>
                     <div style={{ fontSize: 12, fontWeight: active ? "bold" : "normal", color: active ? c.text : dark, lineHeight: 1.4 }}>{ch.title}</div>
                   </div>
