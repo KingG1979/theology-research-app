@@ -8,11 +8,11 @@ const I18nContext = createContext();
 
 export function I18nProvider({ children }) {
   const [lang, setLang] = useState(() => {
-    return localStorage.getItem("cacr-lang") || "en";
+    try { return localStorage.getItem("cacr-lang") || "en"; } catch { return "en"; }
   });
 
   useEffect(() => {
-    localStorage.setItem("cacr-lang", lang);
+    try { localStorage.setItem("cacr-lang", lang); } catch {}
   }, [lang]);
 
   const t = translations[lang] || translations.en;

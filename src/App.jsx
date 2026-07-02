@@ -49,6 +49,9 @@ const EN_TO_DE_KEY = {
   "Longer Catechism (Orthodox)": "Orthodoxer Katechismus",
   "39 Articles": "39 Artikel der Kirche von England",
   "Roman Catechism": "Römischer Katechismus",
+  "Belgic Confession": "Belgisches Bekenntnis",
+  "Canons of Dort": "Dordrechter Canones",
+  "Second Helvetic Confession": "Zweites Helvetisches Bekenntnis",
 };
 const DE_TO_EN_KEY = Object.fromEntries(Object.entries(EN_TO_DE_KEY).map(([en, de]) => [de, en]));
 
@@ -538,6 +541,10 @@ export default function TheologyAssistant() {
       const deKey = EN_TO_DE_KEY[selectedConfession];
       if (deKey && localizedConfessions[deKey]) {
         setSelectedConfession(deKey);
+        const newConf = buildLocalizedConfessions("de")[deKey];
+        if (selectedChapter !== null && newConf && selectedChapter >= newConf.chapters.length) {
+          setSelectedChapter(null);
+        }
       } else if (!localizedConfessions[selectedConfession]) {
         setSelectedConfession(null);
         setSelectedChapter(null);
@@ -546,6 +553,10 @@ export default function TheologyAssistant() {
       const enKey = DE_TO_EN_KEY[selectedConfession];
       if (enKey && localizedConfessions[enKey]) {
         setSelectedConfession(enKey);
+        const newConf = buildLocalizedConfessions("en")[enKey];
+        if (selectedChapter !== null && newConf && selectedChapter >= newConf.chapters.length) {
+          setSelectedChapter(null);
+        }
       } else if (!localizedConfessions[selectedConfession]) {
         setSelectedConfession(null);
         setSelectedChapter(null);
@@ -814,19 +825,19 @@ export default function TheologyAssistant() {
 
   const visibleTraditions = ALL_TRADITIONS.filter(trad => activeTraditions.has(trad));
 
-  async function askQuestion() {
-    if (!input.trim()) return;
+  async function askQuestion(questionOverride) {
+    const question = questionOverride || input;
+    if (!question.trim()) return;
     if (!canUseAI()) {
       setAiLimitMessage(t.aiLimitReached);
       setMessages([
-        { role: "user", content: input },
-        { role: "assistant", content: t.aiLimitReachedInline, isError: true },
+        { role: "user", content: question },
+        { role: "assistant", content: t.aiLimitReachedInline, isError: true, question },
       ]);
       setCitations([]);
       setInput("");
       return;
     }
-    const question = input;
     const userMessage = { role: "user", content: question };
     // Single-query mode: replace prior chat + citations atomically so the
     // answer pane and sources sidebar stay in sync on each new query.
@@ -928,7 +939,7 @@ export default function TheologyAssistant() {
       }
 
       if (parseFailed || (!summary && !answer)) {
-        setMessages([...updated, { role: "assistant", content: t.couldNotParse, isError: true }]);
+        setMessages([...updated, { role: "assistant", content: t.couldNotParse, isError: true, question }]);
         setCitations([]);
       } else {
         const displayContent = summary
@@ -940,7 +951,7 @@ export default function TheologyAssistant() {
       }
     } catch (e) {
       console.error(e);
-      setMessages([...updated, { role: "assistant", content: t.unableToReachAI, isError: true }]);
+      setMessages([...updated, { role: "assistant", content: t.unableToReachAI, isError: true, question }]);
       setCitations([]);
     }
     finally { setLoading(false); setCitationsLoading(false); }
@@ -1143,7 +1154,7 @@ export default function TheologyAssistant() {
                       <span style={{ fontSize: 16, color: "#aa5a5a", lineHeight: 1, flexShrink: 0, marginTop: 1 }}>!</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, color: "#7a2a2a", lineHeight: 1.6 }}>{msg.content}</div>
-                        <button onClick={askQuestion} style={{ marginTop: 8, padding: "4px 14px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 12, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.tryAgain}</button>
+                        <button onClick={() => askQuestion(msg.question)} style={{ marginTop: 8, padding: "4px 14px", background: "#fff", border: "1px solid #e8b4b4", borderRadius: 6, fontSize: 12, color: "#7a2a2a", cursor: "pointer", fontFamily: "Georgia, serif" }}>{t.tryAgain}</button>
                       </div>
                     </div>
                   ) : (
