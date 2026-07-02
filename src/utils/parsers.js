@@ -165,12 +165,14 @@ function parseComparisonLegacy(text) {
       currentRow = { aspect: line.replace("ASPECT:", "").trim() };
     } else if (line === "---") continue;
     else {
-      for (const t of ALL_TRADITIONS) {
-        const key = t.toUpperCase() + ":";
-        if (line.startsWith(key)) {
-          const content = line.replace(key, "").trim();
-          const parts = content.split("|");
-          currentRow[t] = { position: parts[0] ? parts[0].trim() : "", citation: parts[1] ? parts[1].trim() : "" };
+      if (currentRow) {
+        for (const t of ALL_TRADITIONS) {
+          const key = t.toUpperCase() + ":";
+          if (line.startsWith(key)) {
+            const content = line.replace(key, "").trim();
+            const parts = content.split("|");
+            currentRow[t] = { position: parts[0] ? parts[0].trim() : "", citation: parts[1] ? parts[1].trim() : "" };
+          }
         }
       }
     }

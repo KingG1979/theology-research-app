@@ -13,7 +13,7 @@ export function extractText(data) {
     return data.content[0].text;
   }
   if (data && data.error) {
-    throw new Error(data.error.message || data.error);
+    throw new Error(data.error.message || (typeof data.error === "string" ? data.error : JSON.stringify(data.error)));
   }
   throw new Error("No response from the AI service. Please try again.");
 }

@@ -285,7 +285,7 @@ const DOC_SCHEMAS = {
   [DOC_IDS.constantinople2]:    { storage: "section-as-N",    maxChapter: 2,  maxSection: 14,  primaryKey: "anathema" },
   [DOC_IDS.constantinople3]:    { storage: "chapter+section", maxChapter: 8,  maxSection: 200 },
   [DOC_IDS.belgic]:             { storage: "chapter-as-N",    maxChapter: 37, maxSection: 1,   primaryKey: "article" },
-  [DOC_IDS.dort]:               { storage: "chapter+section", maxChapter: 5,  maxSection: 18 },
+  [DOC_IDS.dort]:               { storage: "chapter+section", maxChapter: 4,  maxSection: 18 },
   [DOC_IDS.helvetic2]:          { storage: "chapter+section", maxChapter: 30, maxSection: 1 },
   // CCC (1992) is an outbound link (not embedded in CCCR). Keyed by
   // paragraph 1-2865. The renderer routes external doc_ids through
