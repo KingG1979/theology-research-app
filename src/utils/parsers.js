@@ -1,23 +1,5 @@
 import { ALL_TRADITIONS } from "../data/confessions";
 
-export function parseCitations(text) {
-  const results = [];
-  const blocks = text.split("---").map(b => b.trim()).filter(Boolean);
-  for (const block of blocks) {
-    const lines = block.split("\n").map(l => l.trim()).filter(Boolean);
-    const item = {};
-    for (const line of lines) {
-      if (line.startsWith("TRADITION:")) item.tradition = line.replace("TRADITION:", "").trim();
-      else if (line.startsWith("CONFESSION:")) item.confession = line.replace("CONFESSION:", "").trim();
-      else if (line.startsWith("REFERENCE:")) item.reference = line.replace("REFERENCE:", "").trim();
-      else if (line.startsWith("QUOTE:")) item.quote = line.replace("QUOTE:", "").trim();
-      else if (line.startsWith("RELEVANCE:")) item.relevance = line.replace("RELEVANCE:", "").trim();
-    }
-    if (item.confession && item.tradition) results.push(item);
-  }
-  return results;
-}
-
 // Parse the JSON Compare response. The model returns:
 //   { topic, summary, rows: [ { aspect, cells: { Reformed: {position, citation, doc_id, location}, ... } } ] }
 // We flatten each row's cells onto the row object itself (row[tradition] = cell)

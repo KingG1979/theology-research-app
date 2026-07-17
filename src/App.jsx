@@ -581,6 +581,7 @@ export default function TheologyAssistant() {
       const { data, error } = await supabase
         .from('notes')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
       if (error) { console.error('Failed to load notes:', error); return; }
       setEntries(data.map(row => {
