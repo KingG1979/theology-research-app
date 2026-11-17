@@ -4,21 +4,27 @@
 // for the most semantically similar passages.
 // ============================================================
 
-export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+// Only this site's own pages may call this function from a browser.
+const ALLOWED_ORIGIN = /^https:\/\/((www\.)?ccc-study\.org|theology-research-app[a-z0-9-]*\.vercel\.app)$|^http:\/\/localhost(:\d+)?$/;
+function originAllowed(req) {
+  const origin = req.headers.origin;
+  return !origin || ALLOWED_ORIGIN.test(origin);
+}
 
-  if (req.method === "OPTIONS") return res.status(200).end();
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
-
-  const { query, father_name, era, limit } = req.body;
-
-  if (!query || query.trim().length === 0) {
-    return res.status(400).json({ error: "Query is required" });
+  if (!originAllowed(req)) {
+    return res.status(403).json({ error: "Forbidden" });
   }
+
+  const { query, father_name, era, limit } = req.body || {};
+
+  if (typeof query !== "string" || query.trim().length === 0 || query.length > 2000) {
+    return res.status(400).json({ error: "Query is required (max 2000 characters)" });
+  }
+  const matchCount = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 25);
 
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
     return res.status(503).json({
@@ -49,9 +55,9 @@ export default async function handler(req, res) {
     const queryEmbedding = embeddingData.data[0].embedding;
 
     // Search Supabase
-    const searchParams = { query_embedding: queryEmbedding, match_count: limit || 10 };
-    if (father_name) searchParams.filter_father = father_name;
-    if (era) searchParams.filter_era = era;
+    const searchParams = { query_embedding: queryEmbedding, match_count: matchCount };
+    if (typeof father_name === "string" && father_name) searchParams.filter_father = father_name;
+    if (typeof era === "string" && era) searchParams.filter_era = era;
 
     const supabaseResponse = await fetch(
       `${process.env.SUPABASE_URL}/rest/v1/rpc/search_fathers`,
@@ -74,6 +80,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ results, query: query.trim() });
   } catch (error) {
     console.error("Search error:", error);
-    return res.status(500).json({ error: "Search failed", message: error.message });
+    return res.status(500).json({ error: "Search failed" });
   }
 }
