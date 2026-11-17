@@ -4,12 +4,40 @@
 // Your API key is safe here - users never see this code running.
 // ============================================================
 
+// Only this site's own pages may call this function from a browser.
+const ALLOWED_ORIGIN = /^https:\/\/((www\.)?ccc-study\.org|theology-research-app[a-z0-9-]*\.vercel\.app)$|^http:\/\/localhost(:\d+)?$/;
+const MAX_TOKENS_CAP = 4000;
+const MAX_MESSAGES = 40;
+const MAX_CHARS = 100000; // per system prompt, and for all messages together
+
+function originAllowed(req) {
+  const origin = req.headers.origin;
+  return !origin || ALLOWED_ORIGIN.test(origin);
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+  if (!originAllowed(req)) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
 
-  const { system, messages, max_tokens, mode, query } = req.body;
+  const { system, messages, max_tokens, mode, query } = req.body || {};
+
+  // Validate input so this endpoint cannot be used as a free, unlimited GPT-4o proxy.
+  if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
+    return res.status(400).json({ error: "Invalid messages" });
+  }
+  const badMessage = messages.some(m => !m || !["user", "assistant"].includes(m.role) || typeof m.content !== "string");
+  const totalChars = messages.reduce((n, m) => n + (m && typeof m.content === "string" ? m.content.length : 0), 0);
+  if (badMessage || totalChars > MAX_CHARS) {
+    return res.status(400).json({ error: "Invalid messages" });
+  }
+  if (system != null && (typeof system !== "string" || system.length > MAX_CHARS)) {
+    return res.status(400).json({ error: "Invalid system prompt" });
+  }
+  const maxTokens = Math.min(Math.max(parseInt(max_tokens, 10) || 1000, 1), MAX_TOKENS_CAP);
 
   try {
     let systemPrompt = system || "";
@@ -32,9 +60,10 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
               model: "text-embedding-3-small",
-              input: userQuery,
+              input: String(userQuery).slice(0, 8000),
             }),
           });
+          if (!embResp.ok) throw new Error(`Embedding API returned ${embResp.status}`);
           const embData = await embResp.json();
           const embedding = embData.data[0].embedding;
 
@@ -53,7 +82,7 @@ export default async function handler(req, res) {
           );
           const passages = await searchResp.json();
 
-          if (passages && passages.length > 0) {
+          if (Array.isArray(passages) && passages.length > 0) {
             ragContext = passages;
             const passageTexts = passages.map((p, i) =>
               `[Source ${i + 1}] ${p.father_name}, "${p.work_title}"${p.chapter ? `, Chapter ${p.chapter}` : ""}:\n${p.content}`
@@ -80,7 +109,7 @@ export default async function handler(req, res) {
 
     const openAIBody = {
       model: "gpt-4o",
-      max_tokens: max_tokens || 1000,
+      max_tokens: maxTokens,
       messages: openAIMessages,
     };
 
@@ -102,6 +131,10 @@ export default async function handler(req, res) {
       body: JSON.stringify(openAIBody),
     });
     const data = await response.json();
+    if (!response.ok) {
+      console.error("OpenAI error:", response.status, data?.error?.message);
+      return res.status(502).json({ error: "The AI service returned an error. Please try again." });
+    }
 
     const text = data.choices?.[0]?.message?.content || "";
     const result = { content: [{ type: "text", text }] };

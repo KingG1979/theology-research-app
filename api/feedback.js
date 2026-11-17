@@ -20,13 +20,15 @@ module.exports = async function handler(req, res) {
 
   const { type, message, user_email, page } = req.body || {};
 
-  if (!message || !message.trim()) {
-    return res.status(400).json({ error: "Message is required" });
+  if (typeof message !== "string" || !message.trim() || message.length > 5000) {
+    return res.status(400).json({ error: "Message is required (max 5000 characters)" });
   }
 
-  const feedbackType = type || "suggestion";
-  const from = user_email || "anonymous";
-  const feedbackPage = page || "unknown";
+  // Same values the suggestions table allows. Strip line breaks so nothing can be injected into headers.
+  const clean = (v, max) => String(v).replace(/[\r\n]+/g, " ").slice(0, max);
+  const feedbackType = ["suggestion", "bug", "content"].includes(type) ? type : "suggestion";
+  const from = user_email ? clean(user_email, 200) : "anonymous";
+  const feedbackPage = page ? clean(page, 100) : "unknown";
   const timestamp = new Date().toISOString();
 
   try {

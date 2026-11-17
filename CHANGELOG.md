@@ -3,6 +3,23 @@
 All notable changes to the Creeds, Confessions and Catechism Research app.  
 Maintained by **Stein Street Solutions (SSS)**.
 
+## [2026-11-17]
+
+### Security
+
+- `/api/chat` no longer works as an open GPT-4o proxy: requests from other websites are refused, `max_tokens` is capped at 4000, and messages are checked (user/assistant roles only, at most 40 messages and 100,000 characters).
+- `/api/search` no longer allows any website to call it (CORS (Cross-Origin Resource Sharing) wildcard removed), caps results at 25, and stops returning internal error text.
+- `/api/feedback` limits field lengths and only accepts the three known feedback types.
+- Updated `nodemailer` and `ws` to fix known high-severity vulnerabilities.
+
+### Fixed
+
+- AI service errors now show an error instead of an empty answer.
+
+### Removed
+
+- Unused `src/utils/api.js`, which could send an Anthropic key straight from the browser.
+
 ## [2026-05-25]
 
 ### Added
