@@ -1,0 +1,16 @@
+name: Keep Supabase alive
+
+on:
+  schedule:
+    - cron: "0 6 * * 1,4"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Supabase
+        run: |
+          curl --fail --silent --show-error \
+            "https://faewrhljljuactdxwema.supabase.co/rest/v1/notes?select=id&limit=1" \
+            -H "apikey: sb_publishable_dEjGPEZPvy2mWYAyzn-uwQ_0-gXYs08"
